@@ -872,6 +872,14 @@ preferred_encoding: gzip
 # Enable or disable Martin web UI. At the moment, only allows `enable-for-all` which enables the web UI for all connections. This may be undesirable in a production environment. [default: disable]
 web_ui: disable
 
+# Advanced monitoring options
+observability:
+  # Configure metrics reported under `/_/metrics`
+  metrics:
+    # Add these labels to every metric
+    # Example: `{ env: prod, server: martin }`
+    add_labels: {}
+
 # CORS Configuration
 #
 # Defaults to `cors: true`, which allows all origins.
@@ -1024,7 +1032,7 @@ postgres:
 pmtiles:
   # Allows forcing path style URLs for S3 buckets [default: false]
   #
-  # A path style URL is a URL that uses the bucket name as part of the path like mys3.com/somebucket instead of the hostname somebucket.mys3.com
+  # A path style URL is a URL that uses the bucket name as part of the path like example.org/some_bucket instead of the hostname some_bucket.example.org
   force_path_style: false
   # Skip loading credentials for S3 buckets [default: false]
   #
@@ -1160,7 +1168,7 @@ To send requests anonymously for publicly available buckets, set the environment
 <h4 id="url-styles"><a class="header" href="#url-styles">Url styles</a></h4>
 <p>We also support forcing path style URLs for S3 buckets via the environment variable <code>AWS_S3_FORCE_PATH_STYLE=1</code> or configuration key <code>force_path_style: true</code>.
 This allows you to use this functionality for <a href="https://min.io/"><code>MinIO</code></a> or similar s3-compatible instances which use path style URLs.
-A path style URL is a URL that uses the bucket name as part of the path (<code>mys3.com/somebucket</code>) instead of the hostname (<code>somebucket.mys3.com</code>).</p>
+A path style URL is a URL that uses the bucket name as part of the path (<code>example.org/some_bucket</code>) instead of the hostname (<code>some_bucket.example.org</code>).</p>
 <p>Example configuration:</p>
 <pre><code class="language-yaml">pmtiles:
   force_path_style: true
@@ -1518,6 +1526,7 @@ fonts:
 <tr><td><code>/font/{font1},…,{fontN}/{start}-{end}</code></td><td><a href="sources-fonts.html">Composite Font source</a></td></tr>
 <tr><td><code>/style/{style}</code></td><td><a href="sources-styles.html">Style source</a></td></tr>
 <tr><td><code>/health</code></td><td>Martin server health check: returns 200 <code>OK</code></td></tr>
+<tr><td><code>/_/metrics</code></td><td>Martin server Prometheus metrics</td></tr>
 </tbody></table>
 </div>
 <h3 id="duplicate-source-id"><a class="header" href="#duplicate-source-id">Duplicate Source ID</a></h3>
