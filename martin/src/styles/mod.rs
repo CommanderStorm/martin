@@ -9,8 +9,6 @@ use serde::{Deserialize, Serialize};
 use crate::config::UnrecognizedValues;
 use crate::file_config::{ConfigExtras, FileConfigEnum, FileError, FileResult};
 
-pub mod style_spec;
-
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CatalogStyleEntry {
     pub path: PathBuf,
