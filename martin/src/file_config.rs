@@ -68,22 +68,30 @@ pub trait ConfigExtras: Clone + Debug + Default + PartialEq + Send {
         true
     }
 
-    /// Iterates over all unrecognized (present, but not expected) keys in the configuration
+    /// Returns all unrecognized (present, but not expected) keys in the configuration
     fn get_unrecognized_keys(&self) -> UnrecognizedKeys;
 }
 
 pub trait SourceConfigExtras: ConfigExtras {
+    /// Indicates whether path strings for this configuration should be parsed as URLs.
+    ///
+    /// - `true` means any source path starting with `http://`, `https://`, or `s3://` will be treated as a remote URL.
+    /// - `false` means all paths are treated as local file system paths.
     #[must_use]
-    fn parse_urls() -> bool {
-        false
-    }
+    fn parse_urls() -> bool;
 
+    /// Asynchronously creates a new `TileInfoSource` from a **local** file `path` using the given `id`.
+    ///
+    /// This function is called for each discovered file path that is not a URL.
     fn new_sources(
         &self,
         id: String,
         path: PathBuf,
     ) -> impl Future<Output = FileResult<TileInfoSource>> + Send;
 
+    /// Asynchronously creates a new `TileInfoSource` from a **remote** `url` using the given `id`.
+    ///
+    /// This function is called for each discovered source path that is a valid URL.
     fn new_sources_url(
         &self,
         id: String,
@@ -113,7 +121,7 @@ impl<T: ConfigExtras> FileConfigEnum<T> {
         configs: BTreeMap<String, FileConfigSrc>,
         custom: T,
     ) -> Self {
-        if configs.is_empty() && custom.is_default() {
+        if configs.is_empty() {
             match paths.len() {
                 0 => FileConfigEnum::None,
                 1 => FileConfigEnum::Path(paths.into_iter().next().unwrap()),
@@ -169,13 +177,13 @@ impl<T: ConfigExtras> FileConfigEnum<T> {
 
     pub fn finalize(&self, prefix: &str) -> UnrecognizedKeys {
         if let Self::Config(cfg) = self {
-            return cfg
-                .get_unrecognized_keys()
+            cfg.get_unrecognized_keys()
                 .iter()
                 .map(|k| format!("{prefix}{k}"))
-                .collect::<UnrecognizedKeys>();
+                .collect()
+        } else {
+            UnrecognizedKeys::new()
         }
-        UnrecognizedKeys::new()
     }
 }
 
@@ -195,10 +203,7 @@ pub struct FileConfig<T> {
 impl<T: ConfigExtras> FileConfig<T> {
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.paths.is_none()
-            && self.sources.is_none()
-            && self.get_unrecognized_keys().is_empty()
-            && self.custom.is_default()
+        self.paths.is_none() && self.sources.is_none() && self.get_unrecognized_keys().is_empty()
     }
 
     pub fn get_unrecognized_keys(&self) -> UnrecognizedKeys {
