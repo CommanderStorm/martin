@@ -1511,7 +1511,8 @@ $ aws ecr create-repository --repository-name martin
 
 # Read the repositoryUri which includes your account number
 $ docker tag ghcr.io/maplibre/martin:latest 493749042871.dkr.ecr.us-east-2.amazonaws.com/martin:latest
-$ aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 493749042871.dkr.ecr.us-east-2.amazonaws.com
+$ aws ecr get-login-password --region us-east-2 \
+  | docker login --username AWS --password-stdin 493749042871.dkr.ecr.us-east-2.amazonaws.com
 $ docker push 493749042871.dkr.ecr.us-east-2.amazonaws.com/martin:latest
 </code></pre>
 <p>Open <a href="https://console.aws.amazon.com/lambda">Lambda console</a> and create your function:</p>
@@ -1561,7 +1562,7 @@ EOF
 AWSTemplateFormatVersion: 2010-09-09
 Transform: 'AWS::Serverless-2016-10-31'
 Resources:
-  martin:
+  MartinLayer:
     Type: 'AWS::Serverless::LayerVersion'
     DeletionPolicy: Delete
     Properties:
@@ -2133,8 +2134,10 @@ keep_alive: 75
 # The socket address to bind [default: 0.0.0.0:3000]
 listen_addresses: '0.0.0.0:3000'
 
-# Set TileJSON URL path prefix. This overrides the default of respecting the X-Rewrite-URL header.
-# Only modifies the JSON (TileJSON) returned, martins' API-URLs remain unchanged. If you need to rewrite URLs, please use a reverse proxy.
+# Set TileJSON URL path prefix.
+# This overrides the default of respecting the X-Rewrite-URL header.
+# Only modifies the JSON (TileJSON) returned; Martin's API-URLs remain unchanged.
+# If you need to rewrite URLs, please use a reverse proxy.
 # Must begin with a `/`.
 # Examples: `/`, `/tiles`
 base_path: /tiles
@@ -2145,10 +2148,18 @@ worker_processes: 8
 # Amount of memory (in MB) to use for caching tiles [default: 512, 0 to disable]
 cache_size_mb: 1024
 
-# If the client accepts multiple compression formats, and the tile source is not pre-compressed, which compression should be used. `gzip` is faster, but `brotli` is smaller, and may be faster with caching.  Default could be different depending on Martin version.
+# Which compression should be used if the
+# - client accepts multiple compression formats, and
+# - tile source is not pre-compressed.
+#
+# `gzip` is faster, but `brotli` is smaller, and may be faster with caching.
+# Default could be different depending on Martin version.
 preferred_encoding: gzip
 
-# Enable or disable Martin web UI. At the moment, only allows `enable-for-all` which enables the web UI for all connections. This may be undesirable in a production environment. [default: disable]
+# Enable or disable Martin web UI. [default: disable]
+#
+# At the moment, only allows `enable-for-all`, which enables the web UI for all connections.
+# This may be undesirable in a production environment
 web_ui: disable
 
 # Advanced monitoring options
@@ -2188,7 +2199,7 @@ postgres:
   # Same as PGSSLROOTCERT for psql
   ssl_root_cert: './root.crt'
 
-  #  If a spatial table has SRID 0, then this SRID will be used as a fallback
+  # If a spatial table has SRID 0, then this SRID will be used as a fallback
   default_srid: 4326
 
   # Maximum Postgres connections pool size [default: 20]
@@ -2196,15 +2207,21 @@ postgres:
 
   # Limit the number of geo features per tile.
   #
-  # If the source table has more features than set here, they will not be included in the tile and the result will look "cut off"/incomplete.
-  # This feature allows to put a maximum latency bound on tiles with extreme amount of detail at the cost of not returning all data.
-  # It is sensible to set this limit if you have user generated/untrusted geodata, e.g. a lot of data points at [Null Island](https://en.wikipedia.org/wiki/Null_Island).
+  # If the source table has more features than set here, they will not be
+  # included in the tile and the result will look "cut off"/incomplete.
+  # This feature allows you to put a maximum latency bound on tiles with an
+  # extreme amount of detail at the cost of not returning all data.
+  # It is sensible to set this limit if you have user generated/untrusted
+  # geodata, e.g. a lot of data points at [Null Island]
+  # (https://en.wikipedia.org/wiki/Null_Island).
   max_feature_count: null # either a positive integer, or null=unlimited (default)
 
   # Specify how bounds should be computed for the spatial PG tables [default: quick]
-  # 'calc' - compute table geometry bounds on startup.
-  # 'quick' - same as 'calc', but the calculation will be aborted if it takes more than 5 seconds.
-  # 'skip' - do not compute table geometry bounds on startup.
+  #
+  # Options:
+  # - `calc` compute table geometry bounds on startup.
+  # - `quick` same as 'calc', but the calculation will be aborted after 5 seconds.
+  # - `skip` does not compute table geometry bounds on startup.
   auto_bounds: quick
 
   # Enable automatic discovery of tables and functions.
@@ -2215,21 +2232,25 @@ postgres:
       - public
       - my_schema
     # Here we enable both tables and functions auto discovery.
-    # You can also enable just one of them by not mentioning the other,
-    # or setting it to false.  Setting one to true disables the other one as well.
+    # You can also enable just one of them by not mentioning the other, or
+    # setting it to false. Setting one to true disables the other one as well.
     # E.g. `tables: false` enables just the functions auto-discovery.
     tables:
-      # Optionally set how source ID should be generated based on the table's name, schema, and geometry column
+      # Optionally set how source ID should be generated based on the table's name,
+      # schema, and geometry column
       source_id_format: 'table.{schema}.{table}.{column}'
       # Add more schemas to the ones listed above
       from_schemas: my_other_schema
       # A table column to use as the feature ID
-      # If a table has no column with this name, `id_column` will not be set for that table.
-      # If a list of strings is given, the first found column will be treated as a feature ID.
+      # If a table has no column with this name, `id_column` will not be set for
+      # that table.
+      # If a list of strings is given, the first found column will be treated as a
+      # feature ID.
       id_columns: feature_id
-      # Boolean to control if geometries should be clipped or encoded as is, optional, default to true
+      # Controls if geometries should be clipped or encoded as is [default: true]
       clip_geom: true
-      # Buffer distance in tile coordinate space to optionally clip geometries, optional, default to 64
+      # Buffer distance in tile coordinate space to optionally clip geometries,
+      # optional, default to 64
       buffer: 64
       # Tile extent in tile coordinate space, optional, default to 4096
       extent: 4096
@@ -2238,7 +2259,8 @@ postgres:
       from_schemas:
         - public
         - my_schema
-      # Optionally set how source ID should be generated based on the function's name and schema
+      # Optionally set how source ID should be generated based on the function's
+      # name and schema
       source_id_format: '{schema}.{function}'
 
   # Associative arrays of table sources
@@ -2269,9 +2291,9 @@ postgres:
       maxzoom: 30
 
       # The maximum extent of available map tiles. Bounds MUST define an area
-      # covered by all zoom levels. The bounds are represented in WGS:84
-      # latitude and longitude values, in the order left, bottom, right, top.
-      # Values may be integers or floating point numbers.
+      # covered by all zoom levels. The bounds are represented in WGS:84 latitude
+      # and longitude values, in the order left, bottom, right, top. Values may
+      # be integers or floating point numbers.
       bounds: [ -180.0, -90.0, 180.0, 90.0 ]
 
       # Tile extent in tile coordinate space
@@ -2315,7 +2337,8 @@ postgres:
 pmtiles:
   # Allows forcing path style URLs for S3 buckets [default: false]
   #
-  # A path style URL is a URL that uses the bucket name as part of the path like example.org/some_bucket instead of the hostname some_bucket.example.org
+  # A path style URL is a URL that uses the bucket name as part of the path like
+  # example.org/some_bucket instead of the hostname some_bucket.example.org
   force_path_style: false
   # Skip loading credentials for S3 buckets [default: false]
   #
@@ -2385,9 +2408,10 @@ styles:
    sources:
      # publish a JSON file found at this path as `some_style_name`
      #
-     # Contrairy to paths, if directories are specified, Martin will print a warning and ignore them.
-     # To serve a style-directory, use the `paths` section above or name each style individually.
-     # This prevents footguns with names being unclear.
+     # Contrairy to paths, if directories are specified, Martin will print a
+     # warning and ignore them.
+     # To serve a style-directory, use the `paths` section above or name each
+     # style individually. This prevents footguns with names being unclear.
      some_style_name: /path/to/this/style.json
      #  Publish specific file as `other_style_name`
      other_style_name: /path/to/other_style.json
@@ -4500,18 +4524,43 @@ This is where the vector tile schema comes in:
 <p>Below command downloads a tile archive at <code>data/monaco.mbtiles</code> for monaco.</p>
 <p>Please refer to <a href="https://github.com/onthegomap/planetiler/">Planetilers documentation</a> on different download options.</p>
 <pre><code class="language-bash">mkdir --parents data
-docker run --user=$UID -e JAVA_TOOL_OPTIONS="-Xmx1g" -v "$(pwd)/data":/data --rm ghcr.io/onthegomap/planetiler:latest --download --minzoom=0 --maxzoom=14 --tile_compression=none --area=monaco --output /data/monaco.mbtiles
+docker run \
+  --user=$UID \
+  -e JAVA_TOOL_OPTIONS="-Xmx1g" \
+  -v "$(pwd)/data":/data \
+  --rm \
+  ghcr.io/onthegomap/planetiler:latest \
+  --download \
+  --minzoom=0 \
+  --maxzoom=14 \
+  --tile_compression=none \
+  --area=monaco \
+  --output /data/monaco.mbtiles
 </code></pre>
 <h2 id="loading-data-into-a-postgis-database"><a class="header" href="#loading-data-into-a-postgis-database">Loading data into a PostGIS database</a></h2>
 <h3 id="run-postgis"><a class="header" href="#run-postgis">Run PostGIS</a></h3>
 <p>First, you need a running <a href="https://postgis.net">postGIS</a> instance.</p>
-<pre><code class="language-bash">docker run --name some-postgis --env POSTGRES_PASSWORD=mypass --publish 5432:5432 --detach postgis/postgis
+<pre><code class="language-bash">docker run \
+  --name some-postgis \
+  --env POSTGRES_PASSWORD=mypass \
+  --publish 5432:5432 \
+  --detach \
+  postgis/postgis
 </code></pre>
 <h3 id="import-points-into-postgis"><a class="header" href="#import-points-into-postgis">Import Points into PostGIS</a></h3>
 <p>Then you need to add geometries to the PostGIS database.
 This is possible via multiple ways, such as <a href="https://osm2pgsql.org/"><code>osm2pgsql</code> for adding specific, updatable OSM data</a> or in the programming language of your choice via postgres’ various database connectors.</p>
-<pre><code class="language-bash">docker exec some-postgis psql --dbname postgres --username postgres --command "CREATE TABLE where_yachts_can_be_looked_at (title TEXT NOT NULL, subtitle TEXT NOT NULL, location GEOMETRY(Point, 4326) NOT NULL);"
-docker exec some-postgis psql --dbname postgres --username postgres --command "INSERT INTO where_yachts_can_be_looked_at (title, subtitle, location) VALUES ('Port Hercules', 'Great view of superyachts docked in the iconic harbor.', ST_SetSRID(ST_MakePoint(7.424789, 43.735217), 4326));"
+<pre><code class="language-bash">docker exec some-postgis psql --dbname postgres --username postgres --command \
+  "CREATE TABLE where_yachts_can_be_looked_at ("\
+  "  title TEXT NOT NULL, "\
+  "  subtitle TEXT NOT NULL, "\
+  "  location GEOMETRY(Point, 4326) NOT NULL);"
+
+docker exec some-postgis psql --dbname postgres --username postgres --command \
+  "INSERT INTO where_yachts_can_be_looked_at (title, subtitle, location) VALUES ( "\
+  "  'Port Hercules', "\
+  "  'Great view of superyachts docked in the iconic harbor.', "\
+  "  ST_SetSRID(ST_MakePoint(7.424789, 43.735217), 4326));"
 </code></pre>
 <h2 id="serving-tiles-with-martin"><a class="header" href="#serving-tiles-with-martin">Serving tiles with Martin</a></h2>
 <p>Now we will serve the content of <a href="sources-files.html">mbtiles</a> and the <a href="pg-connections.html">postgis database</a>.</p>
@@ -4819,8 +4868,10 @@ martin
 </ul>
 <h2 id="troubleshooting-1"><a class="header" href="#troubleshooting-1">Troubleshooting</a></h2>
 <p>You can get more context via the following commands:</p>
-<pre><code class="language-bash"># Verbose psql
-PGSSLMODE=verify-full PGSSLROOTCERT=./ca-cert.pem psql -h localhost -U postgres -d postgres -v
+<pre><code class="language-bash">export PGSSLMODE=verify-full
+export PGSSLROOTCERT=./ca-cert.pem
+# Verbose psql
+psql -h localhost -U postgres -d postgres -v
 
 # Debug Martin
 RUST_LOG=debug martin postgresql://...
@@ -4960,14 +5011,20 @@ This allows the MBTiles file to be <a href="mbtiles-validation.html#aggregate-co
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p><code>--concurrency &lt;CONCURRENCY&gt;</code> and <code>--pool-size &lt;POOL_SIZE&gt;</code> can be used to control the number of concurrent requests and the pool size for postgres sources respectively.</p>
+<p>Next to regular sorces, <code>--source &lt;SOURCE&gt;</code> does support <a href="sources-composite.html">composite sources</a>.
+This means <code>martin-cp</code> can be used to merge two different sources into one <code>mbtiles</code> archive.</p>
+</div>
+<p>If performance is a concern, you should also consider</p>
+<blockquote>
+<p>[!TIP]
+<code>--concurrency &lt;CONCURRENCY&gt;</code> and <code>--pool-size &lt;POOL_SIZE&gt;</code> can be used to control the number of concurrent requests and the pool size for postgres sources respectively.</p>
 <p>The optimal setting depends on:</p>
 <ul>
 <li>the source(s) performance characteristics</li>
 <li>how much load is allowed, for example in a multi-tenant environment</li>
 <li>how to compress tiles stored in the output file</li>
 </ul>
-</div>
+</blockquote>
 <p>You should also consider</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
@@ -5607,7 +5664,8 @@ new <code>agg_tiles_hash</code> will be generated for the diff file itself. This
 file to the original file, as the <code>agg_tiles_hash</code> value will be different after the diff is applied. The <code>apply-patch</code>
 command will automatically rename the <code>agg_tiles_hash_after_apply</code> value back to <code>agg_tiles_hash</code> when applying the
 diff.</p>
-<pre><code class="language-bash"># This command will compare `file1.mbtiles` and `file2.mbtiles`, and generate a new diff file `diff.mbtiles`.
+<pre><code class="language-bash"># This command will compare `file1.mbtiles` and `file2.mbtiles`,
+# and generate a new diff file `diff.mbtiles`.
 mbtiles diff file1.mbtiles file2.mbtiles diff.mbtiles
 
 # If diff.mbtiles is applied to file1.mbtiles, it will produce file2.mbtiles
@@ -5640,10 +5698,15 @@ passed as a query parameter to the sqlite3 command line tool, and then used in t
 not update the <code>agg_tiles_hash</code> metadata value, so it will be incorrect after the diff is applied.</p>
 <pre><code class="language-bash">sqlite3 src_file.mbtiles \
   -bail \
-  -cmd ".parameter set @diffDbFilename diff_file.mbtiles" \
-  "ATTACH DATABASE @diffDbFilename AS diffDb;" \
-  "DELETE FROM tiles WHERE (zoom_level, tile_column, tile_row) IN (SELECT zoom_level, tile_column, tile_row FROM diffDb.tiles WHERE tile_data ISNULL);" \
-  "INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) SELECT * FROM diffDb.tiles WHERE tile_data NOTNULL;"
+  -cmd ".parameter set @diffDbFilename diff_file.mbtiles "\
+  "ATTACH DATABASE @diffDbFilename AS diffDb; "\
+  "DELETE FROM tiles "\
+  "  WHERE (zoom_level, tile_column, tile_row) IN ( "\
+  "    SELECT zoom_level, tile_column, tile_row "\
+  "    FROM diffDb.tiles "\
+  "    WHERE tile_data ISNULL); "\
+  "INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) "\
+  "  SELECT * FROM diffDb.tiles WHERE tile_data NOTNULL;"
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
