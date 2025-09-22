@@ -1,5 +1,5 @@
 mod errors;
-pub use errors::{PgError, PgResult};
+pub use errors::{PostgresError, PgResult};
 
 mod tls;
 

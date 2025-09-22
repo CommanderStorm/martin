@@ -6,7 +6,7 @@ use futures::pin_mut;
 use log::warn;
 use martin_core::config::{OptBoolObj, OptOneMany};
 use martin_core::tiles::BoxedSource;
-use martin_core::tiles::postgres::{PgError, PgResult};
+use martin_core::tiles::postgres::{PostgresError, PgResult};
 use serde::{Deserialize, Serialize};
 use tilejson::TileJSON;
 use tokio::time::timeout;
@@ -176,12 +176,12 @@ impl PgConfig {
         if let Some(pool_size) = self.pool_size
             && pool_size < 1
         {
-            return Err(PgError::ConfigError(
+            return Err(PostgresError::ConfigError(
                 "pool_size must be greater than or equal to 1.",
             ));
         }
         if self.connection_string.is_none() {
-            return Err(PgError::ConfigError(
+            return Err(PostgresError::ConfigError(
                 "A connection string must be provided.",
             ));
         }

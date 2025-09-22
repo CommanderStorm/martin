@@ -7,7 +7,7 @@ use log::{info, warn};
 use postgres::config::SslMode;
 use semver::Version;
 
-use crate::tiles::postgres::PgError::{
+use crate::tiles::postgres::PostgresError::{
     BadPostgisVersion, BadPostgresVersion, PostgisTooOld, PostgresError, PostgresPoolBuildError,
     PostgresPoolConnError, PostgresqlTooOld,
 };

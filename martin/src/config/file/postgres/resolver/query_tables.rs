@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use futures::pin_mut;
 use log::{debug, warn};
-use martin_core::tiles::postgres::PgError::PostgresError;
+use martin_core::tiles::postgres::PostgresError::PostgresError;
 use martin_core::tiles::postgres::{PgPool, PgResult, PgSqlInfo};
 use martin_tile_utils::EARTH_CIRCUMFERENCE_DEGREES;
 use postgis::ewkb;

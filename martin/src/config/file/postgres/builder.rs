@@ -7,7 +7,7 @@ use log::{debug, error, info, warn};
 use martin_core::config::OptBoolObj::{Bool, NoValue, Object};
 use martin_core::config::OptOneMany::NoVals;
 use martin_core::tiles::BoxedSource;
-use martin_core::tiles::postgres::{PgError, PgPool, PgResult, PgSource, PgSqlInfo};
+use martin_core::tiles::postgres::{PostgresError, PgPool, PgResult, PgSource, PgSqlInfo};
 
 use crate::config::args::BoundsCalcType;
 use crate::config::file::postgres::resolver::{
@@ -137,7 +137,7 @@ impl PgBuilder {
         for (id, cfg_inf) in &self.tables {
             // TODO: move this validation to serde somehow?
             if cfg_inf.extent == Some(0) {
-                return Err(PgError::InvalidTableExtent(
+                return Err(PostgresError::InvalidTableExtent(
                     id.to_string(),
                     cfg_inf.format_id(),
                 ));
