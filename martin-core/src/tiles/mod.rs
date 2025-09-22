@@ -32,7 +32,7 @@ mod source;
 pub use source::{BoxedSource, Source, UrlQuery};
 
 mod error;
-pub use error::{TileSourceResult, TileSourceError};
+pub use error::{TileSourceError, TileSourceResult};
 
 mod tile;
 pub use tile::Tile;

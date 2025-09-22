@@ -6,10 +6,12 @@ use martin_tile_utils::Format::Mvt;
 use martin_tile_utils::{TileCoord, TileData, TileInfo};
 use tilejson::TileJSON;
 
-use crate::tiles::postgres::PostgresError::{GetTileError, GetTileWithQueryError, PrepareQueryError};
 use crate::tiles::postgres::PgPool;
+use crate::tiles::postgres::PostgresError::{
+    GetTileError, GetTileWithQueryError, PrepareQueryError,
+};
 use crate::tiles::postgres::utils::query_to_json;
-use crate::tiles::{BoxedSource, TileSourceError, Source, UrlQuery};
+use crate::tiles::{BoxedSource, Source, TileSourceError, UrlQuery};
 
 #[derive(Clone, Debug)]
 /// `PostgreSQL` tile source that executes SQL queries to generate tiles.

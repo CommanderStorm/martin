@@ -7,7 +7,7 @@ use log::{debug, error, info, warn};
 use martin_core::config::OptBoolObj::{Bool, NoValue, Object};
 use martin_core::config::OptOneMany::NoVals;
 use martin_core::tiles::BoxedSource;
-use martin_core::tiles::postgres::{PostgresError, PgPool, PgResult, PgSource, PgSqlInfo};
+use martin_core::tiles::postgres::{PgPool, PgResult, PgSource, PgSqlInfo, PostgresError};
 
 use crate::config::args::BoundsCalcType;
 use crate::config::file::postgres::resolver::{

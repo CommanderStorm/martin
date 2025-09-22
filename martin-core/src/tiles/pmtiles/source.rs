@@ -24,7 +24,7 @@ use url::Url;
 use crate::cache::{CacheKey, CacheValue, OptMainCache};
 use crate::get_cached_value;
 use crate::tiles::pmtiles::PmtilesError::{self, InvalidMetadata, InvalidUrlMetadata};
-use crate::tiles::{BoxedSource, TileSourceError, Source, UrlQuery};
+use crate::tiles::{BoxedSource, Source, TileSourceError, UrlQuery};
 
 /// [`pmtiles::Directory`] cache for `PMTiles` files.
 #[derive(Clone, Debug)]
