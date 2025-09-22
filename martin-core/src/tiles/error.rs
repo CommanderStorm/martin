@@ -1,9 +1,9 @@
 /// Temporary error type for integration purposes.
-pub type BoxedMartinCoreError = Box<dyn std::error::Error>;
+pub type BoxedTileSourceError = Box<dyn std::error::Error>;
 
 /// Errors that can occur during mbtiles processing operations.
 #[derive(thiserror::Error, Debug)]
-pub enum MartinCoreError {
+pub enum TileSourceError {
     /// Errors that can occur during mbtiles processing operations.
     #[cfg(feature = "mbtiles")]
     #[error(transparent)]
@@ -15,4 +15,4 @@ pub enum MartinCoreError {
 }
 
 /// A convenience [`Result`] for tiles coming from `martin-core`.
-pub type MartinCoreResult<T> = Result<T, BoxedMartinCoreError>;
+pub type TileSourceResult<T> = Result<T, BoxedTileSourceError>;

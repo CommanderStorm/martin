@@ -14,7 +14,7 @@ use tilejson::{TileJSON, tilejson};
 use crate::tiles::cog::CogError;
 use crate::tiles::cog::image::Image;
 use crate::tiles::cog::model::ModelInfo;
-use crate::tiles::{MartinCoreResult, Source, UrlQuery};
+use crate::tiles::{TileSourceError, Source, UrlQuery};
 
 /// Tile source that reads from `Cloud Optimized GeoTIFF` files.
 #[derive(Clone, Debug)]
@@ -159,7 +159,7 @@ impl Source for CogSource {
         &self,
         xyz: TileCoord,
         _url_query: Option<&UrlQuery>,
-    ) -> MartinCoreResult<TileData> {
+    ) -> TileSourceResult<TileData> {
         if xyz.z < self.min_zoom || xyz.z > self.max_zoom {
             return Ok(Vec::new());
         }

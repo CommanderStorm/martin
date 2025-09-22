@@ -8,7 +8,7 @@ use pprof::criterion::{Output, PProfProfiler};
 mod sources {
     use async_trait::async_trait;
     use martin_core::tiles::catalog::CatalogSourceEntry;
-    use martin_core::tiles::{MartinCoreResult, Source, UrlQuery};
+    use martin_core::tiles::{TileSourceError, Source, UrlQuery};
     use martin_tile_utils::{Encoding, Format, TileCoord, TileData, TileInfo};
     use tilejson::{TileJSON, tilejson};
 
@@ -51,7 +51,7 @@ mod sources {
             &self,
             _xyz: TileCoord,
             _url_query: Option<&UrlQuery>,
-        ) -> MartinCoreResult<TileData> {
+        ) -> TileSourceResult<TileData> {
             Ok(b"empty".to_vec())
         }
 
@@ -99,7 +99,7 @@ mod sources {
             &self,
             _xyz: TileCoord,
             _url_query: Option<&UrlQuery>,
-        ) -> MartinCoreResult<TileData> {
+        ) -> TileSourceResult<TileData> {
             Err(Box::new(std::io::Error::other("some error".to_string())))
         }
 

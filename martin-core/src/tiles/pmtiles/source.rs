@@ -24,7 +24,7 @@ use url::Url;
 use crate::cache::{CacheKey, CacheValue, OptMainCache};
 use crate::get_cached_value;
 use crate::tiles::pmtiles::PmtilesError::{self, InvalidMetadata, InvalidUrlMetadata};
-use crate::tiles::{BoxedSource, MartinCoreResult, Source, UrlQuery};
+use crate::tiles::{BoxedSource, TileSourceError, Source, UrlQuery};
 
 /// [`pmtiles::Directory`] cache for `PMTiles` files.
 #[derive(Clone, Debug)]
@@ -185,7 +185,7 @@ macro_rules! impl_pmtiles_source {
                 &self,
                 xyz: TileCoord,
                 _url_query: Option<&UrlQuery>,
-            ) -> MartinCoreResult<TileData> {
+            ) -> TileSourceResult<TileData> {
                 // TODO: optimize to return Bytes
                 if let Some(t) = self
                     .pmtiles

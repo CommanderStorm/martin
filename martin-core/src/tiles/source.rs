@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use martin_tile_utils::{TileCoord, TileData, TileInfo};
 use tilejson::TileJSON;
 
-use crate::tiles::MartinCoreResult;
+use crate::tiles::TileSourceError;
 use crate::tiles::catalog::CatalogSourceEntry;
 
 /// URL query parameters for dynamic tile generation.
@@ -47,7 +47,7 @@ pub trait Source: Send + Debug {
         &self,
         xyz: TileCoord,
         url_query: Option<&UrlQuery>,
-    ) -> MartinCoreResult<TileData>;
+    ) -> TileSourceResult<TileData>;
 
     /// Validates zoom level against `TileJSON` min/max zoom constraints.
     fn is_valid_zoom(&self, zoom: u8) -> bool {

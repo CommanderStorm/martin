@@ -12,7 +12,7 @@ use mbtiles::MbtilesPool;
 use tilejson::TileJSON;
 
 use crate::tiles::mbtiles::MbtilesError;
-use crate::tiles::{BoxedSource, MartinCoreResult, Source, UrlQuery};
+use crate::tiles::{BoxedSource, TileSourceError, Source, UrlQuery};
 
 /// Tile source that reads from `MBTiles` files.
 #[derive(Clone)]
@@ -83,7 +83,7 @@ impl Source for MbtSource {
         &self,
         xyz: TileCoord,
         _url_query: Option<&UrlQuery>,
-    ) -> MartinCoreResult<TileData> {
+    ) -> TileSourceResult<TileData> {
         if let Some(tile) = self
             .mbtiles
             .get_tile(xyz.z, xyz.x, xyz.y)

@@ -9,7 +9,7 @@ use tilejson::TileJSON;
 use crate::tiles::postgres::PostgresError::{GetTileError, GetTileWithQueryError, PrepareQueryError};
 use crate::tiles::postgres::PgPool;
 use crate::tiles::postgres::utils::query_to_json;
-use crate::tiles::{BoxedSource, MartinCoreResult, Source, UrlQuery};
+use crate::tiles::{BoxedSource, TileSourceError, Source, UrlQuery};
 
 #[derive(Clone, Debug)]
 /// `PostgreSQL` tile source that executes SQL queries to generate tiles.
@@ -64,7 +64,7 @@ impl Source for PgSource {
         &self,
         xyz: TileCoord,
         url_query: Option<&UrlQuery>,
-    ) -> MartinCoreResult<TileData> {
+    ) -> TileSourceResult<TileData> {
         let conn = self.pool.get().await?;
         let param_types: &[Type] = if self.support_url_query() {
             &[Type::INT2, Type::INT8, Type::INT8, Type::JSON]

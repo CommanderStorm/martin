@@ -54,21 +54,14 @@ pub enum MartinError {
     #[error("Unrecognizable connection strings: {0:?}")]
     UnrecognizableConnections(Vec<String>),
 
-    #[cfg(feature = "postgres")]
+    #[cfg(any(
+        feature = "postgres",
+        feature = "pmtiles",
+        feature = "mbtiles",
+        feature = "cog"
+    ))]
     #[error(transparent)]
-    PostgresError(#[from] martin_core::tiles::postgres::PgError),
-
-    #[cfg(feature = "pmtiles")]
-    #[error(transparent)]
-    PmtilesError(#[from] martin_core::tiles::pmtiles::PmtilesError),
-
-    #[cfg(feature = "mbtiles")]
-    #[error(transparent)]
-    MbtilesError(#[from] martin_core::tiles::mbtiles::MbtilesError),
-
-    #[cfg(feature = "cog")]
-    #[error(transparent)]
-    CogError(#[from] martin_core::tiles::cog::CogError),
+    TileSourceError(#[from] martin_core::tiles::TileSourceError),
 
     #[error(transparent)]
     ConfigFileError(#[from] crate::config::file::ConfigFileError),
