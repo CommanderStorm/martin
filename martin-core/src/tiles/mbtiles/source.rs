@@ -12,7 +12,7 @@ use mbtiles::MbtilesPool;
 use tilejson::TileJSON;
 
 use crate::tiles::mbtiles::MbtilesError;
-use crate::tiles::{BoxedSource, Source, TileSourceError, UrlQuery};
+use crate::tiles::{BoxedSource, Source, TileSourceResult, UrlQuery};
 
 /// Tile source that reads from `MBTiles` files.
 #[derive(Clone)]

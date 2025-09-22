@@ -9,7 +9,8 @@ use url::Url;
 
 use crate::MartinResult;
 use crate::config::file::{
-    ConfigExtras, ConfigFileResult, SourceConfigExtras, UnrecognizedKeys, UnrecognizedValues,
+    ConfigExtras, ConfigFileError, ConfigFileResult, SourceConfigExtras, UnrecognizedKeys,
+    UnrecognizedValues,
 };
 
 #[serde_with::skip_serializing_none]
@@ -71,13 +72,16 @@ impl SourceConfigExtras for PmtConfig {
         true
     }
 
-    async fn new_sources(&self, id: String, path: PathBuf) -> MartinResult<BoxedSource> {
-        Ok(Box::new(
-            PmtFileSource::new(PmtCache::from(self.cache.clone()), id, path).await?,
-        ))
+    async fn new_sources(&self, id: String, path: PathBuf) -> ConfigFileResult<BoxedSource> {
+        let cache = PmtCache::from(self.cache.clone());
+        let source = PmtFileSource::new(cache, id.clone(), path.clone())
+            .await
+            .map_err(|e| ConfigFileError::PmtilesIntialisationFailedPath(e, id, path))?;
+        Ok(Box::new(source))
     }
 
-    async fn new_sources_url(&self, id: String, url: Url) -> MartinResult<BoxedSource> {
+    async fn new_sources_url(&self, id: String, url: Url) -> ConfigFileResult<BoxedSource> {
+        let cache = PmtCache::from(self.cache.clone());
         match url.scheme() {
             "s3" => {
                 let force_path_style = self.force_path_style.unwrap_or_else(|| {
@@ -89,20 +93,23 @@ impl SourceConfigExtras for PmtConfig {
                         get_env_as_bool("AWS_NO_CREDENTIALS").unwrap_or_default()
                     })
                 });
-                Ok(Box::new(
-                    PmtS3Source::new(
-                        PmtCache::from(self.cache.clone()),
-                        id,
-                        url,
-                        skip_credentials,
-                        force_path_style,
-                    )
-                    .await?,
-                ))
+                let source = PmtS3Source::new(
+                    cache,
+                    id.clone(),
+                    url.clone(),
+                    skip_credentials,
+                    force_path_style,
+                )
+                .await
+                .map_err(|e| ConfigFileError::PmtilesIntialisationFailedUrl(e, id, url))?;
+                Ok(Box::new(source))
             }
-            _ => Ok(Box::new(
-                PmtHttpSource::new(PmtCache::from(self.cache.clone()), id, url).await?,
-            )),
+            _ => {
+                let source = PmtHttpSource::new(cache, id.clone(), url.clone())
+                    .await
+                    .map_err(|e| ConfigFileError::PmtilesIntialisationFailedUrl(e, id, url))?;
+                Ok(Box::new(source))
+            }
         }
     }
 }

@@ -7,7 +7,10 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::MartinResult;
-use crate::config::file::{ConfigExtras, SourceConfigExtras, UnrecognizedKeys, UnrecognizedValues};
+use crate::config::file::{
+    ConfigExtras, ConfigFileError, ConfigFileResult, SourceConfigExtras, UnrecognizedKeys,
+    UnrecognizedValues,
+};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct MbtConfig {
@@ -25,11 +28,15 @@ impl SourceConfigExtras for MbtConfig {
     fn parse_urls() -> bool {
         false
     }
-    async fn new_sources(&self, id: String, path: PathBuf) -> MartinResult<BoxedSource> {
-        Ok(Box::new(MbtSource::new(id, path).await?))
+    async fn new_sources(&self, id: String, path: PathBuf) -> ConfigFileResult<BoxedSource> {
+        Ok(Box::new(
+            MbtSource::new(id.clone(), path.clone())
+                .await
+                .map_err(|e| ConfigFileError::MbtilesIntialisationFailed(e, id, path))?,
+        ))
     }
 
-    async fn new_sources_url(&self, _id: String, _url: Url) -> MartinResult<BoxedSource> {
+    async fn new_sources_url(&self, _id: String, _url: Url) -> ConfigFileResult<BoxedSource> {
         unreachable!()
     }
 }

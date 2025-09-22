@@ -14,7 +14,7 @@ use tilejson::{TileJSON, tilejson};
 use crate::tiles::cog::CogError;
 use crate::tiles::cog::image::Image;
 use crate::tiles::cog::model::ModelInfo;
-use crate::tiles::{Source, TileSourceError, UrlQuery};
+use crate::tiles::{Source, TileSourceResult, UrlQuery};
 
 /// Tile source that reads from `Cloud Optimized GeoTIFF` files.
 #[derive(Clone, Debug)]

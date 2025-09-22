@@ -26,6 +26,23 @@ pub enum ConfigFileError {
     #[error("Source path is not a file: {0}")]
     InvalidFilePath(PathBuf),
 
+    #[error("Base path must be a valid URL path, and must begin with a '/' symbol, but is '{0}'")]
+    BasePathError(String),
+
+    #[error(
+        "No tile sources found. Set sources by giving a database connection string on command line, env variable, or a config file."
+    )]
+    NoSources,
+
+    #[error("Unable to load config file {1}: {0}")]
+    ConfigLoadError(std::io::Error, PathBuf),
+
+    #[error("Unable to parse config file {1}: {0}")]
+    ConfigParseError(subst::yaml::Error, PathBuf),
+
+    #[error("Unable to write config file {1}: {0}")]
+    ConfigWriteError(std::io::Error, PathBuf),
+
     #[error("Error {0} while parsing URL {1}")]
     InvalidSourceUrl(url::ParseError, String),
 
@@ -38,6 +55,49 @@ pub enum ConfigFileError {
     #[cfg(feature = "styles")]
     #[error("Walk directory error {0}: {1}")]
     DirectoryWalking(walkdir::Error, PathBuf),
+
+    #[cfg(feature = "cog")]
+    #[error("Cog initialization of source {1} ({2}) failed {0}")]
+    CogIntialisationFailed(#[source] martin_core::tiles::cog::CogError, String, PathBuf),
+
+    #[cfg(feature = "postgres")]
+    #[error("Could not resolve postgres sources {0}")]
+    PostgresResolutionFailed(#[source] martin_core::tiles::postgres::PostgresError),
+
+    #[cfg(feature = "postgres")]
+    #[error("The postgres pool_size must be greater than or equal to 1")]
+    PostgresPoolSizeInvalid,
+
+    #[cfg(feature = "postgres")]
+    #[error("A postgres connection string must be provided")]
+    PostgresConnectionStringMissing,
+
+    #[cfg(feature = "postgres")]
+    #[error("Failed to create postgres pool: {0}")]
+    PostgresPoolCreationFailed(#[source] martin_core::tiles::postgres::PostgresError),
+
+    #[cfg(feature = "mbtiles")]
+    #[error("Mbtiles initialization of source {1} ({2}) failed {0}")]
+    MbtilesIntialisationFailed(
+        #[source] martin_core::tiles::mbtiles::MbtilesError,
+        String,
+        PathBuf,
+    ),
+
+    #[cfg(feature = "pmtiles")]
+    #[error("PMTiles initialization of source {1} (from file {2}) failed {0}")]
+    PmtilesIntialisationFailedPath(
+        #[source] martin_core::tiles::pmtiles::PmtilesError,
+        String,
+        PathBuf,
+    ),
+    #[cfg(feature = "pmtiles")]
+    #[error("PMTiles initialization of source {1} (from file {2}) failed {0}")]
+    PmtilesIntialisationFailedUrl(
+        #[source] martin_core::tiles::pmtiles::PmtilesError,
+        String,
+        url::Url,
+    ),
 }
 
 pub trait ConfigExtras: Clone + Debug + Default + PartialEq + Send {
@@ -60,20 +120,12 @@ pub trait SourceConfigExtras: ConfigExtras {
     /// Asynchronously creates a new `BoxedSource` from a **local** file `path` using the given `id`.
     ///
     /// This function is called for each discovered file path that is not a URL.
-    fn new_sources(
-        &self,
-        id: String,
-        path: PathBuf,
-    ) -> impl Future<Output = MartinResult<BoxedSource>> + Send;
+    async fn new_sources(&self, id: String, path: PathBuf) -> ConfigFileResult<BoxedSource>;
 
     /// Asynchronously creates a new `BoxedSource` from a **remote** `url` using the given `id`.
     ///
     /// This function is called for each discovered source path that is a valid URL.
-    fn new_sources_url(
-        &self,
-        id: String,
-        url: Url,
-    ) -> impl Future<Output = MartinResult<BoxedSource>> + Send;
+    async fn new_sources_url(&self, id: String, url: Url) -> ConfigFileResult<BoxedSource>;
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -229,7 +281,7 @@ pub async fn resolve_files<T: SourceConfigExtras>(
     idr: &IdResolver,
     cache: OptMainCache,
     extension: &[&str],
-) -> MartinResult<Vec<BoxedSource>> {
+) -> ConfigFileResult<Vec<BoxedSource>> {
     resolve_int(config, idr, cache, extension).await
 }
 
@@ -238,7 +290,7 @@ async fn resolve_int<T: SourceConfigExtras>(
     idr: &IdResolver,
     cache: OptMainCache,
     extension: &[&str],
-) -> MartinResult<Vec<BoxedSource>> {
+) -> ConfigFileResult<Vec<BoxedSource>> {
     let Some(cfg) = config.extract_file_config(cache)? else {
         return Ok(Vec::new());
     };
@@ -261,10 +313,7 @@ async fn resolve_int<T: SourceConfigExtras>(
                 let can = source.abs_path()?;
                 if !can.is_file() {
                     // todo: maybe warn instead?
-                    return Err(MartinError::ConfigFileError(InvalidSourceFilePath(
-                        id.to_string(),
-                        can,
-                    )));
+                    return Err(ConfigFileError::InvalidSourceFilePath(id.to_string(), can));
                 }
 
                 let dup = !files.insert(can.clone());
@@ -307,9 +356,9 @@ async fn resolve_int<T: SourceConfigExtras>(
             } else if path.is_file() {
                 vec![path]
             } else {
-                return Err(MartinError::from(InvalidFilePath(
+                return Err(ConfigFileError::InvalidFilePath(
                     path.canonicalize().unwrap_or(path),
-                )));
+                ));
             };
             for path in dir_files {
                 let can = path.canonicalize().map_err(|e| IoError(e, path.clone()))?;

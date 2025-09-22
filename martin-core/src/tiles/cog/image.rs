@@ -5,7 +5,7 @@ use std::path::Path;
 use martin_tile_utils::{TileCoord, TileData};
 use tiff::decoder::{Decoder, DecodingResult};
 
-use crate::tiles::TileSourceError;
+use crate::tiles::TileSourceResult;
 use crate::tiles::cog::CogError;
 
 /// Image represents a single image in a COG file. A tiff file may contain many images.

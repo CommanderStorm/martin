@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 use actix_web::http::Uri;
 
 use crate::MartinError::BasePathError;
+use crate::config::file::ConfigFileResult;
 use crate::{MartinError, MartinResult};
 
 pub fn init_aws_lc_tls() -> MartinResult<()> {
@@ -17,7 +18,7 @@ pub fn init_aws_lc_tls() -> MartinResult<()> {
         .map_err(|e| MartinError::InternalError(e.into()))
 }
 
-pub fn parse_base_path(path: &str) -> MartinResult<String> {
+pub fn parse_base_path(path: &str) -> ConfigFileResult<String> {
     if !path.starts_with('/') {
         return Err(BasePathError(path.to_string()));
     }

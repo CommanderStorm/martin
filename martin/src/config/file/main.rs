@@ -12,7 +12,8 @@ use martin_core::tiles::BoxedSource;
 use serde::{Deserialize, Serialize};
 use subst::VariableMap;
 
-use crate::MartinError::{ConfigLoadError, ConfigParseError, ConfigWriteError, NoSources};
+use crate::config::file::ConfigFileError;
+
 #[cfg(any(
     feature = "cog",
     feature = "mbtiles",
@@ -22,7 +23,8 @@ use crate::MartinError::{ConfigLoadError, ConfigParseError, ConfigWriteError, No
 ))]
 use crate::config::file::FileConfigEnum;
 use crate::config::file::{
-    ConfigExtras, UnrecognizedKeys, UnrecognizedValues, copy_unrecognized_keys_from_config,
+    ConfigExtras, ConfigFileResult, UnrecognizedKeys, UnrecognizedValues,
+    copy_unrecognized_keys_from_config,
 };
 use crate::source::TileSources;
 use crate::srv::RESERVED_KEYWORDS;
@@ -82,7 +84,7 @@ pub struct Config {
 
 impl Config {
     /// Apply defaults to the config, and validate if there is a connection string
-    pub fn finalize(&mut self) -> MartinResult<UnrecognizedKeys> {
+    pub fn finalize(&mut self) -> ConfigFileResult<UnrecognizedKeys> {
         let mut res = self.srv.get_unrecognized_keys();
         copy_unrecognized_keys_from_config(&mut res, "", &self.unrecognized);
 
@@ -147,7 +149,11 @@ impl Config {
         #[cfg(feature = "fonts")]
         let is_empty = is_empty && self.fonts.is_empty();
 
-        if is_empty { Err(NoSources) } else { Ok(res) }
+        if is_empty {
+            Err(ConfigFileError::NoSources)
+        } else {
+            Ok(res)
+        }
     }
 
     pub async fn resolve(&mut self) -> MartinResult<ServerState> {
@@ -193,7 +199,7 @@ impl Config {
         #[allow(unused_variables)] cache: OptMainCache,
     ) -> MartinResult<TileSources> {
         #[allow(unused_mut)]
-        let mut sources: Vec<BoxFuture<MartinResult<Vec<BoxedSource>>>> = Vec::new();
+        let mut sources: Vec<BoxFuture<ConfigFileResult<Vec<BoxedSource>>>> = Vec::new();
 
         #[cfg(feature = "postgres")]
         for s in self.postgres.iter_mut() {
@@ -224,7 +230,7 @@ impl Config {
         Ok(TileSources::new(try_join_all(sources).await?))
     }
 
-    pub fn save_to_file(&self, file_name: PathBuf) -> MartinResult<()> {
+    pub fn save_to_file(&self, file_name: PathBuf) -> ConfigFileResult<()> {
         let yaml = serde_yaml::to_string(&self).expect("Unable to serialize config");
         if file_name.as_os_str() == OsStr::new("-") {
             info!("Current system configuration:");
@@ -238,30 +244,32 @@ impl Config {
             match File::create(&file_name) {
                 Ok(mut file) => file
                     .write_all(yaml.as_bytes())
-                    .map_err(|e| ConfigWriteError(e, file_name)),
-                Err(e) => Err(ConfigWriteError(e, file_name)),
+                    .map_err(|e| ConfigFileError::ConfigWriteError(e, file_name)),
+                Err(e) => Err(ConfigFileError::ConfigWriteError(e, file_name)),
             }
         }
     }
 }
 
 /// Read config from a file
-pub fn read_config<'a, M>(file_name: &Path, env: &'a M) -> MartinResult<Config>
+pub fn read_config<'a, M>(file_name: &Path, env: &'a M) -> ConfigFileResult<Config>
 where
     M: VariableMap<'a>,
     M::Value: AsRef<str>,
 {
-    let mut file = File::open(file_name).map_err(|e| ConfigLoadError(e, file_name.into()))?;
+    let mut file =
+        File::open(file_name).map_err(|e| ConfigFileError::ConfigLoadError(e, file_name.into()))?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)
-        .map_err(|e| ConfigLoadError(e, file_name.into()))?;
+        .map_err(|e| ConfigFileError::ConfigLoadError(e, file_name.into()))?;
     parse_config(&contents, env, file_name)
 }
 
-pub fn parse_config<'a, M>(contents: &str, env: &'a M, file_name: &Path) -> MartinResult<Config>
+pub fn parse_config<'a, M>(contents: &str, env: &'a M, file_name: &Path) -> ConfigFileResult<Config>
 where
     M: VariableMap<'a>,
     M::Value: AsRef<str>,
 {
-    subst::yaml::from_str(contents, env).map_err(|e| ConfigParseError(e, file_name.into()))
+    subst::yaml::from_str(contents, env)
+        .map_err(|e| ConfigFileError::ConfigParseError(e, file_name.into()))
 }

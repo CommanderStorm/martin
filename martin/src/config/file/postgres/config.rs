@@ -16,7 +16,8 @@ use crate::MartinResult;
 use crate::config::args::{BoundsCalcType, DEFAULT_BOUNDS_TIMEOUT};
 use crate::config::file::postgres::PgBuilder;
 use crate::config::file::{
-    ConfigExtras, UnrecognizedKeys, UnrecognizedValues, copy_unrecognized_keys_from_config,
+    ConfigExtras, ConfigFileError, ConfigFileResult, UnrecognizedKeys, UnrecognizedValues,
+    copy_unrecognized_keys_from_config,
 };
 use crate::utils::IdResolver;
 
@@ -172,24 +173,20 @@ impl ConfigExtras for PgCfgPublishFuncs {
 
 impl PgConfig {
     /// Validate if all settings are valid
-    pub fn validate(&self) -> PgResult<()> {
+    pub fn validate(&self) -> ConfigFileResult<()> {
         if let Some(pool_size) = self.pool_size
             && pool_size < 1
         {
-            return Err(PostgresError::ConfigError(
-                "pool_size must be greater than or equal to 1.",
-            ));
+            return Err(ConfigFileError::PostgresPoolSizeInvalid);
         }
         if self.connection_string.is_none() {
-            return Err(PostgresError::ConfigError(
-                "A connection string must be provided.",
-            ));
+            return Err(ConfigFileError::PostgresConnectionStringMissing);
         }
 
         Ok(())
     }
 
-    pub fn finalize(&mut self, prefix: &str) -> PgResult<UnrecognizedKeys> {
+    pub fn finalize(&mut self, prefix: &str) -> ConfigFileResult<UnrecognizedKeys> {
         let mut res = UnrecognizedKeys::new();
         if let Some(ref ts) = self.tables {
             for (k, v) in ts {
@@ -221,7 +218,7 @@ impl PgConfig {
             .collect())
     }
 
-    pub async fn resolve(&mut self, id_resolver: IdResolver) -> MartinResult<Vec<BoxedSource>> {
+    pub async fn resolve(&mut self, id_resolver: IdResolver) -> ConfigFileResult<Vec<BoxedSource>> {
         let pg = PgBuilder::new(self, id_resolver).await?;
         let inst_tables = on_slow(
             pg.instantiate_tables(),

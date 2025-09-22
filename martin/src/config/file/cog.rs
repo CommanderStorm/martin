@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::MartinResult;
-use crate::config::file::{ConfigExtras, SourceConfigExtras, UnrecognizedKeys, UnrecognizedValues};
+use crate::config::file::{
+    ConfigExtras, ConfigFileError, SourceConfigExtras, UnrecognizedKeys, UnrecognizedValues,
+};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct CogConfig {
@@ -27,7 +29,8 @@ impl SourceConfigExtras for CogConfig {
     }
 
     async fn new_sources(&self, id: String, path: PathBuf) -> MartinResult<BoxedSource> {
-        let cog = CogSource::new(id, path)?;
+        let cog = CogSource::new(id.clone(), path.clone())
+            .map_err(|e| ConfigFileError::CogIntialisationFailed(e, id, path))?;
         Ok(Box::new(cog))
     }
 

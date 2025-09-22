@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use martin_tile_utils::{TileCoord, TileData, TileInfo};
 use tilejson::TileJSON;
 
-use crate::tiles::TileSourceError;
+use crate::tiles::TileSourceResult;
 use crate::tiles::catalog::CatalogSourceEntry;
 
 /// URL query parameters for dynamic tile generation.

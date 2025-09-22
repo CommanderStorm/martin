@@ -34,23 +34,6 @@ pub enum MartinError {
     #[error("Unable to bind to {1}: {0}")]
     BindingError(io::Error, String),
 
-    #[error("Base path must be a valid URL path, and must begin with a '/' symbol, but is '{0}'")]
-    BasePathError(String),
-
-    #[error("Unable to load config file {1}: {0}")]
-    ConfigLoadError(io::Error, PathBuf),
-
-    #[error("Unable to parse config file {1}: {0}")]
-    ConfigParseError(subst::yaml::Error, PathBuf),
-
-    #[error("Unable to write config file {1}: {0}")]
-    ConfigWriteError(io::Error, PathBuf),
-
-    #[error(
-        "No tile sources found. Set sources by giving a database connection string on command line, env variable, or a config file."
-    )]
-    NoSources,
-
     #[error("Unrecognizable connection strings: {0:?}")]
     UnrecognizableConnections(Vec<String>),
 

@@ -11,7 +11,7 @@ use crate::tiles::postgres::PostgresError::{
     GetTileError, GetTileWithQueryError, PrepareQueryError,
 };
 use crate::tiles::postgres::utils::query_to_json;
-use crate::tiles::{BoxedSource, Source, TileSourceError, UrlQuery};
+use crate::tiles::{BoxedSource, Source, TileSourceResult, UrlQuery};
 
 #[derive(Clone, Debug)]
 /// `PostgreSQL` tile source that executes SQL queries to generate tiles.

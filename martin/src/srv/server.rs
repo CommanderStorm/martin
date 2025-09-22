@@ -233,7 +233,7 @@ pub fn new_server(config: SrvConfig, state: ServerState) -> MartinResult<(Server
 #[cfg(test)]
 pub mod tests {
     use async_trait::async_trait;
-    use martin_core::tiles::{BoxedSource, Source, TileSourceError, UrlQuery};
+    use martin_core::tiles::{BoxedSource, Source, TileSourceResult, UrlQuery};
     use martin_tile_utils::{Encoding, Format, TileCoord, TileData, TileInfo};
     use tilejson::TileJSON;
 
