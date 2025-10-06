@@ -187,14 +187,29 @@ impl Config {
             info!("Initializing main cache with maximum size {cache_size}B");
             Some(
                 MainCache::builder()
-                    .weigher(|_key, value: &CacheValue| -> u32 {
-                        match value {
-                            CacheValue::Tile(v) => v.len().try_into().unwrap_or(u32::MAX),
+                    .weigher(|key, value| -> u32 {
+                        let dynamic_size_value = match value {
+                            CacheValue::Tile(v) => v.data.len().try_into().unwrap_or(u32::MAX),
                             #[cfg(feature = "pmtiles")]
                             CacheValue::PmtDirectory(v) => {
                                 v.get_approx_byte_size().try_into().unwrap_or(u32::MAX)
                             }
-                        }
+                        };
+                        let dynamic_size_key = match key {
+                            CacheKey::Tile(source, _coord) => {
+                                source.len().try_into().unwrap_or(u32::MAX)
+                            }
+                            CacheKey::TileWithQuery(source, _coord, query) => {
+                                source.len().try_into().unwrap_or(u32::MAX)
+                                    + query.len().try_into().unwrap_or(u32::MAX)
+                            }
+                            #[cfg(feature = "pmtiles")]
+                            CacheKey::PmtDirectory(_) => 0,
+                        };
+                        dynamic_size_value
+                            + dynamic_size_key
+                            + size_of::<CacheKey>() as u32
+                            + size_of::<CacheValue>() as u32
                     })
                     .max_capacity(cache_size)
                     .build(),
