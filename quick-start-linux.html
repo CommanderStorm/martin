@@ -29,6 +29,7 @@
         <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/tabs.css">
 
 
         <!-- Provide site root and default themes to javascript -->
@@ -253,7 +254,13 @@
 cd martin
 
 # Download some sample data
-curl -L -O https://github.com/maplibre/martin/raw/main/tests/fixtures/mbtiles/world_cities.mbtiles
+curl -L -O https://github.com/maplibre/martin/raw/main/tests/fixtures/mbtiles/world_cities.sql
+
+# Check if sqlite is installed
+sqlite3 --version
+
+# Initialize a database
+sqlite3 world_cities.mbtiles &lt; world_cities.sql
 
 # Download the latest version of Martin binary, extract it, and make it executable
 curl -L -O https://github.com/maplibre/martin/releases/latest/download/martin-x86_64-unknown-linux-gnu.tar.gz
@@ -315,6 +322,7 @@ chmod +x ./martin
         <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
+        <script src="theme/tabs.js"></script>
 
 
 
