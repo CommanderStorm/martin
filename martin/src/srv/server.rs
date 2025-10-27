@@ -8,6 +8,7 @@ use actix_web::middleware::{Logger, NormalizePath, TrailingSlash};
 use actix_web::web::Data;
 use actix_web::{App, HttpResponse, HttpServer, Responder, middleware, route, web};
 use futures::TryFutureExt;
+use futures::future::try_join;
 #[cfg(feature = "lambda")]
 use lambda_web::{is_running_on_lambda, run_actix_on_lambda};
 
@@ -40,10 +41,50 @@ async fn get_health() -> impl Responder {
         .message_body("OK")
 }
 
-pub fn router(cfg: &mut web::ServiceConfig, #[allow(unused_variables)] usr_cfg: &SrvConfig) {
-    cfg.service(get_health)
-        .service(crate::srv::admin::get_catalog);
+/// Macro to create an App with all the necessary data and middleware
+macro_rules! create_app {
+    ($catalog:expr, $config:expr, $state:expr, $cors_config:expr $(, $prometheus:expr)?) => {{
+        let cors_middleware = $cors_config.make_cors_middleware();
 
+        let app = App::new()
+            .app_data($catalog.clone())
+            .app_data($config.clone());
+
+        #[cfg(feature = "_tiles")]
+        let app = app
+            .app_data(Data::new($state.tiles.clone()))
+            .app_data(Data::new($state.tile_cache.clone()));
+
+        #[cfg(feature = "sprites")]
+        let app = app
+            .app_data(Data::new($state.sprites.clone()))
+            .app_data(Data::new($state.sprite_cache.clone()));
+
+        #[cfg(feature = "fonts")]
+        let app = app
+            .app_data(Data::new($state.fonts.clone()))
+            .app_data(Data::new($state.font_cache.clone()));
+
+        #[cfg(feature = "styles")]
+        let app = app.app_data(Data::new($state.styles.clone()));
+
+        let app = app.wrap(middleware::Condition::new(
+            cors_middleware.is_some(),
+            cors_middleware.unwrap_or_default(),
+        ));
+
+        $(
+            #[cfg(feature = "metrics")]
+            let app = app.wrap($prometheus.clone());
+        )?
+
+        app.wrap(Logger::default())
+            .wrap(NormalizePath::new(TrailingSlash::MergeOnly))
+    }};
+}
+
+/// Configure main service routes (tiles, sprites, fonts, styles)
+pub fn main_router(cfg: &mut web::ServiceConfig) {
     #[cfg(feature = "_tiles")]
     cfg.service(crate::srv::tiles::metadata::get_source_info)
         .service(crate::srv::tiles::content::get_tile);
@@ -62,6 +103,12 @@ pub fn router(cfg: &mut web::ServiceConfig, #[allow(unused_variables)] usr_cfg: 
 
     #[cfg(all(feature = "unstable-rendering", target_os = "linux"))]
     cfg.service(crate::srv::styles_rendering::get_style_rendered);
+}
+
+/// Configure admin-only routes (catalog, health, metrics, web UI)
+pub fn admin_router(cfg: &mut web::ServiceConfig, #[allow(unused_variables)] usr_cfg: &SrvConfig) {
+    cfg.service(get_health)
+        .service(crate::srv::admin::get_catalog);
 
     #[cfg(all(feature = "webui", not(docsrs)))]
     {
@@ -79,6 +126,12 @@ pub fn router(cfg: &mut web::ServiceConfig, #[allow(unused_variables)] usr_cfg: 
 
     #[cfg(any(not(feature = "webui"), docsrs))]
     cfg.service(crate::srv::admin::get_index_no_ui);
+}
+
+/// Configure all routes (for single-server mode)
+pub fn router(cfg: &mut web::ServiceConfig, usr_cfg: &SrvConfig) {
+    admin_router(cfg, usr_cfg);
+    main_router(cfg);
 }
 
 type Server = Pin<Box<dyn Future<Output = MartinResult<()>>>>;
@@ -101,7 +154,7 @@ pub fn new_server(config: SrvConfig, state: ServerState) -> MartinResult<(Server
         )
         .build()
         .map_err(|err| MartinError::MetricsIntialisationError(err))?;
-    let catalog = Catalog::new(&state)?;
+    let catalog = Data::new(Catalog::new(&state)?);
 
     let keep_alive = Duration::from_secs(config.keep_alive.unwrap_or(KEEP_ALIVE_DEFAULT));
     let worker_processes = config.worker_processes.unwrap_or_else(num_cpus::get);
@@ -109,63 +162,119 @@ pub fn new_server(config: SrvConfig, state: ServerState) -> MartinResult<(Server
         .listen_addresses
         .clone()
         .unwrap_or_else(|| LISTEN_ADDRESSES_DEFAULT.to_string());
+    let admin_listen_addresses = config
+        .admin_listen_addresses
+        .clone()
+        .unwrap_or_else(|| listen_addresses.clone());
 
     let cors_config = config.cors.clone().unwrap_or_default();
     cors_config.validate()?;
     cors_config.log_current_configuration();
 
-    let factory = move || {
-        let cors_middleware = cors_config.make_cors_middleware();
-
-        let app = App::new()
-            .app_data(Data::new(catalog.clone()))
-            .app_data(Data::new(config.clone()));
-
-        #[cfg(feature = "_tiles")]
-        let app = app
-            .app_data(Data::new(state.tiles.clone()))
-            .app_data(Data::new(state.tile_cache.clone()));
-
-        #[cfg(feature = "sprites")]
-        let app = app
-            .app_data(Data::new(state.sprites.clone()))
-            .app_data(Data::new(state.sprite_cache.clone()));
-
-        #[cfg(feature = "fonts")]
-        let app = app
-            .app_data(Data::new(state.fonts.clone()))
-            .app_data(Data::new(state.font_cache.clone()));
-
-        #[cfg(feature = "styles")]
-        let app = app.app_data(Data::new(state.styles.clone()));
-
-        let app = app.wrap(middleware::Condition::new(
-            cors_middleware.is_some(),
-            cors_middleware.unwrap_or_default(),
-        ));
-
-        #[cfg(feature = "metrics")]
-        let app = app.wrap(prometheus.clone());
-
-        app.wrap(Logger::default())
-            .wrap(NormalizePath::new(TrailingSlash::MergeOnly))
-            .configure(|c| router(c, &config))
-    };
+    let run_separate_servers = admin_listen_addresses != listen_addresses;
 
     #[cfg(feature = "lambda")]
     if is_running_on_lambda() {
+        let factory = move || {
+            create_app!(catalog, config, state, cors_config, #[cfg(feature = "metrics")] prometheus)
+                .configure(|c| router(c, &config))
+        };
+
         let server = run_actix_on_lambda(factory).map_err(MartinError::LambdaError);
         return Ok((Box::pin(server), "(aws lambda)".into()));
     }
 
-    let server = HttpServer::new(factory)
-        .bind(listen_addresses.clone())
-        .map_err(|e| MartinError::BindingError(e, listen_addresses.clone()))?
-        .keep_alive(keep_alive)
-        .shutdown_timeout(0)
-        .workers(worker_processes)
-        .run()
-        .err_into();
+    if run_separate_servers {
+        // Create separate servers for admin and main services
+        let admin_config = config.clone();
+        let main_config = config.clone();
+        let admin_state = state.clone();
+        let main_state = state.clone();
+        let admin_catalog = catalog.clone();
+        let main_catalog = catalog.clone();
+        let admin_cors = cors_config.clone();
+        let main_cors = cors_config.clone();
 
-    Ok((Box::pin(server), listen_addresses))
-}
+        // Admin server factory
+        let admin_factory = move || {
+          create_app!(admin_catalog, admin_config, admin_state, admin_cors, #[cfg(feature = "metrics")] prometheus)
+                .configure(|c| admin_router(c, &admin_config))
+        };
+
+        // Main server factory
+        let main_factory = move || {
+          create_app!(main_catalog, main_config, main_state, main_cors)
+                .configure(main_router)
+        };
+
+        let admin_server = HttpServer::new(admin_factory)
+            .bind(admin_listen_addresses.clone())
+            .map_err(|e| MartinError::BindingError(e, admin_listen_addresses.clone()))?
+            .keep_alive(keep_alive)
+            .shutdown_timeout(0)
+            .workers(worker_processes)
+            .run();
+
+        let main_server = HttpServer::new(main_factory)
+            .bind(listen_addresses.clone())
+            .map_err(|e| MartinError::BindingError(e, listen_addresses.clone()))?
+            .keep_alive(keep_alive)
+            .shutdown_timeout(0)
+            .workers(worker_processes)
+            .run();
+
+        let combined = try_join(admin_server, main_server)
+            .map_ok(|_| ())
+            .err_into();
+
+        Ok((Box::pin(combined), (listen_addresses, admin_listen_addresses)))
+    } else {
+        // Single server mode - run everything together
+        let factory = move || {
+            let cors_middleware = cors_config.make_cors_middleware();
+
+            let app = App::new()
+                .app_data(Data::new(catalog.clone()))
+                .app_data(Data::new(config.clone()));
+
+            #[cfg(feature = "_tiles")]
+            let app = app
+                .app_data(Data::new(state.tiles.clone()))
+                .app_data(Data::new(state.tile_cache.clone()));
+
+            #[cfg(feature = "sprites")]
+            let app = app
+                .app_data(Data::new(state.sprites.clone()))
+                .app_data(Data::new(state.sprite_cache.clone()));
+
+            #[cfg(feature = "fonts")]
+            let app = app
+                .app_data(Data::new(state.fonts.clone()))
+                .app_data(Data::new(state.font_cache.clone()));
+
+            #[cfg(feature = "styles")]
+            let app = app.app_data(Data::new(state.styles.clone()));
+
+            let app = app.wrap(middleware::Condition::new(
+                cors_middleware.is_some(),
+                cors_middleware.unwrap_or_default(),
+            ));
+
+            #[cfg(feature = "metrics")]
+            let app = app.wrap(prometheus.clone());
+
+            app.wrap(Logger::default())
+                .wrap(NormalizePath::new(TrailingSlash::MergeOnly))
+                .configure(|c| router(c, &config))
+        };
+
+        let server = HttpServer::new(factory)
+            .bind(listen_addresses.clone())
+            .map_err(|e| MartinError::BindingError(e, listen_addresses.clone()))?
+            .keep_alive(keep_alive)
+            .shutdown_timeout(0)
+            .workers(worker_processes)
+            .run()
+            .err_into();
+
+        Ok((Box::pin(server), listen_addresses))

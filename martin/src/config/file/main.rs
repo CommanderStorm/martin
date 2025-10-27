@@ -39,6 +39,7 @@ use crate::source::TileSources;
 use crate::srv::RESERVED_KEYWORDS;
 use crate::{MartinError, MartinResult};
 
+#[derive(Clone)]
 pub struct ServerState {
     #[cfg(feature = "_tiles")]
     pub tiles: TileSources,

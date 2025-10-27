@@ -14,6 +14,11 @@ pub struct SrvArgs {
     pub keep_alive: Option<u64>,
     #[arg(help = format!("The socket address to bind. [DEFAULT: {LISTEN_ADDRESSES_DEFAULT}]"), short, long)]
     pub listen_addresses: Option<String>,
+    #[arg(
+        help = "The socket address to bind for admin endpoints (catalog, health, metrics, web UI). If not set, admin endpoints are served on listen_addresses.",
+        long
+    )]
+    pub admin_listen_addresses: Option<String>,
     /// Set TileJSON URL path prefix.
     ///
     /// This overrides the default of respecting the X-Rewrite-URL header.
@@ -84,6 +89,9 @@ impl SrvArgs {
         }
         if self.listen_addresses.is_some() {
             srv_config.listen_addresses = self.listen_addresses;
+        }
+        if self.admin_listen_addresses.is_some() {
+            srv_config.admin_listen_addresses = self.admin_listen_addresses;
         }
         if self.base_path.is_some() {
             srv_config.base_path = self.base_path;
