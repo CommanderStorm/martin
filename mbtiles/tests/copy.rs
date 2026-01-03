@@ -441,7 +441,8 @@ async fn convert(
             path(&frm_mbt),
             path(&mem),
             dst_type_cli => Some(dst_type),
-        }
+        },
+        "Converting format {frm} to {to} (copying both metadata and tiles) should match expected v1 database"
     );
 
     let dmp = copy_dump! {
@@ -490,7 +491,8 @@ async fn convert(
             path(&mem),
             dst_type_cli => Some(dst_type),
             min_zoom => Some(6),
-        }
+        },
+        "Filtering with zoom_levels=[6] should match min_zoom=6"
     );
 
     pretty_assert_eq!(
@@ -501,7 +503,8 @@ async fn convert(
             dst_type_cli => Some(dst_type),
             min_zoom => Some(6),
             max_zoom => Some(6),
-        }
+        },
+        "Filtering with zoom_levels=[6] should match min_zoom=6 and max_zoom=6"
     );
 
     Ok(())
@@ -529,7 +532,10 @@ async fn diff_and_patch(
     eprintln!(
         "TEST: Compare {a_db} with {b_db}, and copy anything that's different (i.e. mathematically: {b_db} - {a_db} = {dif_db})"
     );
-    let (dif_mbt, mut dif_cn) = open!(diff_and_patch, "{a_db}_{short_a_type}--{b_db}_{short_b_type}={dif}__{dif_db}");
+    let (dif_mbt, mut dif_cn) = open!(
+        diff_and_patch,
+        "{a_db}_{short_a_type}--{b_db}_{short_b_type}={dif}__{dif_db}"
+    );
     copy! {
         databases.path(a_db, a_type),
         path(&dif_mbt),
@@ -548,7 +554,10 @@ async fn diff_and_patch(
     eprintln!(
         "TEST: Applying the difference ({b_db} - {a_db} = {dif_db}) to {a_db}, should get {b_db}"
     );
-    let (clone_mbt, mut clone_cn) = open!(diff_and_patch, "{a_db}_{short_a_type}--{b_db}_{short_b_type}={dif}__to__{short_dst_type}__1");
+    let (clone_mbt, mut clone_cn) = open!(
+        diff_and_patch,
+        "{a_db}_{short_a_type}--{b_db}_{short_b_type}={dif}__to__{short_dst_type}__1"
+    );
     copy!(databases.path(a_db, dst_type), path(&clone_mbt));
     apply_patch(path(&clone_mbt), path(&dif_mbt), false).await?;
     let hash = clone_mbt.open_and_validate(Off, Verify).await?;
@@ -577,13 +586,13 @@ async fn diff_and_patch(
     assert_eq!(
         hash,
         databases.hash(b_db, dst_type),
-        "After applying patch to target {b_db}, hash should remain idempotent"
+        "After applying patch to target {b_db}, hash should remain unchanged (idempotent operation)"
     );
     let dmp = dump(&mut clone_cn).await?;
     pretty_assert_eq!(
         &dmp,
         expected_b,
-        "After applying patch to {b_db}, content should remain idempotent"
+        "After applying patch to {b_db}, content should remain unchanged (idempotent operation)"
     );
 
     Ok(())
