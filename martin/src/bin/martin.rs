@@ -1,8 +1,12 @@
+use std::fmt::Write;
+
 use clap::Parser;
-use log::{error, info, log_enabled, warn};
-use martin::args::{Args, OsEnv};
+use log::{error, info, log_enabled};
+use martin::MartinResult;
+use martin::config::args::Args;
+use martin::config::file::{Config, read_config};
 use martin::srv::new_server;
-use martin::{Config, LogFormatOptions, MartinResult, ReloadableTracingConfiguration, read_config};
+use martin_core::config::env::OsEnv;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -42,20 +46,20 @@ async fn start(args: Args) -> MartinResult<()> {
     let sources = config.resolve().await?;
 
     if let Some(file_name) = save_config {
-        config.save_to_file(file_name)?;
+        config.save_to_file(file_name.as_path())?;
     } else {
         info!("Use --save-config to save or print Martin configuration.");
     }
 
-    #[cfg(feature = "webui")]
+    #[cfg(all(feature = "webui", not(docsrs)))]
     let web_ui_mode = config.srv.web_ui.unwrap_or_default();
 
     let (server, listen_addresses) = new_server(config.srv, sources)?;
     info!("Martin has been started on {listen_addresses}.");
     info!("Use http://{listen_addresses}/catalog to get the list of available sources.");
 
-    #[cfg(feature = "webui")]
-    if web_ui_mode == martin::args::WebUiMode::EnableForAll {
+    #[cfg(all(feature = "webui", not(docsrs)))]
+    if web_ui_mode == martin::config::args::WebUiMode::EnableForAll {
         log::warn!("Web UI is enabled for all connections at http://{listen_addresses}/");
     } else {
         info!(

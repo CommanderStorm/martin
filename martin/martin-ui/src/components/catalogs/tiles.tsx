@@ -1,5 +1,4 @@
 import { Database, Eye, ImageIcon, Layers, Palette, Search } from 'lucide-react';
-import { useState } from 'react';
 import { TileInspectDialog } from '@/components/dialogs/tile-inspect';
 import { ErrorState } from '@/components/error/error-state';
 import { CatalogSkeleton } from '@/components/loading/catalog-skeleton';
@@ -7,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { TooltipCopyText } from '@/components/ui/tooltip-copy-text';
 import type { TileSource } from '@/lib/types';
 import { DisabledNonInteractiveButton } from '../ui/disabled-non-interactive-button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
@@ -19,6 +19,8 @@ interface TilesCatalogProps {
   error?: Error | null;
   onRetry?: () => void;
   isRetrying?: boolean;
+  selectedTileForInspection?: string | null;
+  onInspectTile?: (tileName: string | undefined) => void;
 }
 
 export function TilesCatalog({
@@ -29,8 +31,9 @@ export function TilesCatalog({
   error = null,
   onRetry,
   isRetrying = false,
+  selectedTileForInspection = null,
+  onInspectTile = () => {},
 }: TilesCatalogProps) {
-  const [selectedTileForInspection, setSelectedTileForInspection] = useState<string | null>(null);
   if (isLoading) {
     return (
       <CatalogSkeleton
@@ -95,13 +98,13 @@ export function TilesCatalog({
           {filteredTileSources.map(([name, source]) => (
             <Card className="hover:shadow-lg transition-shadow flex flex-col" key={name}>
               <CardHeader>
-                <div className="flex flex-col md:flex-row items-center justify-between gap-2 mb-4">
-                  <div className="flex items-center space-x-2">
-                    {getIcon(source.content_type)}
-                    <CardTitle className="text-lg font-mono">{name}</CardTitle>
-                  </div>
+                <div className="flex items-center space-x-2">
+                  {getIcon(source.content_type)}
                   <Badge variant="secondary">{source.content_type}</Badge>
                 </div>
+                <CardTitle>
+                  <TooltipCopyText text={name} />
+                </CardTitle>
                 <div className="text-center md:text-start break-all text-balance">
                   {(source.description || source.name) && (
                     <CardDescription>
@@ -124,7 +127,7 @@ export function TilesCatalog({
                 <div className="flex flex-col md:flex-row items-center gap-2 mt-auto pt-4">
                   <Button
                     className="flex-1 bg-transparent w-full"
-                    onClick={() => setSelectedTileForInspection(name)}
+                    onClick={() => onInspectTile(name)}
                     size="sm"
                     variant="outline"
                   >
@@ -173,7 +176,7 @@ export function TilesCatalog({
       {selectedTileForInspection && tileSources && (
         <TileInspectDialog
           name={selectedTileForInspection}
-          onCloseAction={() => setSelectedTileForInspection(null)}
+          onCloseAction={() => onInspectTile(undefined)}
           source={tileSources[selectedTileForInspection]}
         />
       )}

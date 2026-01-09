@@ -146,7 +146,11 @@ impl Mbtiles {
     }
 
     /// Detect tile format and verify that it is consistent across some tiles
-    pub async fn detect_format<T>(&self, tilejson: &TileJSON, conn: &mut T) -> MbtResult<TileInfo>
+    pub async fn detect_format<T>(
+        &self,
+        tilejson: &TileJSON,
+        conn: &mut T,
+    ) -> MbtResult<Option<TileInfo>>
     where
         for<'e> &'e mut T: SqliteExecutor<'e>,
     {
@@ -217,13 +221,13 @@ impl Mbtiles {
         if let Some(info) = tile_info {
             if info.format != Format::Mvt && tilejson.vector_layers.is_some() {
                 warn!(
-                    "{} has vector_layers metadata but non-vector tiles",
+                    "{} has vector_layers metadata value, but the tiles are not MVT",
                     self.filename()
                 );
             }
-            Ok(info)
+            Ok(Some(info))
         } else {
-            Err(MbtError::NoTilesFound)
+            Ok(None)
         }
     }
 
@@ -621,42 +625,44 @@ FROM tiles;
 pub(crate) mod tests {
     use super::*;
     use crate::mbtiles::tests::open;
+    use crate::metadata::anonymous_mbtiles;
 
     #[actix_rt::test]
-    async fn detect_type() -> MbtResult<()> {
-        let (mut conn, mbt) = open("../tests/fixtures/mbtiles/world_cities.mbtiles").await?;
-        let res = mbt.detect_type(&mut conn).await?;
+    async fn detect_type() {
+        let script = include_str!("../../tests/fixtures/mbtiles/world_cities.sql");
+        let (mbt, mut conn) = anonymous_mbtiles(script).await;
+        let res = mbt.detect_type(&mut conn).await.unwrap();
         assert_eq!(res, MbtType::Flat);
 
-        let (mut conn, mbt) = open("../tests/fixtures/mbtiles/zoomed_world_cities.mbtiles").await?;
-        let res = mbt.detect_type(&mut conn).await?;
+        let script = include_str!("../../tests/fixtures/mbtiles/zoomed_world_cities.sql");
+        let (mbt, mut conn) = anonymous_mbtiles(script).await;
+        let res = mbt.detect_type(&mut conn).await.unwrap();
         assert_eq!(res, MbtType::FlatWithHash);
 
-        let (mut conn, mbt) = open("../tests/fixtures/mbtiles/geography-class-jpg.mbtiles").await?;
-        let res = mbt.detect_type(&mut conn).await?;
+        let script = include_str!("../../tests/fixtures/mbtiles/geography-class-jpg.sql");
+        let (mbt, mut conn) = anonymous_mbtiles(script).await;
+        let res = mbt.detect_type(&mut conn).await.unwrap();
         assert_eq!(res, MbtType::Normalized { hash_view: false });
 
-        let (mut conn, mbt) = open(":memory:").await?;
+        let (mut conn, mbt) = open(":memory:").await.unwrap();
         let res = mbt.detect_type(&mut conn).await;
         assert!(matches!(res, Err(MbtError::InvalidDataFormat(_))));
-
-        Ok(())
     }
 
     #[actix_rt::test]
-    async fn validate_valid_file() -> MbtResult<()> {
-        let (mut conn, mbt) = open("../tests/fixtures/mbtiles/zoomed_world_cities.mbtiles").await?;
+    async fn validate_valid_file() {
+        let script = include_str!("../../tests/fixtures/mbtiles/zoomed_world_cities.sql");
+        let (mbt, mut conn) = anonymous_mbtiles(script).await;
         mbt.check_integrity(&mut conn, IntegrityCheckType::Quick)
-            .await?;
-        Ok(())
+            .await
+            .unwrap();
     }
 
     #[actix_rt::test]
-    async fn validate_invalid_file() -> MbtResult<()> {
-        let (mut conn, mbt) =
-            open("../tests/fixtures/files/invalid_zoomed_world_cities.mbtiles").await?;
+    async fn validate_invalid_file() {
+        let script = include_str!("../../tests/fixtures/files/invalid_zoomed_world_cities.sql");
+        let (mbt, mut conn) = anonymous_mbtiles(script).await;
         let result = mbt.check_agg_tiles_hashes(&mut conn).await;
         assert!(matches!(result, Err(AggHashMismatch(..))));
-        Ok(())
     }
 }

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { TooltipCopyText } from '@/components/ui/tooltip-copy-text';
 import { buildMartinUrl } from '@/lib/api';
 import type { Style } from '@/lib/types';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -21,6 +22,8 @@ interface StylesCatalogProps {
   onRetry?: () => void;
   isRetrying?: boolean;
   onEditStyle?: (styleName: string) => void;
+  selectedStyleForGuide?: string | undefined;
+  onStyleGuide?: (styleName: string | undefined) => void;
 }
 
 export function StylesCatalog({
@@ -32,16 +35,14 @@ export function StylesCatalog({
   onRetry,
   isRetrying = false,
   onEditStyle,
+  selectedStyleForGuide = undefined,
+  onStyleGuide = () => {},
 }: StylesCatalogProps) {
   const [viewState, setViewState] = useState({
     latitude: 53,
     longitude: 9,
     zoom: 2,
   });
-  const [selectedStyleForGuide, setSelectedStyleForGuide] = useState<{
-    name: string;
-    style: Style;
-  } | null>(null);
   if (isLoading) {
     return (
       <CatalogSkeleton
@@ -99,10 +100,12 @@ export function StylesCatalog({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Brush className="w-5 h-5 text-primary" />
-                  <CardTitle className="text-lg font-mono">{name}</CardTitle>
+                  {style.type && <Badge variant="secondary">{style.type}</Badge>}
                 </div>
-                {style.type && <Badge variant="secondary">{style.type}</Badge>}
               </div>
+              <CardTitle className="text-lg font-mono">
+                <TooltipCopyText text={name} />
+              </CardTitle>
               <CardDescription>{style.path}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -148,7 +151,7 @@ export function StylesCatalog({
                     <div className="flex space-x-1">
                       {style.colors.map((color) => (
                         <div
-                          className="w-6 h-6 rounded border border-gray-200"
+                          className="w-6 h-6 rounded-sm border border-gray-200"
                           key={color}
                           style={{ backgroundColor: color }}
                           title={color}
@@ -160,7 +163,7 @@ export function StylesCatalog({
                 <div className="flex flex-col md:flex-row items-center gap-2 mt-4">
                   <Button
                     className="flex-1 w-full"
-                    onClick={() => setSelectedStyleForGuide({ name, style })}
+                    onClick={() => onStyleGuide(name)}
                     size="sm"
                     variant="outline"
                   >
@@ -201,11 +204,11 @@ export function StylesCatalog({
         </div>
       )}
 
-      {selectedStyleForGuide && (
+      {selectedStyleForGuide && styles && (
         <StyleIntegrationGuideDialog
-          name={selectedStyleForGuide.name}
-          onCloseAction={() => setSelectedStyleForGuide(null)}
-          style={selectedStyleForGuide.style}
+          name={selectedStyleForGuide}
+          onCloseAction={() => onStyleGuide(undefined)}
+          style={styles[selectedStyleForGuide]}
         />
       )}
     </div>

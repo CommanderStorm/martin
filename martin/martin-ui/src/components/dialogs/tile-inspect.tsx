@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useId, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import type { TileSource } from '@/lib/types';
 import '@maplibre/maplibre-gl-inspect/dist/maplibre-gl-inspect.css';
 import MaplibreInspect from '@maplibre/maplibre-gl-inspect';
 import type { MapRef } from '@vis.gl/react-maplibre';
-import { Map as MapLibreMap, Source } from '@vis.gl/react-maplibre';
+import { Layer, Map as MapLibreMap, Source } from '@vis.gl/react-maplibre';
 import { Database } from 'lucide-react';
 import { Popup } from 'maplibre-gl';
 import { buildMartinUrl } from '@/lib/api';
@@ -24,15 +24,18 @@ interface TileInspectDialogProps {
 }
 
 export function TileInspectDialog({ name, source, onCloseAction }: TileInspectDialogProps) {
+  const id = useId();
   const mapRef = useRef<MapRef>(null);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const inspectControlRef = useRef<MaplibreInspect | null>(null);
+  const inspectControlRef = useRef<MaplibreInspect>(null);
 
-  useEffect(() => {
-    if (!isMapLoaded || !mapRef.current) return;
-
+  const addInspectorToMap = useCallback(() => {
+    if (!mapRef.current) {
+      console.error('Map not found despite being initialized, this cannot happen');
+      return;
+    }
     const map = mapRef.current.getMap();
 
+    map.addSource(name, { type: 'vector', url: buildMartinUrl(`/${name}`) });
     // Import and add the inspect control
     if (inspectControlRef.current) {
       map.removeControl(inspectControlRef.current);
@@ -51,23 +54,14 @@ export function TileInspectDialog({ name, source, onCloseAction }: TileInspectDi
     });
 
     map.addControl(inspectControlRef.current);
-
-    // Cleanup function
-    return () => {
-      if (inspectControlRef.current && map) {
-        try {
-          map.removeControl(inspectControlRef.current);
-        } catch (_e) {
-          // Control might already be removed
-        }
-      }
-    };
-  }, [isMapLoaded]);
-
+  }, [name]);
+  const isImageSource = ['image/gif', 'image/jpeg', 'image/png', 'image/webp'].includes(
+    source.content_type,
+  );
   return (
     <Dialog onOpenChange={(v) => !v && onCloseAction()} open={true}>
       <DialogContent className="max-w-6xl w-full p-6 max-h-[90vh] overflow-auto">
-        <DialogHeader className="mb-6">
+        <DialogHeader className="mb-6 truncate">
           <DialogTitle className="text-2xl flex items-center justify-between">
             <span>
               Inspect Tile Source: <code>{name}</code>
@@ -79,19 +73,30 @@ export function TileInspectDialog({ name, source, onCloseAction }: TileInspectDi
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Map Container */}
           <section className="border rounded-lg overflow-hidden">
-            <MapLibreMap
-              onLoad={() => setIsMapLoaded(true)}
-              ref={mapRef}
-              reuseMaps={false}
-              style={{
-                height: '500px',
-                width: '100%',
-              }}
-            >
-              <Source type="vector" url={buildMartinUrl(`/${name}`)} />
-            </MapLibreMap>
+            {isImageSource ? (
+              <MapLibreMap
+                ref={mapRef}
+                reuseMaps={false}
+                style={{
+                  height: '500px',
+                  width: '100%',
+                }}
+              >
+                <Source id={`${id}tile-source`} type="raster" url={buildMartinUrl(`/${name}`)} />
+                <Layer id={`${id}tile-layer`} source={`${id}tile-source`} type="raster" />
+              </MapLibreMap>
+            ) : (
+              <MapLibreMap
+                onLoad={addInspectorToMap}
+                ref={mapRef}
+                reuseMaps={false}
+                style={{
+                  height: '500px',
+                  width: '100%',
+                }}
+              ></MapLibreMap>
+            )}
           </section>
           {/* Source Information */}
           <section className="bg-muted/30 p-4 rounded-lg">

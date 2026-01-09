@@ -1,7 +1,6 @@
 'use client';
 
-import { Code, Copy, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { Code, Copy, CopyCheck, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { buildMartinUrl } from '@/lib/api';
 import type { Style } from '@/lib/types';
 
@@ -21,41 +21,42 @@ interface StyleIntegrationGuideDialogProps {
   onCloseAction: () => void;
 }
 
-export function StyleIntegrationGuideDialog({
-  name,
-  style,
-  onCloseAction,
-}: StyleIntegrationGuideDialogProps) {
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+const CodeBlock = ({ code }: { code: string }) => {
+  const { copy, copied } = useCopyToClipboard();
 
-  const styleUrl = buildMartinUrl(`/style/${name}`);
-
-  const copyToClipboard = async (code: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCode(id);
-      setTimeout(() => setCopiedCode(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy code:', err);
-    }
-  };
-
-  const CodeBlock = ({ code, id }: { code: string; id: string }) => (
+  return (
     <div className="relative">
       <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm border">
         <Button
           className="absolute top-2 right-2 h-6 px-2 z-10"
-          onClick={() => copyToClipboard(code, id)}
+          onClick={() => copy(code)}
           size="sm"
           variant="ghost"
         >
-          <Copy className="w-3 h-3 mr-1" />
-          {copiedCode === id ? 'Copied!' : 'Copy'}
+          {copied ? (
+            <>
+              Copied
+              <CopyCheck className="w-3 h-3 dark:text-green-600" />
+            </>
+          ) : (
+            <>
+              Copy
+              <Copy className="w-3 h-3" />
+            </>
+          )}
         </Button>
         <code>{code}</code>
       </pre>
     </div>
   );
+};
+
+export function StyleIntegrationGuideDialog({
+  name,
+  style,
+  onCloseAction,
+}: StyleIntegrationGuideDialogProps) {
+  const styleUrl = buildMartinUrl(`/style/${name}`);
 
   const webJsCode = `// Include MapLibre GL JS in your HTML
 <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
@@ -156,10 +157,12 @@ function MyMap() {
   return (
     <Dialog onOpenChange={(v) => !v && onCloseAction()} open={true}>
       <DialogContent className="max-w-4xl w-full p-6 max-h-[90vh] overflow-auto">
-        <DialogHeader className="mb-6">
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Code className="w-6 h-6" />
-            Integration Guide: <code>{name}</code>
+        <DialogHeader className="mb-6 truncate">
+          <DialogTitle>
+            <div className="text-2xl flex items-center gap-2">
+              <Code className="w-6 h-6" />
+              Integration Guide: <code>{name}</code>
+            </div>
           </DialogTitle>
           <DialogDescription>
             Learn how to integrate this style into your MapLibre application across different
@@ -175,7 +178,7 @@ function MyMap() {
               <div>
                 <span className="font-medium">Style URL:</span>
                 <br />
-                <code className="text-xs bg-background px-2 py-1 rounded break-all">
+                <code className="text-xs bg-background px-2 py-1 rounded-sm break-all">
                   {styleUrl}
                 </code>
               </div>
@@ -223,7 +226,7 @@ function MyMap() {
                       </a>
                     </Button>
                   </h4>
-                  <CodeBlock code={webJsCode} id="web-js" />
+                  <CodeBlock code={webJsCode} />
                 </div>
 
                 <div>
@@ -239,7 +242,7 @@ function MyMap() {
                       </a>
                     </Button>
                   </h4>
-                  <CodeBlock code={webNpmCode} id="web-npm" />
+                  <CodeBlock code={webNpmCode} />
                 </div>
 
                 <div>
@@ -255,7 +258,7 @@ function MyMap() {
                       </a>
                     </Button>
                   </h4>
-                  <CodeBlock code={reactCode} id="react" />
+                  <CodeBlock code={reactCode} />
                 </div>
               </div>
             </TabsContent>
@@ -275,7 +278,7 @@ function MyMap() {
                       </a>
                     </Button>
                   </h4>
-                  <CodeBlock code={androidCode} id="android" />
+                  <CodeBlock code={androidCode} />
                 </div>
 
                 <div>
@@ -291,7 +294,7 @@ function MyMap() {
                       </a>
                     </Button>
                   </h4>
-                  <CodeBlock code={iosCode} id="ios" />
+                  <CodeBlock code={iosCode} />
                 </div>
 
                 <div>
@@ -307,7 +310,7 @@ function MyMap() {
                       </a>
                     </Button>
                   </h4>
-                  <CodeBlock code={reactNativeCode} id="react-native" />
+                  <CodeBlock code={reactNativeCode} />
                 </div>
               </div>
             </TabsContent>

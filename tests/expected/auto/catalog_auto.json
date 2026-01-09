@@ -1,16 +1,16 @@
 {
   "fonts": {
     "Overpass Mono Light": {
-      "end": 64258,
+      "end": 128276,
       "family": "Overpass Mono",
-      "glyphs": 931,
+      "glyphs": 934,
       "start": 0,
       "style": "Light"
     },
     "Overpass Mono Regular": {
-      "end": 64258,
+      "end": 128276,
       "family": "Overpass Mono",
-      "glyphs": 931,
+      "glyphs": 934,
       "start": 0,
       "style": "Regular"
     }
@@ -120,7 +120,7 @@
     },
     "geography-class-jpg-diff": {
       "content_type": "image/jpeg",
-      "description": "One of the example maps that comes with TileMill - a bright & colorful world map that blends retro and high-tech with its folded paper texture and interactive flag tooltips. ",
+      "description": "A modified version of one of the example maps that comes with TileMill - a bright & colorful world map that blends retro and high-tech with its folded paper texture and interactive flag tooltips.",
       "name": "Geography Class"
     },
     "geography-class-jpg-modified": {
@@ -141,6 +141,10 @@
     "json": {
       "content_type": "application/json",
       "name": "Dummy json data"
+    },
+    "mat_view": {
+      "content_type": "application/x-protobuf",
+      "description": "materialized view comment"
     },
     "png": {
       "content_type": "image/png",
@@ -171,17 +175,24 @@
       "content_type": "application/x-protobuf",
       "description": "public.points_empty_srid.geom"
     },
-    "rgb_u8": {
-      "content_type": "image/png"
-    },
-    "rgba_u8": {
-      "content_type": "image/png"
-    },
-    "rgba_u8_nodata": {
-      "content_type": "image/png"
-    },
     "stamen_toner__raster_CC-BY-ODbL_z3": {
       "content_type": "image/png"
+    },
+    "table_and_view_two_schemas": {
+      "content_type": "application/x-protobuf",
+      "description": "schema_a.table_and_view_two_schemas.a_geom"
+    },
+    "table_and_view_two_schemas.1": {
+      "content_type": "application/x-protobuf",
+      "description": "schema_b.table_and_view_two_schemas.b_geom"
+    },
+    "table_name_existing_two_schemas": {
+      "content_type": "application/x-protobuf",
+      "description": "schema_a.table_name_existing_two_schemas.a_geom"
+    },
+    "table_name_existing_two_schemas.1": {
+      "content_type": "application/x-protobuf",
+      "description": "schema_b.table_name_existing_two_schemas.b_geom"
     },
     "table_source": {
       "content_type": "application/x-protobuf"
@@ -201,6 +212,14 @@
       "content_type": "application/x-protobuf",
       "description": "Major cities from Natural Earth data",
       "name": "Major cities from Natural Earth data"
+    },
+    "view_name_existing_two_schemas": {
+      "content_type": "application/x-protobuf",
+      "description": "schema_a.view_name_existing_two_schemas.a_geom"
+    },
+    "view_name_existing_two_schemas.1": {
+      "content_type": "application/x-protobuf",
+      "description": "schema_b.view_name_existing_two_schemas.b_geom"
     },
     "webp": {
       "content_type": "image/webp",
@@ -224,8 +243,7 @@
     "world_cities_diff": {
       "content_encoding": "gzip",
       "content_type": "application/x-protobuf",
-      "description": "Major cities from Natural Earth data",
-      "name": "Major cities from Natural Earth data"
+      "description": "A modified version of major cities from Natural Earth data"
     },
     "world_cities_modified": {
       "content_encoding": "gzip",
