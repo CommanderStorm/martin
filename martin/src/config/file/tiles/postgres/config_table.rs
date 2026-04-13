@@ -73,6 +73,11 @@ pub struct TableInfo {
     #[serde(skip)]
     pub prop_mapping: HashMap<String, String>,
 
+    /// Postprocessing pipeline for this source.
+    /// Overrides source-type and global `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<crate::config::file::ProcessConfig>,
+
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,
 

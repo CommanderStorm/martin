@@ -28,6 +28,11 @@ pub struct PmtConfig {
     #[serde(skip)]
     pub options: HashMap<String, String>,
 
+    /// Postprocessing pipeline for all `PMTiles` sources.
+    /// Overrides global `process`; overridden by per-source `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<crate::config::file::ProcessConfig>,
+
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,
 

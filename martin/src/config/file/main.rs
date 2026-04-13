@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::prelude::*;
@@ -113,6 +114,11 @@ pub struct Config {
     #[serde(default, skip_serializing_if = "FileConfigEnum::is_none")]
     pub fonts: super::fonts::FontConfig,
 
+    /// Postprocessing pipeline configuration (global level).
+    /// Overridden by source-type or per-source `process` blocks.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<super::process::ProcessConfig>,
+
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,
 }
@@ -120,6 +126,20 @@ pub struct Config {
 impl Config {
     /// Apply defaults to the config, and validate if there is a connection string
     pub fn finalize(&mut self) -> MartinResult<UnrecognizedKeys> {
+        // Synthesize global ProcessConfig from preferred_encoding if not explicitly set
+        if self.process.is_none()
+            && let Some(enc) = self.srv.preferred_encoding
+        {
+            let encoding_name = match enc {
+                crate::config::args::PreferredEncoding::Brotli => "br",
+                crate::config::args::PreferredEncoding::Gzip => "gzip",
+            };
+            self.process = Some(super::process::ProcessConfig {
+                mlt: None,
+                compress: Some(vec![encoding_name.to_string()]),
+            });
+        }
+
         let mut res = self.srv.get_unrecognized_keys();
         copy_unrecognized_keys_from_config(&mut res, "", &self.unrecognized);
 
@@ -252,12 +272,33 @@ impl Config {
             .unwrap_or_default()
             .handle_tile_warnings(&warnings)?;
 
+        #[cfg(feature = "_tiles")]
+        let process_map = self.build_process_config_map();
+        #[cfg(feature = "_tiles")]
+        let global_process = self.process.clone().unwrap_or_default();
+        #[cfg(feature = "_tiles")]
+        let tile_sources_with_process: Vec<Vec<(martin_core::tiles::BoxedSource, super::process::ProcessConfig)>> = tile_sources
+            .into_iter()
+            .map(|group| {
+                group
+                    .into_iter()
+                    .map(|src| {
+                        let pc = process_map
+                            .get(src.get_id())
+                            .cloned()
+                            .unwrap_or_else(|| global_process.clone());
+                        (src, pc)
+                    })
+                    .collect()
+            })
+            .collect();
+
         Ok(ServerState {
             #[cfg(feature = "_tiles")]
-            tile_manager: TileSourceManager::from_sources(
+            tile_manager: TileSourceManager::from_sources_with_process(
                 cache_config.create_tile_cache(),
                 self.on_invalid.unwrap_or_default(),
-                tile_sources,
+                tile_sources_with_process,
             ),
 
             #[cfg(feature = "sprites")]
@@ -383,6 +424,67 @@ impl Config {
             all_tile_sources,
             all_tile_warnings.into_iter().flatten().collect(),
         ))
+    }
+
+    /// Build a map from source ID → resolved [`ProcessConfig`].
+    ///
+    /// Uses full-override semantics: per-source > source-type > global > default.
+    #[cfg(feature = "_tiles")]
+    fn build_process_config_map(&self) -> HashMap<String, super::process::ProcessConfig> {
+        use super::process::resolve_process_config;
+
+        let global = self.process.as_ref();
+        let mut map = HashMap::new();
+
+        #[cfg(feature = "postgres")]
+        for pg in self.postgres.iter() {
+            let source_type = pg.process.as_ref();
+            if let Some(tables) = &pg.tables {
+                for (id, info) in tables {
+                    let resolved = resolve_process_config(global, source_type, info.process.as_ref());
+                    map.insert(id.clone(), resolved);
+                }
+            }
+            if let Some(functions) = &pg.functions {
+                for (id, info) in functions {
+                    let resolved = resolve_process_config(global, source_type, info.process.as_ref());
+                    map.insert(id.clone(), resolved);
+                }
+            }
+        }
+
+        #[cfg(feature = "pmtiles")]
+        Self::insert_file_source_configs(&mut map, global, &self.pmtiles, |c| c.process.as_ref());
+
+        #[cfg(feature = "mbtiles")]
+        Self::insert_file_source_configs(&mut map, global, &self.mbtiles, |c| c.process.as_ref());
+
+        map
+    }
+
+    /// Helper to resolve process configs for file-based source types (pmtiles, mbtiles).
+    #[cfg(any(feature = "pmtiles", feature = "mbtiles"))]
+    fn insert_file_source_configs<T: super::ConfigurationLivecycleHooks>(
+        map: &mut HashMap<String, super::process::ProcessConfig>,
+        global: Option<&super::process::ProcessConfig>,
+        file_cfg: &FileConfigEnum<T>,
+        get_source_type_process: impl Fn(&T) -> Option<&super::process::ProcessConfig>,
+    ) {
+        use super::process::resolve_process_config;
+
+        if let FileConfigEnum::Config(cfg) = file_cfg {
+            let source_type = get_source_type_process(&cfg.custom);
+            if let Some(sources) = &cfg.sources {
+                for (id, src) in sources {
+                    let per_source = match src {
+                        super::FileConfigSrc::Obj(obj) => obj.process.as_ref(),
+                        super::FileConfigSrc::Path(_) => None,
+                    };
+                    let resolved = resolve_process_config(global, source_type, per_source);
+                    map.insert(id.clone(), resolved);
+                }
+            }
+        }
     }
 
     pub fn save_to_file(&self, file_name: &Path) -> ConfigFileResult<()> {
@@ -514,5 +616,62 @@ mod tests {
     fn parse_base_path_rejects_invalid_paths() {
         assert!(parse_base_path("").is_err());
         assert!(parse_base_path("foo/bar").is_err());
+    }
+
+    /// Test that `finalize()` synthesizes `ProcessConfig` from `preferred_encoding`.
+    /// We call `finalize()` and ignore the `NoSources` error since we're only
+    /// testing the process synthesis which happens before source validation.
+    #[test]
+    fn finalize_synthesizes_process_from_preferred_encoding_gzip() {
+        let mut cfg = Config {
+            srv: super::super::srv::SrvConfig {
+                preferred_encoding: Some(crate::config::args::PreferredEncoding::Gzip),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let _ = cfg.finalize(); // may fail with NoSources, that's fine
+        let process = cfg.process.expect("process should be synthesized");
+        assert_eq!(process.compress, Some(vec!["gzip".to_string()]));
+        assert!(process.mlt.is_none());
+    }
+
+    #[test]
+    fn finalize_synthesizes_process_from_preferred_encoding_brotli() {
+        let mut cfg = Config {
+            srv: super::super::srv::SrvConfig {
+                preferred_encoding: Some(crate::config::args::PreferredEncoding::Brotli),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let _ = cfg.finalize();
+        let process = cfg.process.expect("process should be synthesized");
+        assert_eq!(process.compress, Some(vec!["br".to_string()]));
+    }
+
+    #[test]
+    fn finalize_explicit_process_overrides_preferred_encoding() {
+        let explicit = crate::config::file::process::ProcessConfig {
+            mlt: Some(crate::config::file::process::MltProcessConfig::Auto),
+            compress: Some(vec!["zstd".to_string()]),
+        };
+        let mut cfg = Config {
+            srv: super::super::srv::SrvConfig {
+                preferred_encoding: Some(crate::config::args::PreferredEncoding::Gzip),
+                ..Default::default()
+            },
+            process: Some(explicit.clone()),
+            ..Default::default()
+        };
+        let _ = cfg.finalize();
+        assert_eq!(cfg.process, Some(explicit));
+    }
+
+    #[test]
+    fn finalize_no_preferred_encoding_leaves_process_none() {
+        let mut cfg = Config::default();
+        let _ = cfg.finalize();
+        assert!(cfg.process.is_none());
     }
 }

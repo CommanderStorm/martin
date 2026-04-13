@@ -34,6 +34,11 @@ pub struct FunctionInfo {
     #[serde(skip)]
     pub tilejson: Option<serde_json::Value>,
 
+    /// Postprocessing pipeline for this source.
+    /// Overrides source-type and global `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<crate::config::file::ProcessConfig>,
+
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,
 }

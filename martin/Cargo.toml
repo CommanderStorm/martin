@@ -97,6 +97,7 @@ default = [
     "sprites",
     "styles",
     "webui",
+    "mlt",
 ]
 unstable-cog = ["martin-core/unstable-cog", "_tiles"]
 unstable-rendering = ["styles", "martin-core/unstable-rendering", "dep:image"]
@@ -116,6 +117,7 @@ postgres = [
 sprites = ["martin-core/sprites", "_catalog"]
 styles = ["martin-core/styles", "dep:walkdir", "_catalog"]
 webui = ["dep:actix-web-static-files", "dep:static-files", "dep:walkdir"]
+mlt = ["dep:mlt-core", "_tiles"]
 _tiles = ["martin-core/_tiles", "_catalog"]
 _catalog = []
 __hotpath = [
@@ -151,6 +153,7 @@ log.workspace = true
 martin-core.workspace = true
 martin-tile-utils.workspace = true
 mbtiles = { workspace = true, optional = true }
+mlt-core = { workspace = true, optional = true }
 num_cpus.workspace = true
 object_store = { workspace = true, optional = true }
 postgis = { workspace = true, optional = true }

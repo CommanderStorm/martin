@@ -112,7 +112,7 @@ mod sources {
 }
 
 async fn process_null_tile(manager: &TileSourceManager) {
-    let src = DynTileSource::new(manager, "null", Some(0), "", None, None, None)
+    let src = DynTileSource::new(manager, "null", Some(0), "", None, None)
         .expect("null source can be created");
     src.get_http_response(TileCoord { z: 0, x: 0, y: 0 })
         .await
@@ -120,7 +120,7 @@ async fn process_null_tile(manager: &TileSourceManager) {
 }
 
 async fn process_error_tile(manager: &TileSourceManager) {
-    let src = DynTileSource::new(manager, "error", Some(0), "", None, None, None)
+    let src = DynTileSource::new(manager, "error", Some(0), "", None, None)
         .expect("error source can be created");
     src.get_http_response(TileCoord { z: 0, x: 0, y: 0 })
         .await

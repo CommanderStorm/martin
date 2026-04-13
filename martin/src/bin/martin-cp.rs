@@ -316,7 +316,7 @@ fn default_bounds(src: &DynTileSource) -> Vec<Bounds> {
         let mut source_bounds = src
             .sources
             .iter()
-            .map(|source| source.get_tilejson().bounds.unwrap_or(Bounds::MAX_TILED))
+            .map(|(source, _)| source.get_tilejson().bounds.unwrap_or(Bounds::MAX_TILED))
             .collect::<Vec<Bounds>>();
 
         source_bounds.dedup_by_key(|bounds| bounds.to_string());
@@ -368,7 +368,6 @@ async fn run_tile_copy(args: CopyArgs, state: ServerState) -> MartinCpResult<()>
         args.url_query.as_deref().unwrap_or_default(),
         Some(parse_encoding(args.encoding.as_str())?),
         None,
-        None,
     )?;
 
     let inferred_bboxes = if args.bbox.is_empty() {
@@ -392,7 +391,8 @@ async fn run_tile_copy(args: CopyArgs, state: ServerState) -> MartinCpResult<()>
     } else {
         CopyDuplicateMode::Override
     };
-    let mbt_type = init_schema(&mbt, &mut conn, src.sources.as_slice(), src.info, &args).await?;
+    let just_sources: Vec<_> = src.sources.iter().map(|(s, _)| s.clone()).collect();
+    let mbt_type = init_schema(&mbt, &mut conn, &just_sources, src.info, &args).await?;
     let total_size = tiles.iter().map(TileRect::size).sum();
     let progress = TileCopyProgress::new(total_size);
     info!(
@@ -663,7 +663,7 @@ mod tests {
         #[case] ids: &str,
         #[case] expected: Vec<Bounds>,
     ) {
-        let dts = DynTileSource::new(&src, ids, None, "", None, None, None).unwrap();
+        let dts = DynTileSource::new(&src, ids, None, "", None, None).unwrap();
 
         assert_eq!(default_bounds(&dts), expected);
     }

@@ -10,6 +10,9 @@ pub mod srv;
 mod error;
 pub use error::{ConfigFileError, ConfigFileResult};
 
+pub mod process;
+pub use process::{MltEncoderConfig, MltProcessConfig, ProcessConfig, resolve_process_config};
+
 #[cfg(any(feature = "fonts", feature = "sprites", feature = "styles"))]
 mod resources;
 #[cfg(any(feature = "fonts", feature = "sprites", feature = "styles"))]

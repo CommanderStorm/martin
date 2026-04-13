@@ -10,25 +10,16 @@ use actix_web::{HttpMessage as _, HttpRequest, HttpResponse, Result as ActixResu
 use futures::future::try_join_all;
 use martin_core::tiles::{BoxedSource, Tile, TileCache, UrlQuery};
 use martin_tile_utils::{
-    Encoding, Format, TileCoord, TileData, TileInfo, decode_brotli, decode_gzip, encode_brotli,
-    encode_gzip,
+    Encoding, Format, TileCoord, TileData, TileInfo, decode_brotli, decode_gzip, decode_zlib,
+    decode_zstd, encode_brotli, encode_gzip, encode_zlib, encode_zstd,
 };
 use serde::Deserialize;
 use tracing::warn;
 
-use crate::config::args::PreferredEncoding;
+use crate::config::file::ProcessConfig;
 use crate::config::file::srv::SrvConfig;
 use crate::srv::server::{DebouncedWarning, map_internal_error};
 use crate::tile_source_manager::TileSourceManager;
-use martin_tile_utils::{decode_zlib, decode_zstd, encode_zlib, encode_zstd};
-
-const SUPPORTED_ENC: &[HeaderEnc] = &[
-    HeaderEnc::gzip(),
-    HeaderEnc::brotli(),
-    HeaderEnc::zstd(),
-    //probably dont need deflate here, most clients don't support
-    HeaderEnc::identity(),
-];
 
 #[derive(Deserialize, Clone)]
 pub struct TileRequest {
@@ -42,7 +33,6 @@ pub struct TileRequest {
 #[hotpath::measure]
 async fn get_tile(
     req: HttpRequest,
-    srv_config: Data<SrvConfig>,
     path: Path<TileRequest>,
     manager: Data<TileSourceManager>,
 ) -> ActixResult<HttpResponse> {
@@ -53,7 +43,6 @@ async fn get_tile(
         req.query_string(),
         req.get_header::<AcceptEncoding>(),
         req.get_header::<IfNoneMatch>(),
-        srv_config.preferred_encoding,
     )?;
 
     src.get_http_response(TileCoord {
@@ -160,14 +149,24 @@ fn redirect_tile_with_query(
 }
 
 pub struct DynTileSource<'a> {
-    pub sources: Vec<BoxedSource>,
+    pub sources: Vec<(BoxedSource, ProcessConfig)>,
     pub info: TileInfo,
     pub query_str: Option<&'a str>,
     pub query_obj: Option<UrlQuery>,
     pub accept_enc: Option<AcceptEncoding>,
     pub if_none_match: Option<IfNoneMatch>,
-    pub preferred_enc: Option<PreferredEncoding>,
     pub cache: Option<&'a TileCache>,
+}
+
+/// Parse a compression encoding name (as used in process config) to a [`ContentEncoding`].
+fn parse_encoding_name(name: &str) -> Option<ContentEncoding> {
+    match name {
+        "gzip" => Some(ContentEncoding::Gzip),
+        "br" | "brotli" => Some(ContentEncoding::Brotli),
+        "zstd" => Some(ContentEncoding::Zstd),
+        "deflate" | "zlib" => Some(ContentEncoding::Deflate),
+        _ => None,
+    }
 }
 
 impl<'a> DynTileSource<'a> {
@@ -179,31 +178,29 @@ impl<'a> DynTileSource<'a> {
         query: &'a str,
         accept_enc: Option<AcceptEncoding>,
         if_none_match: Option<IfNoneMatch>,
-        preferred_enc: Option<PreferredEncoding>,
     ) -> ActixResult<Self> {
         let tile_sources = manager.tile_sources();
-        let (sources, use_url_query, info) = tile_sources.get_sources(source_ids, zoom)?;
+        let resolved = tile_sources.get_sources(source_ids, zoom)?;
         let cache = manager.tile_cache().as_ref();
 
-        if sources.is_empty() {
+        if resolved.sources.is_empty() {
             return Err(ErrorNotFound("No valid sources found"));
         }
 
         let mut query_obj = None;
         let mut query_str = None;
-        if use_url_query && !query.is_empty() {
+        if resolved.use_url_query && !query.is_empty() {
             query_obj = Some(Query::<UrlQuery>::from_query(query)?.into_inner());
             query_str = Some(query);
         }
 
         Ok(Self {
-            sources,
-            info,
+            sources: resolved.sources,
+            info: resolved.info,
             query_str,
             query_obj,
             accept_enc,
             if_none_match,
-            preferred_enc,
             cache,
         })
     }
@@ -216,11 +213,13 @@ impl<'a> DynTileSource<'a> {
         }
         let etag = EntityTag::new_strong(tile.etag.clone());
 
-        if let Some(IfNoneMatch::Items(expected_etags)) = &self.if_none_match {
-            for expected_etag in expected_etags {
-                if etag.strong_eq(expected_etag) {
-                    return Ok(HttpResponse::NotModified().finish());
-                }
+        if let Some(if_none_match) = &self.if_none_match {
+            let dominated_by = match if_none_match {
+                IfNoneMatch::Any => true,
+                IfNoneMatch::Items(items) => items.iter().any(|e| e.strong_eq(&etag)),
+            };
+            if dominated_by {
+                return Ok(HttpResponse::NotModified().finish());
             }
         }
 
@@ -235,22 +234,27 @@ impl<'a> DynTileSource<'a> {
 
     #[hotpath::measure]
     pub async fn get_tile_content(&self, xyz: TileCoord) -> ActixResult<Tile> {
-        let mut tiles = try_join_all(self.sources.iter().map(|s| async {
-            if let Some(cache) = self.cache {
-                cache
-                    .get_or_insert(
-                        s.get_id().to_string(),
-                        xyz,
-                        self.query_str.map(ToString::to_string),
-                        || s.get_tile_with_etag(xyz, self.query_obj.as_ref()),
-                    )
-                    .await
-            } else {
-                s.get_tile_with_etag(xyz, self.query_obj.as_ref()).await
-            }
-        }))
-        .await
-        .map_err(map_internal_error)?;
+        let mut tiles = try_join_all(
+            self.sources
+                .iter()
+                .map(|(s, pc)| async {
+                    let tile = if let Some(cache) = self.cache {
+                        cache
+                            .get_or_insert(
+                                s.get_id().to_string(),
+                                xyz,
+                                self.query_str.map(ToString::to_string),
+                                || s.get_tile_with_etag(xyz, self.query_obj.as_ref()),
+                            )
+                            .await
+                    } else {
+                        s.get_tile_with_etag(xyz, self.query_obj.as_ref()).await
+                    };
+                    tile.map_err(map_internal_error)
+                        .and_then(|t| crate::srv::tiles::process::apply_pre_cache_processors(t, pc))
+                }),
+        )
+        .await?;
 
         let mut layer_count = 0;
         let mut last_non_empty_layer = 0;
@@ -261,12 +265,11 @@ impl<'a> DynTileSource<'a> {
             }
         }
 
-        // Minor optimization to prevent concatenation if there are less than 2 tiles
-        let (data, etag, effective_info) = match layer_count {
+        let (data, effective_info) = match layer_count {
             0 => return Ok(Tile::new_hash_etag(Vec::new(), self.info)),
             1 => {
                 let tile = tiles.swap_remove(last_non_empty_layer);
-                (tile.data, tile.etag, tile.info)
+                (tile.data, tile.info)
             }
             _ => {
                 let can_join = (self.info.format == Format::Mvt || self.info.format == Format::Mlt)
@@ -278,17 +281,9 @@ impl<'a> DynTileSource<'a> {
                     )));
                 }
 
-                // Build combined etag before consuming tiles
-                let total_etag_len: usize = tiles.iter().map(|t| t.etag.len()).sum();
-                let mut combined_etag = String::with_capacity(total_etag_len);
-                for tile in &tiles {
-                    combined_etag.push_str(&tile.etag);
-                }
-
-                let (concat_data, effective_info) = if self.info.encoding == Encoding::Uncompressed
+                if self.info.encoding == Encoding::Uncompressed
                     || self.info.encoding == Encoding::Gzip
                 {
-                    // Gzip multi-stream is valid; uncompressed concat is fine
                     let data = tiles
                         .into_iter()
                         .map(|t| t.data)
@@ -296,80 +291,108 @@ impl<'a> DynTileSource<'a> {
                         .concat();
                     (data, self.info)
                 } else {
-                    // Decompress first, concat raw MVT, let recompress re-encode
-                    let mut raw = Vec::new();
-                    for tile_data in tiles {
-                        let t = Tile::new_with_etag(tile_data.data, tile_data.info, tile_data.etag);
-                        let decoded = decode(t)?;
-                        raw.extend_from_slice(&decoded.data);
+                    let mut combined = Vec::new();
+                    for tile in tiles {
+                        let decoded = decode(tile)?;
+                        combined.extend_from_slice(&decoded.data);
                     }
-                    (raw, self.info.encoding(Encoding::Uncompressed))
-                };
-
-                (concat_data, combined_etag, effective_info)
+                    (
+                        combined,
+                        TileInfo::new(self.info.format, Encoding::Uncompressed),
+                    )
+                }
             }
         };
 
-        // decide if (re-)encoding of the tile data is needed, and recompress if so
-        let mut tile = self.recompress(data, effective_info)?;
-        // Set the etag for the final tile
-        tile.etag = etag;
-        Ok(tile)
+        self.recompress(data, effective_info)
     }
 
-    /// Decide which encoding to use for the uncompressed tile data, based on the client's Accept-Encoding header
+    /// Get the effective compress list from the first source's process config.
+    fn get_compress_list(&self) -> Option<&Vec<String>> {
+        self.sources
+            .first()
+            .and_then(|(_, pc)| pc.compress.as_ref())
+    }
+
+    /// Decide which encoding to use for uncompressed tile data,
+    /// based on the client's Accept-Encoding and the configured compress list.
+    ///
+    /// RFC-compliant: only encodings in the configured compress list are offered.
+    /// If no compress list is configured, falls back to legacy behavior.
     fn decide_encoding(&self, accept_enc: &AcceptEncoding) -> ActixResult<Option<ContentEncoding>> {
-        let mut q_gzip = None;
-        let mut q_brotli = None;
-        let mut q_zstd = None;
-        for enc in accept_enc.iter() {
-            if let Preference::Specific(HeaderEnc::Known(e)) = enc.item {
-                match e {
-                    ContentEncoding::Gzip => q_gzip = Some(enc.quality),
-                    ContentEncoding::Brotli => q_brotli = Some(enc.quality),
-                    ContentEncoding::Zstd => q_zstd = Some(enc.quality),
-                    _ => {}
-                }
-            } else if let Preference::Any = enc.item {
-                q_gzip.get_or_insert(enc.quality);
-                q_brotli.get_or_insert(enc.quality);
-                q_zstd.get_or_insert(enc.quality);
-            }
-        }
-        if let (Some(qg), Some(qb)) = (q_gzip, q_brotli) {
-            let qz = q_zstd.unwrap_or(Quality::ZERO);
-            let max_q = if qg >= qb && qg >= qz {
-                qg
-            } else if qb >= qz {
-                qb
-            } else {
-                qz
-            };
-            if max_q == Quality::ZERO {
-                return Ok(None);
-            }
-            let at_max = u8::from(qg == max_q) + u8::from(qb == max_q) + u8::from(qz == max_q);
-            return Ok(Some(if at_max > 1 {
-                self.get_preferred_enc()
-            } else if qb == max_q {
-                ContentEncoding::Brotli
-            } else if qz == max_q {
-                ContentEncoding::Zstd
-            } else {
-                ContentEncoding::Gzip
-            }));
-        }
-        if let Some(HeaderEnc::Known(enc)) = accept_enc.negotiate(SUPPORTED_ENC.iter()) {
-            Ok(Some(enc))
-        } else {
-            Err(ErrorNotAcceptable("No supported encoding found"))
-        }
-    }
+        let mut client_prefs: Vec<(ContentEncoding, Quality)> = Vec::new();
+        let mut wildcard_quality: Option<Quality> = None;
 
-    fn get_preferred_enc(&self) -> ContentEncoding {
-        match self.preferred_enc {
-            None | Some(PreferredEncoding::Gzip) => ContentEncoding::Gzip,
-            Some(PreferredEncoding::Brotli) => ContentEncoding::Brotli,
+        for enc in accept_enc.iter() {
+            match &enc.item {
+                Preference::Specific(HeaderEnc::Known(e)) => {
+                    client_prefs.push((*e, enc.quality));
+                }
+                Preference::Any => {
+                    wildcard_quality = Some(enc.quality);
+                }
+                Preference::Specific(_) => {}
+            }
+        }
+
+        if let Some(compress_list) = self.get_compress_list() {
+            // RFC-compliant negotiation against configured compress list
+            let mut best: Option<(ContentEncoding, Quality, usize)> = None;
+
+            for (server_priority, name) in compress_list.iter().enumerate() {
+                if name == "plain" || name == "identity" {
+                    let q = client_prefs
+                        .iter()
+                        .find(|(e, _)| *e == ContentEncoding::Identity)
+                        .map(|(_, q)| *q)
+                        .or(wildcard_quality);
+
+                    if let Some(q) = q
+                        && q > Quality::ZERO
+                    {
+                        match &best {
+                            None => return Ok(None),
+                            Some((_, best_q, _)) if q > *best_q => return Ok(None),
+                            _ => {}
+                        }
+                    }
+                    continue;
+                }
+
+                let Some(content_enc) = parse_encoding_name(name) else {
+                    continue;
+                };
+
+                let q = client_prefs
+                    .iter()
+                    .find(|(e, _)| *e == content_enc)
+                    .map(|(_, q)| *q)
+                    .or(wildcard_quality);
+
+                if let Some(q) = q {
+                    if q == Quality::ZERO {
+                        continue;
+                    }
+                    let dominated = match &best {
+                        None => true,
+                        Some((_, best_q, best_prio)) => {
+                            q > *best_q || (q == *best_q && server_priority < *best_prio)
+                        }
+                    };
+                    if dominated {
+                        best = Some((content_enc, q, server_priority));
+                    }
+                }
+            }
+
+            match best {
+                Some((enc, _, _)) => Ok(Some(enc)),
+                None => Err(ErrorNotAcceptable(
+                    "No supported encoding found in configured compress list",
+                )),
+            }
+        } else {
+            decide_encoding_legacy(accept_enc)
         }
     }
 
@@ -377,31 +400,85 @@ impl<'a> DynTileSource<'a> {
     fn recompress(&self, tile: TileData, info: TileInfo) -> ActixResult<Tile> {
         let mut tile = Tile::new_hash_etag(tile, info);
         if let Some(accept_enc) = &self.accept_enc {
-            if info.encoding.is_encoded() {
-                // already compressed, see if we can send it as is, or need to re-compress
-                if !accept_enc.iter().any(|e| {
+            if info.encoding.is_encoded()
+                && !accept_enc.iter().any(|e| {
                     if let Preference::Specific(HeaderEnc::Known(enc)) = e.item {
                         to_encoding(enc) == Some(tile.info.encoding)
                     } else {
                         false
                     }
-                }) {
-                    // need to re-compress the tile - uncompress it first
-                    tile = decode(tile)?;
-                }
+                })
+            {
+                tile = decode(tile)?;
             }
 
             if tile.info.encoding == Encoding::Uncompressed
                 && let Some(enc) = self.decide_encoding(accept_enc)?
             {
-                // (re-)compress the tile into the preferred encoding
                 tile = encode(tile, enc)?;
             }
             Ok(tile)
         } else {
-            // no accepted-encoding header, decode the tile if compressed
             decode(tile)
         }
+    }
+}
+
+/// Legacy encoding decision when no compress list is configured.
+fn decide_encoding_legacy(
+    accept_enc: &AcceptEncoding,
+) -> ActixResult<Option<ContentEncoding>> {
+    let supported_enc: &[HeaderEnc] = &[
+        HeaderEnc::gzip(),
+        HeaderEnc::brotli(),
+        HeaderEnc::zstd(),
+        HeaderEnc::identity(),
+    ];
+
+    let mut q_gzip = None;
+    let mut q_brotli = None;
+    let mut q_zstd = None;
+    for enc in accept_enc.iter() {
+        if let Preference::Specific(HeaderEnc::Known(e)) = enc.item {
+            match e {
+                ContentEncoding::Gzip => q_gzip = Some(enc.quality),
+                ContentEncoding::Brotli => q_brotli = Some(enc.quality),
+                ContentEncoding::Zstd => q_zstd = Some(enc.quality),
+                _ => {}
+            }
+        } else if let Preference::Any = enc.item {
+            q_gzip.get_or_insert(enc.quality);
+            q_brotli.get_or_insert(enc.quality);
+            q_zstd.get_or_insert(enc.quality);
+        }
+    }
+    if let (Some(qg), Some(qb)) = (q_gzip, q_brotli) {
+        let qz = q_zstd.unwrap_or(Quality::ZERO);
+        let max_q = if qg >= qb && qg >= qz {
+            qg
+        } else if qb >= qz {
+            qb
+        } else {
+            qz
+        };
+        if max_q == Quality::ZERO {
+            return Ok(None);
+        }
+        let at_max = u8::from(qg == max_q) + u8::from(qb == max_q) + u8::from(qz == max_q);
+        return Ok(Some(if at_max > 1 {
+            ContentEncoding::Gzip
+        } else if qb == max_q {
+            ContentEncoding::Brotli
+        } else if qz == max_q {
+            ContentEncoding::Zstd
+        } else {
+            ContentEncoding::Gzip
+        }));
+    }
+    if let Some(HeaderEnc::Known(enc)) = accept_enc.negotiate(supported_enc.iter()) {
+        Ok(Some(enc))
+    } else {
+        Err(ErrorNotAcceptable("No supported encoding found"))
     }
 }
 
@@ -427,7 +504,7 @@ fn encode(tile: Tile, enc: ContentEncoding) -> ActixResult<Tile> {
 }
 
 #[hotpath::measure]
-fn decode(tile: Tile) -> ActixResult<Tile> {
+pub(crate) fn decode(tile: Tile) -> ActixResult<Tile> {
     let info = tile.info;
     Ok(if info.encoding.is_encoded() {
         match info.encoding {
@@ -481,42 +558,94 @@ mod tests {
         TileSourceManager::from_sources(None, OnInvalid::Abort, sources)
     }
 
+    fn test_manager_with_process(
+        sources: Vec<Vec<BoxedSource>>,
+        process: &ProcessConfig,
+    ) -> TileSourceManager {
+        let pairs: Vec<Vec<(BoxedSource, ProcessConfig)>> = sources
+            .into_iter()
+            .map(|group| {
+                group
+                    .into_iter()
+                    .map(|src| (src, process.clone()))
+                    .collect()
+            })
+            .collect();
+        TileSourceManager::from_sources_with_process(None, OnInvalid::Abort, pairs)
+    }
+
+    /// Legacy tests: no process config, uses default behavior
     #[rstest]
     #[trace]
-    #[case(&["gzip", "deflate", "br", "zstd"], None, Encoding::Gzip)]
-    #[case(&["gzip", "deflate", "br", "zstd"], Some(PreferredEncoding::Brotli), Encoding::Brotli)]
-    #[case(&["gzip", "deflate", "br", "zstd"], Some(PreferredEncoding::Gzip), Encoding::Gzip)]
-    #[case(&["br;q=1", "gzip;q=1"], Some(PreferredEncoding::Gzip), Encoding::Gzip)]
-    #[case(&["gzip;q=1", "br;q=1"], Some(PreferredEncoding::Brotli), Encoding::Brotli)]
-    #[case(&["gzip;q=1", "br;q=0.5"], Some(PreferredEncoding::Brotli), Encoding::Gzip)]
-    #[case(&["gzip;q=0.5", "br;q=0.5", "zstd;q=1.0"], None, Encoding::Zstd)]
-    #[case(&["gzip;q=0.5", "br;q=0.5", "zstd;q=1.0"], Some(PreferredEncoding::Brotli), Encoding::Zstd)]
+    #[case(&["gzip", "deflate", "br", "zstd"], Encoding::Gzip)]
+    #[case(&["br;q=1", "gzip;q=1"], Encoding::Gzip)]
+    #[case(&["gzip;q=1", "br;q=0.5"], Encoding::Gzip)]
+    #[case(&["gzip;q=0.5", "br;q=0.5", "zstd;q=1.0"], Encoding::Zstd)]
     #[actix_rt::test]
-    async fn test_enc_preference(
+    async fn test_enc_preference_legacy(
         #[case] accept_enc: &[&'static str],
-        #[case] preferred_enc: Option<PreferredEncoding>,
         #[case] expected_enc: Encoding,
     ) {
         let mgr = test_manager(vec![vec![Box::new(TestSource {
             id: "test_source",
             tj: tilejson! { tiles: vec![] },
             data: vec![1_u8, 2, 3],
+            format: Format::Mvt,
         })]]);
 
         let accept_enc = Some(AcceptEncoding(
             accept_enc.iter().map(|s| s.parse().unwrap()).collect(),
         ));
 
-        let src = DynTileSource::new(
-            &mgr,
-            "test_source",
-            None,
-            "",
-            accept_enc,
-            None,
-            preferred_enc,
-        )
-        .unwrap();
+        let src =
+            DynTileSource::new(&mgr, "test_source", None, "", accept_enc, None).unwrap();
+
+        let xyz = TileCoord { z: 0, x: 0, y: 0 };
+        let tile = src.get_tile_content(xyz).await.unwrap();
+        assert_eq!(tile.info.encoding, expected_enc);
+    }
+
+    /// Tests with process config compress list
+    #[rstest]
+    #[trace]
+    // Server prefers br, client accepts both → br wins
+    #[case(&["gzip", "br"], &["br", "gzip"], Encoding::Brotli)]
+    // Server prefers gzip, client accepts both equally → gzip wins
+    #[case(&["gzip;q=1", "br;q=1"], &["gzip", "br"], Encoding::Gzip)]
+    // Server prefers br, client prefers gzip → gzip wins (client quality)
+    #[case(&["gzip;q=1", "br;q=0.5"], &["br", "gzip"], Encoding::Gzip)]
+    // Server only offers gzip, client wants br → gzip (only option)
+    #[case(&["br", "gzip"], &["gzip"], Encoding::Gzip)]
+    // Server offers zstd only, client accepts zstd → zstd
+    #[case(&["zstd"], &["zstd"], Encoding::Zstd)]
+    // Client sends wildcard, server prefers br → br
+    #[case(&["*"], &["br", "gzip"], Encoding::Brotli)]
+    #[actix_rt::test]
+    async fn test_enc_with_compress_config(
+        #[case] accept_enc: &[&'static str],
+        #[case] compress_list: &[&str],
+        #[case] expected_enc: Encoding,
+    ) {
+        let process = ProcessConfig {
+            mlt: None,
+            compress: Some(compress_list.iter().map(ToString::to_string).collect()),
+        };
+        let mgr = test_manager_with_process(
+            vec![vec![Box::new(TestSource {
+                id: "test_source",
+                tj: tilejson! { tiles: vec![] },
+                data: vec![1_u8, 2, 3],
+                format: Format::Mvt,
+            })]],
+            &process,
+        );
+
+        let accept_enc = Some(AcceptEncoding(
+            accept_enc.iter().map(|s| s.parse().unwrap()).collect(),
+        ));
+
+        let src =
+            DynTileSource::new(&mgr, "test_source", None, "", accept_enc, None).unwrap();
 
         let xyz = TileCoord { z: 0, x: 0, y: 0 };
         let tile = src.get_tile_content(xyz).await.unwrap();
@@ -538,10 +667,12 @@ mod tests {
             id: source_id,
             tj: tilejson! { tiles: vec![] },
             data: vec![1_u8, 2, 3],
+            format: Format::Mvt,
         };
         let mgr = test_manager(vec![vec![Box::new(source1)]]);
 
-        let src = DynTileSource::new(&mgr, source_id, None, "", None, if_none_match, None).unwrap();
+        let src =
+            DynTileSource::new(&mgr, source_id, None, "", None, if_none_match).unwrap();
         let resp = &src
             .get_http_response(TileCoord { z: 0, x: 0, y: 0 })
             .await
@@ -560,11 +691,13 @@ mod tests {
             id: "non-empty",
             tj: tilejson! { tiles: vec![] },
             data: vec![1_u8, 2, 3],
+            format: Format::Mvt,
         };
         let empty_source = TestSource {
             id: "empty",
             tj: tilejson! { tiles: vec![] },
             data: Vec::default(),
+            format: Format::Mvt,
         };
         let mgr = test_manager(vec![vec![
             Box::new(non_empty_source),
@@ -581,7 +714,7 @@ mod tests {
             ("empty,non-empty", vec![1_u8, 2, 3]),
             ("empty,non-empty,empty", vec![1_u8, 2, 3]),
         ] {
-            let src = DynTileSource::new(&mgr, source_id, None, "", None, None, None).unwrap();
+            let src = DynTileSource::new(&mgr, source_id, None, "", None, None).unwrap();
             let xyz = TileCoord { z: 0, x: 0, y: 0 };
             assert_eq!(expected, &src.get_tile_content(xyz).await.unwrap().data);
         }
@@ -641,7 +774,7 @@ mod tests {
         let mgr = test_manager(vec![vec![Box::new(src1), Box::new(src2)]]);
 
         let accept_enc = accept.map(|s| AcceptEncoding(vec![s.parse().unwrap()]));
-        let src = DynTileSource::new(&mgr, "src1,src2", None, "", accept_enc, None, None).unwrap();
+        let src = DynTileSource::new(&mgr, "src1,src2", None, "", accept_enc, None).unwrap();
 
         let tile = src
             .get_tile_content(TileCoord { z: 0, x: 0, y: 0 })
@@ -659,5 +792,91 @@ mod tests {
             decoded, expected_raw,
             "decoded content mismatch for src={src_enc:?}, accept={accept:?}"
         );
+    }
+
+    /// Compositing sources with mismatched formats (MVT + MLT) should return an error.
+    #[actix_rt::test]
+    async fn test_mixed_mvt_mlt_merge_fails() {
+        let mvt_source = TestSource {
+            id: "mvt",
+            tj: tilejson! { tiles: vec![] },
+            data: vec![1_u8, 2, 3],
+            format: Format::Mvt,
+        };
+        let mlt_source = TestSource {
+            id: "mlt",
+            tj: tilejson! { tiles: vec![] },
+            data: vec![4_u8, 5, 6],
+            format: Format::Mlt,
+        };
+        let mgr = test_manager(vec![vec![
+            Box::new(mvt_source),
+            Box::new(mlt_source),
+        ]]);
+
+        // Mixed MVT+MLT composite should fail at source validation (format mismatch)
+        let result = DynTileSource::new(&mgr, "mvt,mlt", None, "", None, None);
+        assert!(
+            result.is_err(),
+            "Compositing MVT and MLT sources should return an error"
+        );
+    }
+
+    /// Client rejects all server-offered encodings → 406 Not Acceptable
+    #[actix_rt::test]
+    async fn test_compress_config_406_when_no_match() {
+        let process = ProcessConfig {
+            mlt: None,
+            compress: Some(vec!["br".to_string()]),
+        };
+        let mgr = test_manager_with_process(
+            vec![vec![Box::new(TestSource {
+                id: "test_source",
+                tj: tilejson! { tiles: vec![] },
+                data: vec![1_u8, 2, 3],
+                format: Format::Mvt,
+            })]],
+            &process,
+        );
+
+        // Client only accepts gzip, server only offers br
+        let accept_enc = Some(AcceptEncoding(vec!["gzip".parse().unwrap()]));
+        let src =
+            DynTileSource::new(&mgr, "test_source", None, "", accept_enc, None).unwrap();
+
+        let result = src.get_tile_content(TileCoord { z: 0, x: 0, y: 0 }).await;
+        assert!(result.is_err(), "Should return 406 when no encoding matches");
+    }
+
+    /// "plain" in compress list allows uncompressed responses
+    #[actix_rt::test]
+    async fn test_compress_config_plain_allows_uncompressed() {
+        let process = ProcessConfig {
+            mlt: None,
+            compress: Some(vec!["plain".to_string(), "gzip".to_string()]),
+        };
+        let mgr = test_manager_with_process(
+            vec![vec![Box::new(TestSource {
+                id: "test_source",
+                tj: tilejson! { tiles: vec![] },
+                data: vec![1_u8, 2, 3],
+                format: Format::Mvt,
+            })]],
+            &process,
+        );
+
+        // Client accepts identity (uncompressed) with highest quality
+        let accept_enc = Some(AcceptEncoding(vec![
+            "identity;q=1.0".parse().unwrap(),
+            "gzip;q=0.5".parse().unwrap(),
+        ]));
+        let src =
+            DynTileSource::new(&mgr, "test_source", None, "", accept_enc, None).unwrap();
+
+        let tile = src
+            .get_tile_content(TileCoord { z: 0, x: 0, y: 0 })
+            .await
+            .unwrap();
+        assert_eq!(tile.info.encoding, Encoding::Uncompressed);
     }
 }

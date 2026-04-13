@@ -34,10 +34,9 @@ async fn get_source_info(
     manager: Data<TileSourceManager>,
     srv_config: Data<SrvConfig>,
 ) -> ActixResult<HttpResponse> {
-    let sources = manager
+    let resolved = manager
         .tile_sources()
-        .get_sources(&path.source_ids, None)?
-        .0;
+        .get_sources(&path.source_ids, None)?;
 
     // Determine the path prefix for tile URLs in TileJSON responses
     // Priority: base_path (explicit override) > route_prefix (where Martin is mounted) > X-Rewrite-URL header > request path
@@ -60,9 +59,9 @@ async fn get_source_info(
     let version_param = &srv_config.tilejson_url_version_param;
     let versions: Option<(&str, String)> = if let Some(v) = version_param {
         let version_str =
-            sources
+            resolved.sources
                 .iter()
-                .filter_map(|s| s.get_version())
+                .filter_map(|(s, _)| s.get_version())
                 .fold(String::new(), |mut acc, ver| {
                     if !acc.is_empty() {
                         acc.push('-');
@@ -101,7 +100,8 @@ async fn get_source_info(
         .map(|tiles_url| tiles_url.to_string())
         .map_err(|e| ErrorBadRequest(format!("Can't build tiles URL: {e}")))?;
 
-    Ok(HttpResponse::Ok().json(merge_tilejson(&sources, tiles_url)))
+    let just_sources: Vec<_> = resolved.sources.into_iter().map(|(s, _)| s).collect();
+    Ok(HttpResponse::Ok().json(merge_tilejson(&just_sources, tiles_url)))
 }
 
 #[must_use]
@@ -201,6 +201,7 @@ pub fn merge_tilejson(sources: &[BoxedSource], tiles_url: String) -> TileJSON {
 pub mod tests {
     use std::collections::BTreeMap;
 
+    use martin_tile_utils::Format;
     use tilejson::{Bounds, VectorLayer};
 
     use super::*;
@@ -225,6 +226,7 @@ pub mod tests {
                 ],
             },
             data: Vec::default(),
+            format: Format::Mvt,
         };
         let tj = merge_tilejson(&[Box::new(src1.clone())], url.clone());
         assert_eq!(
@@ -251,6 +253,7 @@ pub mod tests {
                 ],
             },
             data: Vec::default(),
+            format: Format::Mvt,
         };
 
         let tj = merge_tilejson(&[Box::new(src1.clone()), Box::new(src2)], url.clone());

@@ -11,8 +11,14 @@ use crate::config::file::{
     ConfigurationLivecycleHooks, TileSourceConfiguration, UnrecognizedKeys, UnrecognizedValues,
 };
 
+#[serde_with::skip_serializing_none]
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct MbtConfig {
+    /// Postprocessing pipeline for all `MBTiles` sources.
+    /// Overrides global `process`; overridden by per-source `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<crate::config::file::ProcessConfig>,
+
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,
 }
@@ -93,6 +99,7 @@ mod tests {
                     "pm-src2".to_string(),
                     FileConfigSrc::Obj(FileConfigSource {
                         path: PathBuf::from("/tmp/file.ext"),
+                        process: None,
                     })
                 ),
                 (
@@ -103,6 +110,7 @@ mod tests {
                     "pm-src4".to_string(),
                     FileConfigSrc::Obj(FileConfigSource {
                         path: PathBuf::from("https://example.org/file4.ext"),
+                        process: None,
                     })
                 ),
             ]))

@@ -72,6 +72,11 @@ pub struct PostgresConfig {
     /// Associative arrays of function sources
     pub functions: Option<FuncInfoSources>,
 
+    /// Postprocessing pipeline for all sources from this connection.
+    /// Overrides global `process`; overridden by per-source `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<crate::config::file::ProcessConfig>,
+
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,
 }

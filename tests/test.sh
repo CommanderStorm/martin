@@ -192,6 +192,33 @@ test_json_with_header() {
   clean_headers_dump "$FILENAME.headers"
 }
 
+test_tile_with_enc() {
+  # Fetch a tile with a specific Accept-Encoding and save headers + body.
+  # Usage: test_tile_with_enc <name> <url_path> <accept_encoding>
+  FILENAME="$TEST_OUT_DIR/$1.tile"
+  URL="$MARTIN_URL/$2"
+  ACCEPT_ENC="$3"
+
+  echo "Testing $(basename "$FILENAME") from $URL with Accept-Encoding: $ACCEPT_ENC"
+  # Use curl without --compressed so we get the raw (possibly compressed) response
+  curl --silent --show-error --fail --dump-header "$FILENAME.headers" -H "Accept-Encoding: $ACCEPT_ENC" "$URL" > "$FILENAME"
+  clean_headers_dump "$FILENAME.headers"
+}
+
+test_mlt() {
+  # Fetch a tile, validate it is valid MLT via `mlt decode`, and save decoded output.
+  # Usage: test_mlt <name> <url_path>
+  FILENAME="$TEST_OUT_DIR/$1.mlt"
+  URL="$MARTIN_URL/$2"
+
+  echo "Testing $(basename "$FILENAME") from $URL (expecting MLT)"
+  $CURL --dump-header "$FILENAME.headers" "$URL" > "$FILENAME"
+  clean_headers_dump "$FILENAME.headers"
+
+  # Validate MLT content with mlt decode
+  mlt decode "$FILENAME" > "$FILENAME.decoded.txt"
+}
+
 test_redirect() {
   URL="$MARTIN_URL/$1"
   EXPECTED_LOCATION="$2"
@@ -666,6 +693,48 @@ test_log_has_str "$LOG_FILE" "WARN Ignoring unrecognized configuration key 'styl
 test_log_has_str "$LOG_FILE" 'WARN Defaulting `pmtiles.allow_http` to `true`. This is likely to become an error in the future for better security.'
 test_log_has_str "$LOG_FILE" 'WARN Environment variable AWS_SKIP_CREDENTIALS is deprecated. Please use pmtiles.skip_signature in the configuration file instead.'
 test_log_has_str "$LOG_FILE" 'WARN Environment variable AWS_REGION is deprecated. Please use pmtiles.region in the configuration file instead.'
+validate_log "$LOG_FILE"
+remove_lines "${TEST_OUT_DIR}/save_config.yaml" " connection_string: "
+echo "::endgroup::"
+
+echo "::group::Test postprocessing (compression + MLT)"
+TEST_NAME="process"
+LOG_FILE="${LOG_DIR}/${TEST_NAME}.txt"
+TEST_OUT_DIR="${TEST_OUT_BASE_DIR}/${TEST_NAME}"
+mkdir -p "$TEST_OUT_DIR"
+
+ARG=(--config tests/config-process.yaml --save-config "${TEST_OUT_DIR}/save_config.yaml" -W 1)
+export DATABASE_URL="$MARTIN_DATABASE_URL"
+set -x
+$MARTIN_BIN "${ARG[@]}" 2>&1 | tee "$LOG_FILE" &
+MARTIN_PROC_ID=$(jobs -p | tail -n 1)
+{ set +x; } 2> /dev/null
+trap "echo 'Stopping Martin server $MARTIN_PROC_ID...'; kill -9 $MARTIN_PROC_ID 2> /dev/null || true; echo 'Stopped Martin server $MARTIN_PROC_ID';" EXIT HUP INT TERM
+wait_for "$MARTIN_PROC_ID" Martin "$MARTIN_URL/health"
+unset DATABASE_URL
+
+>&2 echo "***** Test compression postprocessing *****"
+# points1 uses global process config: compress=[gzip]
+# Requesting with Accept-Encoding: br,gzip — should get gzip (br not in compress list)
+test_tile_with_enc proc_pts1_gzip_only   points1/0/0/0           "br, gzip"
+# Requesting with Accept-Encoding: gzip — should get gzip
+test_tile_with_enc proc_pts1_gzip        points1/0/0/0           "gzip"
+
+# points2 has per-source override: compress=[br]
+# Requesting with Accept-Encoding: br,gzip — should get br (gzip not in compress list)
+test_tile_with_enc proc_pts2_br_only     points2/0/0/0           "br, gzip"
+# Requesting with Accept-Encoding: br — should get br
+test_tile_with_enc proc_pts2_br          points2/0/0/0           "br"
+
+>&2 echo "***** Test MLT postprocessing *****"
+# table_source has process.mlt=auto — should convert MVT to MLT
+test_mlt proc_mlt_table_source           table_source/0/0/0
+
+>&2 echo "***** Test save_config includes process blocks *****"
+test_jsn catalog_process catalog
+
+kill_process "$MARTIN_PROC_ID" Martin
+test_log_has_str "$LOG_FILE" 'WARN Table public.table_source has no spatial index on column geom'
 validate_log "$LOG_FILE"
 remove_lines "${TEST_OUT_DIR}/save_config.yaml" " connection_string: "
 echo "::endgroup::"

@@ -5,7 +5,7 @@ use martin_core::tiles::{BoxedSource, OptTileCache};
 use tracing::info;
 
 use crate::MartinResult;
-use crate::config::file::OnInvalid;
+use crate::config::file::{OnInvalid, ProcessConfig};
 use crate::reload::ReloadAdvisory;
 use crate::source::TileSources;
 
@@ -18,7 +18,7 @@ use crate::source::TileSources;
 /// `TileSourceManager` is cheap to clone.
 #[derive(Clone)]
 pub struct TileSourceManager {
-    tile_sources: Arc<DashMap<String, BoxedSource>>,
+    tile_sources: Arc<DashMap<String, (BoxedSource, ProcessConfig)>>,
     tile_cache: OptTileCache,
     on_invalid: OnInvalid,
 }
@@ -35,16 +35,37 @@ impl TileSourceManager {
     }
 
     /// Creates a manager pre-populated with the given sources.
+    ///
+    /// All sources receive the default [`ProcessConfig`].
     #[must_use]
     pub fn from_sources(
         tile_cache: OptTileCache,
         on_invalid: OnInvalid,
         sources: Vec<Vec<BoxedSource>>,
     ) -> Self {
-        let map: DashMap<String, BoxedSource> = sources
+        let with_defaults = sources
+            .into_iter()
+            .map(|group| {
+                group
+                    .into_iter()
+                    .map(|src| (src, ProcessConfig::default()))
+                    .collect()
+            })
+            .collect();
+        Self::from_sources_with_process(tile_cache, on_invalid, with_defaults)
+    }
+
+    /// Creates a manager pre-populated with sources paired with their process configs.
+    #[must_use]
+    pub fn from_sources_with_process(
+        tile_cache: OptTileCache,
+        on_invalid: OnInvalid,
+        sources: Vec<Vec<(BoxedSource, ProcessConfig)>>,
+    ) -> Self {
+        let map: DashMap<String, (BoxedSource, ProcessConfig)> = sources
             .into_iter()
             .flatten()
-            .map(|src| (src.get_id().to_string(), src))
+            .map(|(src, pc)| (src.get_id().to_string(), (src, pc)))
             .collect();
         Self {
             tile_sources: Arc::new(map),
@@ -88,7 +109,13 @@ impl TileSourceManager {
                     if let Some(cache) = &self.tile_cache {
                         cache.invalidate_source(&new_source.id);
                     }
-                    self.tile_sources.insert(new_source.id.clone(), src);
+                    // Preserve existing process config on update, or use default
+                    let pc = self
+                        .tile_sources
+                        .get(&new_source.id)
+                        .map(|v| v.value().1.clone())
+                        .unwrap_or_default();
+                    self.tile_sources.insert(new_source.id.clone(), (src, pc));
                     info!("Updated source: {:?}", new_source.id);
                 }
                 Err(err) => match self.on_invalid {
@@ -104,7 +131,8 @@ impl TileSourceManager {
         for new_source in advisory.additions {
             match new_source.source {
                 Ok(src) => {
-                    self.tile_sources.insert(new_source.id.clone(), src);
+                    self.tile_sources
+                        .insert(new_source.id.clone(), (src, ProcessConfig::default()));
                     info!("Added source: {:?}", new_source.id);
                 }
                 Err(err) => match self.on_invalid {
