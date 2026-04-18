@@ -47,7 +47,8 @@ jobs:
       - name: Set up system dependencies
         run: sudo apt-get update && sudo apt-get install -y gdal-bin sqlite3-tools postgresql-client
       - name: Install mlt CLI
-        run: cargo install mlt --locked
+        uses: taiki-e/install-action@763e3324d4fd026c9bd284c504378585777a87d5 # v2.62.57
+        with: { tool: mlt }
 
       - name: Generate code coverage
         run: just coverage --codecov --output-path target/codecov.info

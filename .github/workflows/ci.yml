@@ -456,7 +456,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y gdal-bin sqlite3-tools
       - name: Install mlt CLI
         if: matrix.os == 'ubuntu-latest'
-        run: cargo install mlt --locked
+        uses: taiki-e/install-action@763e3324d4fd026c9bd284c504378585777a87d5 # v2.62.57
+        with: { tool: mlt }
       - name: Install sqlite3 and sqldiff on Windows
         if: matrix.os == 'windows-latest'
         run: choco install sqlite --yes
