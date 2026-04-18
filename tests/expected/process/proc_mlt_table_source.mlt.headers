@@ -1,0 +1,5 @@
+content-encoding: gzip
+content-length: 467
+content-type: application/vnd.maplibre-vector-tile
+etag: "25Kqtn6lJAhhOshsZFbOHg"
+vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers

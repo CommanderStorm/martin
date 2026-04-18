@@ -17,7 +17,7 @@ use url::Url;
 
 #[cfg(feature = "_tiles")]
 use crate::config::file::TileSourceWarning;
-use crate::config::file::{ConfigFileError, ConfigFileResult};
+use crate::config::file::{ConfigFileError, ConfigFileResult, ProcessConfig};
 #[cfg(feature = "_tiles")]
 use crate::config::primitives::IdResolver;
 use crate::config::primitives::OptOneMany;
@@ -275,9 +275,14 @@ fn is_sqlite_memory_uri(path: &Path) -> bool {
     }
 }
 
+#[serde_with::skip_serializing_none]
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct FileConfigSource {
     pub path: PathBuf,
+    /// Postprocessing pipeline for this source.
+    /// Overrides source-type and global `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<ProcessConfig>,
     /// Zoom-level bounds for tile caching.
     #[serde(default, skip_serializing_if = "CachePolicy::is_empty")]
     pub cache: CachePolicy,

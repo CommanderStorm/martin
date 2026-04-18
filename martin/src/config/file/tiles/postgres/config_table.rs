@@ -6,7 +6,7 @@ use tracing::{info, warn};
 
 use super::PostgresInfo;
 use crate::config::file::postgres::utils::{normalize_key, patch_json};
-use crate::config::file::{CachePolicy, UnrecognizedValues};
+use crate::config::file::{CachePolicy, ProcessConfig, UnrecognizedValues};
 
 pub type TableInfoSources = BTreeMap<String, TableInfo>;
 
@@ -75,6 +75,11 @@ pub struct TableInfo {
     /// Mapping of properties to the actual table columns
     #[serde(skip)]
     pub prop_mapping: HashMap<String, String>,
+
+    /// Postprocessing pipeline for this source.
+    /// Overrides source-type and global `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<ProcessConfig>,
 
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,

@@ -76,6 +76,7 @@ impl PostgresArgs {
                 auto_publish: OptBoolObj::NoValue,
                 tables: None,
                 functions: None,
+                process: None,
                 unrecognized: UnrecognizedValues::default(),
             })
             .collect();

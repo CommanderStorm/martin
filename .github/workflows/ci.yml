@@ -454,6 +454,9 @@ jobs:
       - name: Set up gdal-bin and sqlite3-tools
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y gdal-bin sqlite3-tools
+      - name: Install mlt CLI
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo install mlt --locked
       - name: Install sqlite3 and sqldiff on Windows
         if: matrix.os == 'windows-latest'
         run: choco install sqlite --yes

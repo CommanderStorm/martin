@@ -85,6 +85,14 @@ cache:
 # Default could be different depending on Martin version.
 preferred_encoding: gzip
 
+# Tile postprocessing pipeline. [default: none]
+# Can also be set per source-type or per source (most specific wins, no merging).
+#
+# process:
+#   # MVT-to-MLT conversion. Use `auto` for defaults, or an object to override
+#   # specific encoder settings. Requires `--features mlt`. See MLT usage guide.
+#   mlt: auto
+
 # Enable or disable Martin web UI. [default: disable]
 #
 # At the moment, only allows `enable-for-all`, which enables the web UI for all connections.
@@ -138,6 +146,10 @@ postgres:
   # connection_string: $DATABASE_URL
   # connection_string: ${DATABASE_URL:-postgres://postgres@localhost/db}
   connection_string: "postgres://postgres@localhost:5432/db"
+
+  # Postprocessing override for all PostgreSQL sources. See top-level `process`.
+  # process:
+  #   mlt: auto
 
   # Same as PGSSLCERT for psql
   ssl_cert: "./postgresql.crt"
@@ -267,6 +279,11 @@ postgres:
       properties:
         gid: int4
 
+      # Per-source postprocessing. Overrides source-type and global `process`.
+      # process:
+      #   mlt:
+      #     tessellate: true
+
       # Zoom-level bounds for tile caching (overrides top-level cache).
       # default: null (inherit from top-level default)
       # Use `cache: disable` to disable caching for this source.
@@ -295,6 +312,10 @@ postgres:
       # Values may be integers or floating point numbers.
       bounds: [-180.0, -90.0, 180.0, 90.0]
 
+      # Per-source postprocessing. Overrides source-type and global `process`.
+      # process:
+      #   mlt: auto
+
 # Publish PMTiles files from local disk or proxy to a web server
 pmtiles:
   # Size of the directory cache (in MB).
@@ -317,6 +338,10 @@ pmtiles:
     # Maximum idle time for directory cache entries.
     # default: null (inherits from cache.idle_timeout)
     idle_timeout: null
+
+  # Postprocessing override for all PMTiles sources. See top-level `process`.
+  # process:
+  #   mlt: auto
 
   # You can pass options for pmtiles files located on remote storages here.
   #
@@ -351,6 +376,10 @@ pmtiles:
 
 # Publish MBTiles files
 mbtiles:
+  # Postprocessing override for all MBTiles sources. See top-level `process`.
+  # process:
+  #   mlt: auto
+
   paths:
     # scan this whole dir, matching all *.mbtiles files
     - /dir-path

@@ -5,7 +5,7 @@ use tilejson::{Bounds, TileJSON};
 
 use super::config::PostgresInfo;
 use crate::config::file::postgres::utils::patch_json;
-use crate::config::file::{CachePolicy, UnrecognizedValues};
+use crate::config::file::{CachePolicy, ProcessConfig, UnrecognizedValues};
 
 pub type FuncInfoSources = BTreeMap<String, FunctionInfo>;
 
@@ -36,6 +36,11 @@ pub struct FunctionInfo {
     /// `TileJSON` provided by the SQL function comment. Not serialized.
     #[serde(skip)]
     pub tilejson: Option<serde_json::Value>,
+
+    /// Postprocessing pipeline for this source.
+    /// Overrides source-type and global `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<ProcessConfig>,
 
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,

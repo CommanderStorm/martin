@@ -8,12 +8,18 @@ use url::Url;
 
 use crate::MartinResult;
 use crate::config::file::{
-    CachePolicy, ConfigurationLivecycleHooks, TileSourceConfiguration, UnrecognizedKeys,
-    UnrecognizedValues,
+    CachePolicy, ConfigurationLivecycleHooks, ProcessConfig, TileSourceConfiguration,
+    UnrecognizedKeys, UnrecognizedValues,
 };
 
+#[serde_with::skip_serializing_none]
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct MbtConfig {
+    /// Postprocessing pipeline for all `MBTiles` sources.
+    /// Overrides global `process`; overridden by per-source `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<ProcessConfig>,
+
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,
 }
@@ -111,6 +117,7 @@ mod tests {
                     "pm-src2".to_string(),
                     FileConfigSrc::Obj(FileConfigSource {
                         path: PathBuf::from("/tmp/file.ext"),
+                        process: None,
                         cache: CachePolicy::default(),
                     })
                 ),
@@ -122,6 +129,7 @@ mod tests {
                     "pm-src4".to_string(),
                     FileConfigSrc::Obj(FileConfigSource {
                         path: PathBuf::from("https://example.org/file4.ext"),
+                        process: None,
                         cache: CachePolicy::default(),
                     })
                 ),
@@ -129,6 +137,7 @@ mod tests {
                     "pm-src5".to_string(),
                     FileConfigSrc::Obj(FileConfigSource {
                         path: PathBuf::from("/tmp/cached.ext"),
+                        process: None,
                         cache: CachePolicy::new(CacheZoomRange::new(Some(0), Some(6))),
                     })
                 ),

@@ -12,7 +12,7 @@ use url::Url;
 use crate::MartinResult;
 use crate::config::file::{
     CachePolicy, CacheSizeConfig, ConfigFileError, ConfigFileResult, ConfigurationLivecycleHooks,
-    TileSourceConfiguration, UnrecognizedKeys, UnrecognizedValues,
+    ProcessConfig, TileSourceConfiguration, UnrecognizedKeys, UnrecognizedValues,
 };
 
 #[serde_with::skip_serializing_none]
@@ -29,6 +29,11 @@ pub struct PmtConfig {
     #[serde(skip)]
     pub options: HashMap<String, String>,
 
+    /// Postprocessing pipeline for all `PMTiles` sources.
+    /// Overrides global `process`; overridden by per-source `process`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process: Option<ProcessConfig>,
+
     #[serde(flatten, skip_serializing)]
     pub unrecognized: UnrecognizedValues,
 
@@ -41,6 +46,7 @@ impl PartialEq for PmtConfig {
     fn eq(&self, other: &Self) -> bool {
         self.directory_cache == other.directory_cache
             && self.options == other.options
+            && self.process == other.process
             && self.unrecognized == other.unrecognized
         // pmtiles_directory_cache is intentionally excluded from equality check
     }
