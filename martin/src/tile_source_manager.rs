@@ -4,10 +4,10 @@ use dashmap::DashMap;
 use martin_core::tiles::{BoxedSource, OptTileCache};
 use tracing::info;
 
-use crate::MartinResult;
 use crate::config::file::OnInvalid;
 use crate::reload::ReloadAdvisory;
 use crate::source::TileSources;
+use crate::{MartinError, MartinResult};
 
 /// Manages the live set of tile sources and their caches.
 ///
@@ -53,6 +53,19 @@ impl TileSourceManager {
         }
     }
 
+    /// Applies the [`OnInvalid`] policy to a source initialization error.
+    ///
+    /// On `Abort`, returns the error. On `Warn`, logs it and returns `Ok`.
+    pub fn handle_source_error(&self, id: &str, err: MartinError) -> MartinResult<()> {
+        match self.on_invalid {
+            OnInvalid::Abort => Err(err),
+            OnInvalid::Warn => {
+                tracing::warn!("Skipping source {id:?}: {err}");
+                Ok(())
+            }
+        }
+    }
+
     /// Returns a [`TileSources`] view for read-only tile serving.
     #[must_use]
     pub fn tile_sources(&self) -> TileSources {
@@ -67,53 +80,30 @@ impl TileSourceManager {
 
     /// Applies a [`ReloadAdvisory`] to the live source set.
     ///
-    /// When a source fails to initialize, the configured [`OnInvalid`] policy
-    /// controls the behavior:
-    /// - [`OnInvalid::Abort`] — return the error immediately.
-    /// - [`OnInvalid::Warn`] — log a warning and skip the source.
-    ///
     /// Order of operations:
     /// 1. **Updates** — time-critical; invalidate cache then replace the source.
     /// 2. **Additions** — make new sources available.
     /// 3. **Removals** — garbage-collect stale sources and their cached tiles.
-    pub async fn apply_changes(&self, advisory: ReloadAdvisory) -> MartinResult<()> {
+    pub async fn apply_changes(&self, advisory: ReloadAdvisory) {
         if advisory.is_empty() {
-            return Ok(());
+            return;
         }
 
         // 1. Updates: time-critical, invalidate cache then swap
         for new_source in advisory.updates {
-            match new_source.source {
-                Ok(src) => {
-                    if let Some(cache) = &self.tile_cache {
-                        cache.invalidate_source(&new_source.id);
-                    }
-                    self.tile_sources.insert(new_source.id.clone(), src);
-                    info!("Updated source: {:?}", new_source.id);
-                }
-                Err(err) => match self.on_invalid {
-                    OnInvalid::Abort => return Err(err),
-                    OnInvalid::Warn => {
-                        tracing::warn!("Skipping update for {:?}: {err}", new_source.id);
-                    }
-                },
+            if let Some(cache) = &self.tile_cache {
+                cache.invalidate_source(&new_source.id);
             }
+            self.tile_sources
+                .insert(new_source.id.clone(), new_source.source);
+            info!("Updated source: {:?}", new_source.id);
         }
 
         // 2. Additions: make new sources available
         for new_source in advisory.additions {
-            match new_source.source {
-                Ok(src) => {
-                    self.tile_sources.insert(new_source.id.clone(), src);
-                    info!("Added source: {:?}", new_source.id);
-                }
-                Err(err) => match self.on_invalid {
-                    OnInvalid::Abort => return Err(err),
-                    OnInvalid::Warn => {
-                        tracing::warn!("Skipping addition of {:?}: {err}", new_source.id);
-                    }
-                },
-            }
+            self.tile_sources
+                .insert(new_source.id.clone(), new_source.source);
+            info!("Added source: {:?}", new_source.id);
         }
 
         // 3. Removals: GC stale sources
@@ -129,8 +119,6 @@ impl TileSourceManager {
         if let Some(cache) = &self.tile_cache {
             cache.run_pending_tasks().await;
         }
-
-        Ok(())
     }
 }
 
@@ -186,10 +174,10 @@ mod tests {
     fn new_source(name: &str) -> NewSource {
         NewSource {
             id: name.to_string(),
-            source: Ok(Box::new(TestSource {
+            source: Box::new(TestSource {
                 id: name.to_string(),
                 tj: tilejson! { tiles: vec![] },
-            })),
+            }),
         }
     }
 
@@ -206,7 +194,7 @@ mod tests {
             additions: vec![new_source("src_a"), new_source("src_b")],
             ..Default::default()
         };
-        mgr.apply_changes(advisory).await.unwrap();
+        mgr.apply_changes(advisory).await;
         assert_yaml_snapshot!(sorted_source_names(&mgr), @"
         - src_a
         - src_b
@@ -220,7 +208,7 @@ mod tests {
             additions: vec![new_source("src_a"), new_source("src_b")],
             ..Default::default()
         };
-        mgr.apply_changes(add).await.unwrap();
+        mgr.apply_changes(add).await;
         assert_yaml_snapshot!(sorted_source_names(&mgr), @"
         - src_a
         - src_b
@@ -234,7 +222,7 @@ mod tests {
             removals,
             ..Default::default()
         };
-        mgr.apply_changes(remove).await.unwrap();
+        mgr.apply_changes(remove).await;
         assert_yaml_snapshot!(sorted_source_names(&mgr), @"- src_b");
     }
 
@@ -245,20 +233,20 @@ mod tests {
             additions: vec![new_source("src_a")],
             ..Default::default()
         };
-        mgr.apply_changes(add).await.unwrap();
+        mgr.apply_changes(add).await;
 
         let update = ReloadAdvisory {
             updates: vec![new_source("src_a")],
             ..Default::default()
         };
-        mgr.apply_changes(update).await.unwrap();
+        mgr.apply_changes(update).await;
         assert_yaml_snapshot!(sorted_source_names(&mgr), @"- src_a");
     }
 
     #[tokio::test]
     async fn empty_advisory_is_noop() {
         let mgr = make_manager();
-        mgr.apply_changes(ReloadAdvisory::default()).await.unwrap();
+        mgr.apply_changes(ReloadAdvisory::default()).await;
         assert_yaml_snapshot!(sorted_source_names(&mgr), @"[]");
     }
 
@@ -280,7 +268,7 @@ mod tests {
             additions: vec![new_source("a")],
             ..Default::default()
         };
-        mgr.apply_changes(advisory).await.unwrap();
+        mgr.apply_changes(advisory).await;
         assert_yaml_snapshot!(sorted_source_names(&mgr), @"- a");
     }
 }

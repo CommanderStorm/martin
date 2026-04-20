@@ -267,7 +267,7 @@ impl FileConfigSrc {
 }
 
 #[cfg(feature = "mbtiles")]
-fn is_sqlite_memory_uri(path: &Path) -> bool {
+pub(crate) fn is_sqlite_memory_uri(path: &Path) -> bool {
     if let Some(s) = path.to_str() {
         s.starts_with("file:") && s.contains("mode=memory") && s.contains("cache=shared")
     } else {
@@ -485,7 +485,7 @@ async fn resolve_one_path_int<T: TileSourceConfiguration>(
 ///
 /// Returns an error if Rust's underlying [`read_dir`](std::fs::read_dir) returns an error.
 #[cfg(feature = "_tiles")]
-fn collect_files_with_extension(
+pub(crate) fn collect_files_with_extension(
     base_path: &Path,
     allowed_extension: &[&str],
 ) -> Result<Vec<PathBuf>, ConfigFileError> {

@@ -72,6 +72,10 @@ pub enum MartinError {
     #[error(transparent)]
     SpriteError(#[from] martin_core::sprites::SpriteError),
 
+    #[cfg(feature = "mbtiles")]
+    #[error("File watcher error: {0}")]
+    NotifyError(#[from] notify::Error),
+
     #[error(transparent)]
     WebError(#[from] actix_web::Error),
 

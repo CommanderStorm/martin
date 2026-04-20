@@ -102,7 +102,7 @@ unstable-cog = ["martin-core/unstable-cog", "_tiles"]
 unstable-rendering = ["styles", "martin-core/unstable-rendering", "dep:image"]
 fonts = ["martin-core/fonts", "_catalog"]
 lambda = ["dep:lambda-web"]
-mbtiles = ["martin-core/mbtiles", "dep:mbtiles", "_tiles"]
+mbtiles = ["martin-core/mbtiles", "dep:mbtiles", "dep:flume", "dep:notify", "dep:tokio-util", "_tiles"]
 metrics = ["dep:actix-web-prom"]
 pmtiles = ["martin-core/pmtiles", "dep:object_store", "_tiles"]
 postgres = [
@@ -140,6 +140,7 @@ async-trait.workspace = true
 clap.workspace = true
 dashmap.workspace = true
 enum-display = { workspace = true, optional = true }
+flume = { workspace = true, optional = true }
 futures.workspace = true
 hotpath.workspace = true
 humantime-serde.workspace = true
@@ -152,6 +153,7 @@ log.workspace = true
 martin-core.workspace = true
 martin-tile-utils.workspace = true
 mbtiles = { workspace = true, optional = true }
+notify = { workspace = true, optional = true }
 num_cpus.workspace = true
 object_store = { workspace = true, optional = true }
 postgis = { workspace = true, optional = true }
@@ -166,6 +168,7 @@ subst.workspace = true
 thiserror.workspace = true
 tilejson.workspace = true
 tokio = { workspace = true, features = ["io-std"] }
+tokio-util = { workspace = true, optional = true }
 tracing.workspace = true
 tracing-actix-web.workspace = true
 tracing-indicatif.workspace = true

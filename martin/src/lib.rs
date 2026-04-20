@@ -19,6 +19,9 @@ mod tile_source_manager;
 #[cfg(feature = "_tiles")]
 pub use tile_source_manager::TileSourceManager;
 
+#[cfg(feature = "mbtiles")]
+mod mbt_reloader;
+
 mod error;
 pub use error::{MartinError, MartinResult};
 

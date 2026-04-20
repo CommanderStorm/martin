@@ -43,7 +43,7 @@ use super::styles::StyleConfig;
 use crate::config::file::FileConfigEnum;
 #[cfg(any(feature = "_tiles", feature = "sprites", feature = "fonts"))]
 use crate::config::file::cache::{CacheConfig, SubCacheSetting};
-#[cfg(any(feature = "pmtiles", feature = "mbtiles", feature = "unstable-cog"))]
+#[cfg(any(feature = "pmtiles", feature = "unstable-cog"))]
 use crate::config::file::resolve_files;
 use crate::config::file::{
     ConfigFileError, ConfigFileResult, ConfigurationLivecycleHooks as _, GlobalCacheConfig,
@@ -51,10 +51,14 @@ use crate::config::file::{
 };
 #[cfg(feature = "_tiles")]
 use crate::config::primitives::IdResolver;
+#[cfg(feature = "_tiles")]
+use crate::reload::{NewSource, ReloadAdvisory};
 #[cfg(feature = "postgres")]
 use crate::config::primitives::OptOneMany;
 #[cfg(feature = "_tiles")]
 use crate::srv::RESERVED_KEYWORDS;
+#[cfg(feature = "mbtiles")]
+use crate::mbt_reloader::MBTilesReloader;
 #[cfg(feature = "_tiles")]
 use crate::tile_source_manager::TileSourceManager;
 use crate::{MartinError, MartinResult};
@@ -241,7 +245,10 @@ impl Config {
         }
     }
 
-    pub async fn resolve(&mut self) -> MartinResult<ServerState> {
+    pub async fn resolve(
+        &mut self,
+        #[cfg(feature = "mbtiles")] shutdown: tokio_util::sync::CancellationToken,
+    ) -> MartinResult<ServerState> {
         init_aws_lc_tls();
 
         #[cfg(feature = "_tiles")]
@@ -254,11 +261,20 @@ impl Config {
         let pmtiles_cache = cache_config.create_pmtiles_cache();
 
         #[cfg(feature = "_tiles")]
-        let (tile_sources, warnings) = self
+        let tile_manager = TileSourceManager::new(
+            cache_config.create_tile_cache(),
+            self.on_invalid.unwrap_or_default(),
+        );
+
+        #[cfg(feature = "_tiles")]
+        let warnings = self
             .resolve_tile_sources(
                 &resolver,
+                &tile_manager,
                 #[cfg(feature = "pmtiles")]
                 pmtiles_cache,
+                #[cfg(feature = "mbtiles")]
+                shutdown,
             )
             .await?;
 
@@ -269,11 +285,7 @@ impl Config {
 
         Ok(ServerState {
             #[cfg(feature = "_tiles")]
-            tile_manager: TileSourceManager::from_sources(
-                cache_config.create_tile_cache(),
-                self.on_invalid.unwrap_or_default(),
-                tile_sources,
-            ),
+            tile_manager,
 
             #[cfg(feature = "sprites")]
             sprites: self.sprites.resolve()?,
@@ -398,11 +410,10 @@ impl Config {
     async fn resolve_tile_sources(
         &mut self,
         idr: &IdResolver,
+        tile_manager: &TileSourceManager,
         #[cfg(feature = "pmtiles")] pmtiles_cache: PmtCache,
-    ) -> MartinResult<(
-        Vec<Vec<martin_core::tiles::BoxedSource>>,
-        Vec<TileSourceWarning>,
-    )> {
+        #[cfg(feature = "mbtiles")] shutdown: tokio_util::sync::CancellationToken,
+    ) -> MartinResult<Vec<TileSourceWarning>> {
         let mut sources_and_warnings: Vec<BoxFuture<_>> = Vec::new();
 
         #[cfg(feature = "postgres")]
@@ -426,13 +437,6 @@ impl Config {
             sources_and_warnings.push(Box::pin(val));
         }
 
-        #[cfg(feature = "mbtiles")]
-        if !self.mbtiles.is_empty() {
-            let cfg = &mut self.mbtiles;
-            let val = resolve_files(cfg, idr, &["mbtiles"], self.cache.policy());
-            sources_and_warnings.push(Box::pin(val));
-        }
-
         #[cfg(feature = "unstable-cog")]
         if !self.cog.is_empty() {
             let cfg = &mut self.cog;
@@ -444,10 +448,51 @@ impl Config {
         let (all_tile_sources, all_tile_warnings): (Vec<_>, Vec<_>) =
             all_results.into_iter().unzip();
 
-        Ok((
-            all_tile_sources,
-            all_tile_warnings.into_iter().flatten().collect(),
-        ))
+        // Convert resolved sources into additions and apply to the manager
+        let sources: Vec<martin_core::tiles::BoxedSource> =
+            all_tile_sources.into_iter().flatten().collect();
+        if !sources.is_empty() {
+            let advisory = ReloadAdvisory {
+                additions: sources
+                    .into_iter()
+                    .map(|src| NewSource {
+                        id: src.get_id().to_string(),
+                        source: src,
+                    })
+                    .collect(),
+                ..Default::default()
+            };
+            tile_manager.apply_changes(advisory).await;
+        }
+        #[cfg_attr(
+            not(feature = "mbtiles"),
+            expect(
+                unused_mut,
+                reason = "only mbtiles requires the warnings vector to be mut"
+            )
+        )]
+        let mut warnings: Vec<TileSourceWarning> =
+            all_tile_warnings.into_iter().flatten().collect();
+
+        // MBTiles: initialize via reloader, optionally spawn file watcher
+        #[cfg(feature = "mbtiles")]
+        if let Some(mbt_file_config) = self.mbtiles.extract_file_config() {
+            let mut reloader = MBTilesReloader::new(
+                tile_manager.clone(),
+                mbt_file_config,
+                idr.clone(),
+                self.cache.policy(),
+                shutdown,
+            )?;
+            let mbt_warnings = reloader.reload_once().await?;
+            warnings.extend(mbt_warnings);
+            self.mbtiles = reloader.resolved_config();
+            if reloader.has_watchable_sources() {
+                tokio::spawn(async move { reloader.run().await });
+            }
+        }
+
+        Ok(warnings)
     }
 
     pub fn save_to_file(&self, file_name: &Path) -> ConfigFileResult<()> {

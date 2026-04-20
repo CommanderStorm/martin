@@ -39,7 +39,14 @@ pub async fn assert_response(response: ServiceResponse) -> ServiceResponse {
 
 pub type MockSource = (ServerState, Config);
 pub async fn mock_sources(mut config: Config) -> MockSource {
-    let res = config.resolve().await;
+    #[cfg(feature = "mbtiles")]
+    let shutdown = tokio_util::sync::CancellationToken::new();
+    let res = config
+        .resolve(
+            #[cfg(feature = "mbtiles")]
+            shutdown,
+        )
+        .await;
     let res = res.unwrap_or_else(|e| {
         panic!(
             "Failed to resolve config:\n{config}\nBecause {e}",

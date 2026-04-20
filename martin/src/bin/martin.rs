@@ -33,8 +33,15 @@ async fn start(args: Args) -> MartinResult<()> {
         &env,
     )?;
     config.finalize()?;
+    #[cfg(feature = "mbtiles")]
+    let shutdown = tokio_util::sync::CancellationToken::new();
     #[cfg(feature = "_catalog")]
-    let sources = config.resolve().await?;
+    let sources = config
+        .resolve(
+            #[cfg(feature = "mbtiles")]
+            shutdown.clone(),
+        )
+        .await?;
 
     if let Some(file_name) = save_config {
         config.save_to_file(file_name.as_path())?;
@@ -68,7 +75,10 @@ async fn start(args: Args) -> MartinResult<()> {
     #[cfg(not(all(feature = "webui", not(docsrs))))]
     info!("Martin server is now active. See {base_url}catalog to see available services");
 
-    server.await
+    let result = server.await;
+    #[cfg(feature = "mbtiles")]
+    shutdown.cancel();
+    result
 }
 
 #[tokio::main]

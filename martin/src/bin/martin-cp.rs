@@ -190,7 +190,14 @@ async fn start(copy_args: CopierArgs) -> MartinCpResult<()> {
     )?;
     config.finalize()?;
 
-    let sources = config.resolve().await?;
+    #[cfg(feature = "mbtiles")]
+    let shutdown = tokio_util::sync::CancellationToken::new();
+    let sources = config
+        .resolve(
+            #[cfg(feature = "mbtiles")]
+            shutdown.clone(),
+        )
+        .await?;
 
     if let Some(file_name) = save_config {
         config
