@@ -459,6 +459,12 @@ jobs:
       - name: Set up gdal-bin and sqlite3-tools
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y gdal-bin sqlite3-tools
+      - uses: taiki-e/install-action@0abfcd587b70a713fdaa7fb502c885e2112acb15 # v2.75.7
+        if: matrix.os == 'ubuntu-latest'
+        with: { tool: 'just' }
+      - name: Install rendering dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: just install-dependencies
       - name: Install sqlite3 and sqldiff on Windows
         if: matrix.os == 'windows-latest'
         run: choco install sqlite --yes
@@ -728,6 +734,10 @@ jobs:
         with: { name: 'build-x86_64-unknown-linux-gnu', path: 'target_releases/' }
       - name: Set up gdal-bin and sqlite3-tools
         run: sudo apt update && sudo apt-get install -y gdal-bin sqlite3-tools
+      - uses: taiki-e/install-action@0abfcd587b70a713fdaa7fb502c885e2112acb15 # v2.75.7
+        with: { tool: 'just' }
+      - name: Install rendering dependencies
+        run: just install-dependencies
       - name: Integration Tests
         run: |
           if [[ "${{ matrix.sslmode }}" == "verify-ca" || "${{ matrix.sslmode }}" == "verify-full" ]]; then
