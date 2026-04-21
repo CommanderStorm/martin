@@ -623,6 +623,18 @@ test_jsn style_src2_maptiler_basic.1  style/maptiler_basic.json
 test_jsn style_maplibre_demo          style/maplibre
 test_jsn style_maplibre_demo.1        style/maplibre.json
 
+# Test style rendering (only available on Linux with the rendering feature)
+RENDERING_AVAILABLE=0
+if [[ $OSTYPE == linux* ]] && $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null 2>&1; then
+  >&2 echo "***** Test server-side style rendering *****"
+  RENDERING_AVAILABLE=1
+  # Smoke test rendering endpoints (no output file comparison as rendered images may vary)
+  $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null
+  $CURL "$MARTIN_URL/style/maplibre/1/0/0.png" > /dev/null
+  $CURL "$MARTIN_URL/style/maplibre/1/1/0.png" > /dev/null
+  echo "Style rendering smoke tests passed"
+fi
+
 # Test fonts
 test_font font_1      font/Overpass%20Mono%20Light/0-255
 test_font font_2      font/Overpass%20Mono%20Regular/0-255
@@ -699,6 +711,12 @@ test_log_has_str "$LOG_FILE" "WARN Ignoring unrecognized configuration key 'spri
 # TODO: below should be changed to cog.warning once unstable-cog is made stable
 test_log_has_str "$LOG_FILE" "WARN Ignoring unrecognized configuration key 'cog'. Please check your configuration file for typos."
 test_log_has_str "$LOG_FILE" "WARN Ignoring unrecognized configuration key 'styles.warning'. Please check your configuration file for typos."
+# rendering: true produces different warnings depending on whether the rendering feature is compiled in
+if [[ "$RENDERING_AVAILABLE" == "1" ]]; then
+  test_log_has_str "$LOG_FILE" 'WARN experimental feature rendering is enabled'
+else
+  test_log_has_str "$LOG_FILE" "WARN Ignoring unrecognized configuration key 'styles.rendering'. Please check your configuration file for typos."
+fi
 test_log_has_str "$LOG_FILE" 'WARN Defaulting `pmtiles.allow_http` to `true`. This is likely to become an error in the future for better security.'
 test_log_has_str "$LOG_FILE" 'WARN Environment variable AWS_SKIP_CREDENTIALS is deprecated. Please use pmtiles.skip_signature in the configuration file instead.'
 test_log_has_str "$LOG_FILE" 'WARN Environment variable AWS_REGION is deprecated. Please use pmtiles.region in the configuration file instead.'
