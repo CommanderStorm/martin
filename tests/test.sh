@@ -684,10 +684,14 @@ RENDERING_AVAILABLE=0
 if [[ $OSTYPE == linux* ]] && $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null 2>&1; then
   >&2 echo "***** Test server-side style rendering *****"
   RENDERING_AVAILABLE=1
+  # PNG rendering
   $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null
   $CURL "$MARTIN_URL/style/maplibre/1/0/0.png" > /dev/null
   $CURL "$MARTIN_URL/style/maplibre/1/1/0.png" > /dev/null
-  echo "Style rendering smoke tests passed"
+  # JPEG rendering
+  $CURL "$MARTIN_URL/style/maplibre/0/0/0.jpeg" > /dev/null
+  $CURL "$MARTIN_URL/style/maplibre/1/0/0.jpg" > /dev/null
+  echo "Style rendering smoke tests passed (PNG + JPEG)"
 fi
 
 kill_process "$MARTIN_PROC_ID" Martin
