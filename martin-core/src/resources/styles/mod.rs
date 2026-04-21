@@ -28,10 +28,6 @@ mod error;
 #[cfg(all(feature = "rendering", target_os = "linux"))]
 pub use error::StyleError;
 
-/// Static map image rendering pool.
-#[cfg(all(feature = "rendering", target_os = "linux"))]
-pub mod static_render_pool;
-
 /// Style metadata.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CatalogStyleEntry {
@@ -133,30 +129,6 @@ impl StyleSources {
 
         let image = maplibre_native::SingleThreadedRenderPool::global_pool()
             .render_tile(path, z, x, y)
-            .await?;
-        Ok(image)
-    }
-
-    /// Render a static map image with free camera control.
-    #[cfg(all(feature = "rendering", target_os = "linux"))]
-    pub async fn render_static(
-        &self,
-        path: PathBuf,
-        lat: f64,
-        lon: f64,
-        zoom: f64,
-        bearing: f64,
-        pitch: f64,
-        width: u32,
-        height: u32,
-        pixel_ratio: f32,
-    ) -> Result<Image, StyleError> {
-        if !self.rendering_enabled {
-            return Err(StyleError::RenderingIsDisabled);
-        }
-
-        let image = static_render_pool::StaticRenderPool::global_pool()
-            .render_static(path, lat, lon, zoom, bearing, pitch, width, height, pixel_ratio)
             .await?;
         Ok(image)
     }
