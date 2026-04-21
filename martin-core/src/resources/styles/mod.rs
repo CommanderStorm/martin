@@ -235,7 +235,7 @@ mod tests {
         assert_eq!((width, height), (512, 512), "Rendered tile must be 512x512");
 
         // Verify the image is not blank (has at least 2 distinct pixel values)
-        let pixels: std::collections::HashSet<_> = rendered_img.pixels().map(|p| *p).collect();
+        let pixels: std::collections::HashSet<_> = rendered_img.pixels().copied().collect();
         assert!(
             pixels.len() > 1,
             "Rendered image is blank (all pixels identical)"
