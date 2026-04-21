@@ -222,22 +222,63 @@ mod tests {
         let mut styles = StyleSources::default();
         styles.set_rendering_enabled(true);
 
-        let image = styles.render(style_path, z, x, y).await.unwrap();
+        let rendered = styles.render(style_path, z, x, y).await.unwrap();
+        let rendered_img = rendered.as_image();
+        let (width, height) = (rendered_img.width(), rendered_img.height());
 
-        let mut img_buffer = std::io::Cursor::new(Vec::new());
-        image
-            .as_image()
-            .write_to(&mut img_buffer, image::ImageFormat::Png)
-            .unwrap();
-
-        // Create a snapshot name based on the style and coordinates
-        let snapshot_name = format!(
+        // Load reference image from git-tracked fixtures
+        let reference_name = format!(
             "{}_{}_{}_{}.png",
             style_file.replace('/', "_").replace(".json", ""),
             z,
             x,
             y
         );
-        insta::assert_binary_snapshot!(&snapshot_name, img_buffer.into_inner());
+        let reference_path = Path::new("../tests/fixtures/rendering_references").join(&reference_name);
+
+        if reference_path.exists() {
+            // Encode rendered image to PNG bytes for comparison
+            let mut rendered_png = std::io::Cursor::new(Vec::new());
+            rendered_img
+                .write_to(&mut rendered_png, image::ImageFormat::Png)
+                .unwrap();
+
+            let reference_png = std::fs::read(&reference_path)
+                .unwrap_or_else(|e| panic!("Failed to read reference image {reference_path:?}: {e}"));
+
+            let diff_pixels = pixelmatch::pixelmatch(
+                std::io::Cursor::new(&reference_png),
+                std::io::Cursor::new(rendered_png.get_ref()),
+                None::<&mut std::io::Sink>,
+                Some(width),
+                Some(height),
+                Some(pixelmatch::Options {
+                    threshold: 0.1,
+                    ..Default::default()
+                }),
+            )
+            .unwrap_or_else(|e| panic!("pixelmatch failed: {e}"));
+
+            let total_pixels = (width * height) as usize;
+            let diff_pct = (diff_pixels as f64 / total_pixels as f64) * 100.0;
+            assert!(
+                diff_pct < 1.0,
+                "Rendered image {reference_name} differs from reference by {diff_pct:.2}% ({diff_pixels}/{total_pixels} pixels). \
+                 If this is expected, update the reference images."
+            );
+        } else {
+            // No reference image exists yet — save the rendered output as the new reference
+            std::fs::create_dir_all(reference_path.parent().unwrap()).unwrap();
+            rendered_img
+                .write_to(
+                    &mut std::io::BufWriter::new(std::fs::File::create(&reference_path).unwrap()),
+                    image::ImageFormat::Png,
+                )
+                .unwrap();
+            panic!(
+                "No reference image found at {reference_path:?}. Created it from the current render. \
+                 Commit this file and re-run the test."
+            );
+        }
     }
 }
