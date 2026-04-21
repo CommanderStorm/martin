@@ -73,10 +73,11 @@ pub async fn get_style_rendered(
     };
 
     // JPEG doesn't support alpha, so convert RGBA→RGB when needed
+    let dynamic_img = image::DynamicImage::ImageRgba8(rendered_img.clone());
     let encoded_img: image::DynamicImage = if image_format == image::ImageFormat::Jpeg {
-        image::DynamicImage::ImageRgb8(rendered_img.to_rgb8())
+        image::DynamicImage::ImageRgb8(dynamic_img.to_rgb8())
     } else {
-        rendered_img
+        dynamic_img
     };
     let image_encoding_result = encoded_img.write_to(&mut img_buffer, image_format);
     match image_encoding_result {
