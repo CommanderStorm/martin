@@ -623,18 +623,6 @@ test_jsn style_src2_maptiler_basic.1  style/maptiler_basic.json
 test_jsn style_maplibre_demo          style/maplibre
 test_jsn style_maplibre_demo.1        style/maplibre.json
 
-# Test style rendering (only available on Linux with the rendering feature)
-RENDERING_AVAILABLE=0
-if [[ $OSTYPE == linux* ]] && $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null 2>&1; then
-  >&2 echo "***** Test server-side style rendering *****"
-  RENDERING_AVAILABLE=1
-  # Smoke test rendering endpoints (no output file comparison as rendered images may vary)
-  $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null
-  $CURL "$MARTIN_URL/style/maplibre/1/0/0.png" > /dev/null
-  $CURL "$MARTIN_URL/style/maplibre/1/1/0.png" > /dev/null
-  echo "Style rendering smoke tests passed"
-fi
-
 # Test fonts
 test_font font_1      font/Overpass%20Mono%20Light/0-255
 test_font font_2      font/Overpass%20Mono%20Regular/0-255
@@ -689,6 +677,18 @@ test_redirect "table_source/0/0/0.pbf?test=123" "/table_source/0/0/0?test=123"
 >&2 echo "***** Test observability outputs (metrics, logs) *****"
 
 test_metrics "metrics_1"
+
+# Test style rendering (only available on Linux with the rendering feature)
+# Run AFTER metrics collection to avoid adding rendering-specific metric entries to expected output
+RENDERING_AVAILABLE=0
+if [[ $OSTYPE == linux* ]] && $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null 2>&1; then
+  >&2 echo "***** Test server-side style rendering *****"
+  RENDERING_AVAILABLE=1
+  $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null
+  $CURL "$MARTIN_URL/style/maplibre/1/0/0.png" > /dev/null
+  $CURL "$MARTIN_URL/style/maplibre/1/1/0.png" > /dev/null
+  echo "Style rendering smoke tests passed"
+fi
 
 kill_process "$MARTIN_PROC_ID" Martin
 test_log_has_str "$LOG_FILE" 'WARN Table public.table_source has no spatial index on column geom'

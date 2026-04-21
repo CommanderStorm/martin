@@ -72,7 +72,7 @@ itertools = "0.14"
 json-patch = "4"
 lambda-web = { version = "0.2.1", features = ["actix4"] }
 log = "0.4"
-maplibre_native = "0.4.2"
+maplibre_native = { path = "../maplibre-native-rs" }
 martin-core = { path = "./martin-core", version = "0.4.0", default-features = false }
 martin-tile-utils = { path = "./martin-tile-utils", version = "0.7.0" }
 mbtiles = { path = "./mbtiles", version = "0.16.0" }
