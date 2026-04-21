@@ -100,7 +100,7 @@ default = [
     "webui",
 ]
 unstable-cog = ["martin-core/unstable-cog", "_tiles"]
-rendering = ["styles", "martin-core/rendering", "dep:image"]
+rendering = ["styles", "martin-core/rendering", "dep:image", "dep:csscolorparser", "dep:geo-types", "dep:polyline", "dep:tiny-skia"]
 fonts = ["martin-core/fonts", "_catalog"]
 lambda = ["dep:lambda-web"]
 mbtiles = ["martin-core/mbtiles", "dep:mbtiles", "_tiles"]
@@ -139,9 +139,11 @@ actix-web-prom = { workspace = true, optional = true }
 actix-web-static-files = { workspace = true, optional = true }
 async-trait.workspace = true
 clap.workspace = true
+csscolorparser = { workspace = true, optional = true }
 dashmap.workspace = true
 enum-display = { workspace = true, optional = true }
 futures.workspace = true
+geo-types = { workspace = true, optional = true }
 hotpath.workspace = true
 humantime-serde.workspace = true
 image = { workspace = true, optional = true }
@@ -155,7 +157,9 @@ martin-tile-utils.workspace = true
 mbtiles = { workspace = true, optional = true }
 num_cpus.workspace = true
 object_store = { workspace = true, optional = true }
+polyline = { workspace = true, optional = true }
 postgis = { workspace = true, optional = true }
+tiny-skia = { workspace = true, optional = true }
 postgres-protocol = { workspace = true, optional = true }
 rustls.workspace = true
 serde.workspace = true
@@ -183,6 +187,7 @@ walkdir = { workspace = true, optional = true }
 criterion.workspace = true
 indoc.workspace = true
 insta = { workspace = true, features = ["json", "yaml", "redactions"] }
+pixelmatch.workspace = true
 rstest.workspace = true
 tempfile.workspace = true
 testcontainers-modules.workspace = true

@@ -54,6 +54,8 @@ bit-set = "0.9"
 brotli = ">=5, <9"
 bytes = "1"
 clap = { version = "4", features = ["derive", "unstable-markdown", "wrap_help"] }
+csscolorparser = "0.8"
+tiny-skia = "0.11"
 criterion = { version = "0.8", features = ["async_futures", "async_tokio", "html_reports"] }
 dashmap = { version = "6.1.0", features = ["serde", "inline", "rayon"] }
 deadpool-postgres = "0.14"
@@ -62,6 +64,7 @@ env_logger = "0.11"
 flate2 = "1"
 flume = "0.12"
 futures = "0.3"
+geo-types = "0.7"
 hotpath = "0.14"
 humantime-serde = "1.1.1"
 image = "0.25.8"
@@ -72,7 +75,7 @@ itertools = "0.14"
 json-patch = "4"
 lambda-web = { version = "0.2.1", features = ["actix4"] }
 log = "0.4"
-maplibre_native = "0.4.2"
+maplibre_native = "0.4.5"
 martin-core = { path = "./martin-core", version = "0.4.0", default-features = false }
 martin-tile-utils = { path = "./martin-tile-utils", version = "0.7.0" }
 mbtiles = { path = "./mbtiles", version = "0.16.0" }
@@ -84,6 +87,7 @@ pbf_font_tools = { version = "3.1.1", features = ["freetype"] }
 pixelmatch = "0.1"
 pmtiles = { version = "0.21.0", features = ["tilejson", "object-store"] }
 png = "0.18.0"
+polyline = "0.11"
 postgis = "0.9"
 postgres = { version = "0.19", features = ["with-time-0_3", "with-uuid-1", "with-serde_json-1"] }
 postgres-protocol = "0.6"

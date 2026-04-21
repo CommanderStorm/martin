@@ -30,6 +30,8 @@ use crate::srv::sprites;
 use crate::srv::styles;
 #[cfg(all(feature = "rendering", target_os = "linux"))]
 use crate::srv::styles_rendering;
+#[cfg(all(feature = "rendering", target_os = "linux"))]
+use crate::srv::styles_static;
 #[cfg(feature = "_tiles")]
 use crate::srv::tiles;
 use crate::{MartinError, MartinResult};
@@ -143,6 +145,10 @@ fn register_services(
 
     #[cfg(all(feature = "rendering", target_os = "linux"))]
     cfg.service(styles_rendering::get_style_rendered);
+
+    #[cfg(all(feature = "rendering", target_os = "linux"))]
+    cfg.service(styles_static::get_style_static)
+        .service(styles_static::post_style_static);
 
     #[cfg(all(feature = "webui", not(docsrs)))]
     {
