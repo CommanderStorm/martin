@@ -260,6 +260,7 @@ mod tests {
             .unwrap_or_else(|e| panic!("pixelmatch failed: {e}"));
 
             let total_pixels = (width * height) as usize;
+            #[allow(clippy::cast_precision_loss)]
             let diff_pct = (diff_pixels as f64 / total_pixels as f64) * 100.0;
             assert!(
                 diff_pct < 1.0,
