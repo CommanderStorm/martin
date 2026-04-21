@@ -120,14 +120,16 @@ build-release target:
     fi
 
 # Build debian package
+# Note: rendering feature is excluded because the Debian build targets older glibc (ubuntu-22.04)
+# and maplibre_native pre-built libraries require newer glibc.
 build-deb output: (cargo-install 'cargo-deb')
     #!/usr/bin/env bash
     set -euo pipefail
     sudo apt-get install -y dpkg dpkg-dev liblzma-dev
     if [[ "{{release_mode}}" == "1" ]]; then
-        cargo deb -v -p martin --output {{output}}
+        cargo deb -v -p martin --output {{output}} -- --no-default-features --features fonts,lambda,mbtiles,metrics,pmtiles,postgres,sprites,styles,webui
     else
-        cargo deb -v -p martin --profile dev --output {{output}}
+        cargo deb -v -p martin --profile dev --output {{output}} -- --no-default-features --features fonts,lambda,mbtiles,metrics,pmtiles,postgres,sprites,styles,webui
     fi
 
 # Build for musl target using zigbuild
