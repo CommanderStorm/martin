@@ -70,6 +70,9 @@ jobs:
           key: ${{ matrix.os }}
       - uses: taiki-e/install-action@0abfcd587b70a713fdaa7fb502c885e2112acb15 # v2.75.7
         with: { tool: 'just' }
+      - name: Install rendering dependencies
+        if: runner.os == 'Linux'
+        run: just install-dependencies
       - name: Run cargo test
         run: |
           set -x
@@ -97,6 +100,8 @@ jobs:
         with: { tool: 'just' }
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/main'
+      - name: Install rendering dependencies
+        run: just install-dependencies
       - run: just env-info
       - run: just clippy
       - run: just check
@@ -779,6 +784,10 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with: { persist-credentials: false }
+      - uses: taiki-e/install-action@0abfcd587b70a713fdaa7fb502c885e2112acb15 # v2.75.7
+        with: { tool: 'just' }
+      - name: Install rendering dependencies
+        run: just install-dependencies
       - name: Test packaging
         run: cargo publish --workspace --dry-run
 

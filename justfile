@@ -132,6 +132,7 @@ build-deb output: (cargo-install 'cargo-deb')
 
 # Build for musl target using zigbuild
 # Set RELEASE_MODE='' to build in debug mode (used for PRs in CI to reduce build time).
+# Note: rendering feature is excluded because maplibre_native cannot be cross-compiled for musl targets.
 build-release-musl target:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -140,7 +141,7 @@ build-release-musl target:
         export CARGO_TARGET_{{shoutysnakecase(target)}}_RUSTFLAGS='-C strip=debuginfo'
     fi
     cargo zigbuild {{if release_mode == '1' {'--release'} else {''} }} --target {{target}} --package mbtiles --locked
-    cargo zigbuild {{if release_mode == '1' {'--release'} else {''} }} --target {{target}} --package martin --locked
+    cargo zigbuild {{if release_mode == '1' {'--release'} else {''} }} --target {{target}} --package martin --locked --no-default-features --features fonts,lambda,mbtiles,metrics,pmtiles,postgres,sprites,styles,webui
 
 
 # Move build artifacts to target_releases directory

@@ -38,14 +38,14 @@ fn test_get(path: &str) -> TestRequest {
     TestRequest::get().uri(path)
 }
 
-#[cfg(all(feature = "unstable-rendering", target_os = "linux"))]
+#[cfg(all(feature = "rendering", target_os = "linux"))]
 const CONFIG_STYLES: &str = indoc! {"
         styles:
             rendering: true
             sources:
                 maplibre_demo: ../tests/fixtures/styles/maplibre_demo.json
     "};
-#[cfg(any(not(feature = "unstable-rendering"), not(target_os = "linux")))]
+#[cfg(any(not(feature = "rendering"), not(target_os = "linux")))]
 const CONFIG_STYLES: &str = indoc! {"
         styles:
             sources:
@@ -91,7 +91,7 @@ async fn style_json_not_found() {
     assert_eq!(body, "No such style exists");
 }
 
-#[cfg(all(feature = "unstable-rendering", target_os = "linux"))]
+#[cfg(all(feature = "rendering", target_os = "linux"))]
 mod render_tests {
     use rstest::rstest;
 
