@@ -190,10 +190,10 @@ sprites:
   sources:
     mysrc: tests/fixtures/sprites/src2
 styles:
-  rendering: true
   paths: tests/fixtures/styles/src2
   sources:
     maplibre: tests/fixtures/styles/maplibre_demo.json
+  rendering: true
 fonts:
 - tests/fixtures/fonts/overpass-mono-regular.ttf
 - tests/fixtures/fonts
