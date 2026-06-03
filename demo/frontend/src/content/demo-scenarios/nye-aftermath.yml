@@ -1,0 +1,7 @@
+id: nye-aftermath
+label: Sun Jan 1, 4am
+layerId: get_trips
+preset:
+  date_from: "2017-01-01"
+  date_to: "2017-01-01"
+  hour: 4

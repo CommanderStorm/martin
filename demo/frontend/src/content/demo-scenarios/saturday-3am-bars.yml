@@ -1,0 +1,8 @@
+id: saturday-3am-bars
+label: Sat Jan 14, 3am
+layerId: get_flows
+preset:
+  date_from: "2017-01-14"
+  date_to: "2017-01-14"
+  hour: 3
+  min_trips: 5

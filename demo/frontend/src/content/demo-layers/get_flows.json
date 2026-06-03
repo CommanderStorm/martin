@@ -1,0 +1,72 @@
+{
+  "allowedParameters": [
+    {
+      "default": "2017-01-13",
+      "label": "From date",
+      "name": "date_from",
+      "type": "string"
+    },
+    {
+      "default": "2017-01-13",
+      "label": "To date",
+      "name": "date_to",
+      "type": "string"
+    },
+    {
+      "default": 17,
+      "label": "Hour (-1 = all)",
+      "max": 23,
+      "min": -1,
+      "name": "hour",
+      "type": "number"
+    },
+    {
+      "default": 10,
+      "label": "Min trips",
+      "max": 500,
+      "min": 1,
+      "name": "min_trips",
+      "type": "number"
+    }
+  ],
+  "hoverNameField": "pu_id",
+  "id": "get_flows",
+  "label": "Taxi flows (PU → DO)",
+  "layerType": "line",
+  "paint": {
+    "line-cap": "round",
+    "line-color": [
+      "interpolate",
+      ["linear"],
+      ["get", "trips"],
+      10,
+      "#3a5a8c",
+      100,
+      "#5b95e0",
+      500,
+      "#95BEFA",
+      2000,
+      "#ffd166"
+    ],
+    "line-opacity": 0.75,
+    "line-width": [
+      "interpolate",
+      ["linear"],
+      ["get", "trips"],
+      10,
+      0.4,
+      100,
+      1.0,
+      500,
+      2.2,
+      2000,
+      4.5
+    ]
+  },
+  "promoteIdField": "pu_id",
+  "sourceLayer": "flows",
+  "url": "/get_flows/{z}/{x}/{y}",
+  "viewBounds": [[-74.26, 40.48], [-73.7, 40.93]],
+  "viewCenter": [-73.985, 40.748],
+  "viewZoom": 10.5
+}

@@ -1,0 +1,34 @@
+---
+import Icon from '../Icon.astro';
+
+const outlineClass =
+  'inline-flex items-center gap-2 px-5 py-2.5 text-sm font-mono bg-background/80 text-foreground border border-border rounded hover:border-primary/50 transition-colors shadow-lg';
+---
+
+<a
+  class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-mono bg-primary text-primary-foreground rounded hover:opacity-90 transition-opacity shadow-lg"
+  href="https://maplibre.org/martin/"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  Get started
+  <Icon name="external-link" size={14} />
+</a>
+<a
+  class={outlineClass}
+  href="https://github.com/maplibre/martin"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  <Icon name="github" size={14} />
+  View on GitHub
+</a>
+<a
+  class={outlineClass}
+  href="https://github.com/maplibre/martin/releases"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  <Icon name="download" size={14} />
+  Download
+</a>

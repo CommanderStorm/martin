@@ -1,0 +1,32 @@
+---
+import Icon from '../Icon.astro';
+import InstallBox from '../install-box';
+---
+
+<section class="px-6 py-12 border-b border-border" aria-labelledby="install-heading">
+  <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+    <div>
+      <h2
+        id="install-heading"
+        class="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3"
+      >
+        Quick start
+      </h2>
+      <h3 class="text-xl font-mono font-bold text-foreground mb-3">Install</h3>
+      <p class="text-sm leading-relaxed text-muted-foreground mb-4">
+        Install via Cargo, Homebrew, Docker, or a pre-built binary from GitHub releases.
+        Point Martin at your data and you have a tile server.
+      </p>
+      <a
+        class="inline-flex items-center gap-2 text-sm font-mono text-accent hover:text-foreground transition-colors"
+        href="https://maplibre.org/martin/installation"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <Icon name="book" size={14} />
+        Full installation guide
+      </a>
+    </div>
+    <InstallBox client:load />
+  </div>
+</section>

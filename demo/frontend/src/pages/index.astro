@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import type { DemoScenarioItem } from '../components/demo/ScenarioSelector';
+import Community from '../components/landing/Community.astro';
+import Features from '../components/landing/Features.astro';
+import Hero from '../components/landing/Hero.astro';
+import QuickStart from '../components/landing/QuickStart.astro';
+import Stats from '../components/landing/Stats.astro';
+import Layout from '../layouts/Layout.astro';
+import { MARTIN_BASE_URL } from '../lib/demo-config';
+import { getGithubStats } from '../lib/github-stats';
+
+const stats = await getGithubStats();
+const featuresCollection = await getCollection('features');
+const demoLayers = await getCollection('demoLayers');
+const demoScenarios = await getCollection('demoScenarios');
+const tileSources = demoLayers.map((e) => e.data);
+const scenarios: DemoScenarioItem[] = demoScenarios.map((e) => ({ data: e.data, id: e.id }));
+const features = featuresCollection.map((e) => e.data);
+const latestVersion = stats.latestVersion?.replace('martin-', '') ?? 'v0.x';
+
+const STATS = [
+  { label: 'GitHub stars', value: stats.stars },
+  { label: 'Contributors', value: stats.contributors },
+  { label: 'Forks', value: stats.forks },
+  { label: 'Latest release', value: latestVersion },
+  { label: 'License', value: 'Apache 2.0 + MIT' },
+  { label: 'Tile formats', value: 'MVT + MLT + Raster' },
+];
+---
+
+<Layout latestVersion={latestVersion}>
+  <main class="flex flex-col flex-1">
+    <Hero tileSources={tileSources} scenarios={scenarios} martinBaseUrl={MARTIN_BASE_URL} />
+    <Stats stats={STATS} />
+    <Features features={features} />
+    <QuickStart />
+    <Community />
+  </main>
+</Layout>

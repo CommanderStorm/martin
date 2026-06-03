@@ -1,0 +1,242 @@
+---
+import "../styles/globals.css";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  latestVersion?: string;
+}
+
+const {
+  title = "Martin - vector tiles server",
+  description = "Martin is a fast, lightweight tile server for PostGIS, MBTiles, PMTiles, and more. Serve vector and raster tiles at scale.",
+  latestVersion = "latest",
+} = Astro.props;
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    applicationCategory: "DeveloperApplication",
+    author: {
+      "@type": "Organization",
+      name: "MapLibre",
+      url: "https://maplibre.org/",
+    },
+    codeRepository: "https://github.com/maplibre/martin",
+    description: description,
+    featureList: [
+      "Serve vector tiles from PostGIS",
+      "Serve MBTiles and PMTiles files",
+      "Built-in sprite and font serving",
+      "Prometheus metrics endpoint",
+      "Single binary, zero dependencies",
+      "Docker support",
+    ],
+    license: "https://opensource.org/licenses/Apache-2.0",
+    name: "Martin",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+      url: "https://martin.maplibre.org/",
+    },
+    operatingSystem: "Linux, macOS, Windows",
+    softwareVersion: latestVersion,
+    url: "https://martin.maplibre.org/",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    description: description,
+    name: "Martin",
+    potentialAction: {
+      "@type": "SearchAction",
+      "query-input": "required name=search_term_string",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: "https://maplibre.org/martin/search/?q={search_term_string}",
+      },
+    },
+    url: "https://martin.maplibre.org/",
+  },
+];
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Martin serves tiles from PostGIS tables, MBTiles files, PMTiles archives, or plain file directories - all configured in a single YAML file.",
+      },
+      name: "What data sources does Martin support?",
+    },
+    {
+      "@type": "Question",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Martin is written in Rust and handles thousands of tile requests per second with minimal memory overhead and no runtime dependencies.",
+      },
+      name: "How fast is Martin?",
+    },
+    {
+      "@type": "Question",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. Martin serves both vector tiles (MVT / MapLibre Tiles) and raster tiles from the same server.",
+      },
+      name: "Does Martin support vector and raster tiles?",
+    },
+    {
+      "@type": "Question",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Martin can be installed via Cargo (cargo install martin), Homebrew (brew install martin), Docker, or by downloading a pre-built binary from the GitHub releases page.",
+      },
+      name: "How do I install Martin?",
+    },
+    {
+      "@type": "Question",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. Martin is open source, dual-licensed under Apache 2.0 and MIT, and maintained by the MapLibre community on GitHub.",
+      },
+      name: "Is Martin open source?",
+    },
+  ],
+};
+
+structuredData.push(faqSchema);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="keywords" content="vector tiles, tile server, PostGIS, MBTiles, PMTiles, MapLibre, Rust, geospatial, map tiles, MVT, open source" />
+    <meta name="author" content="MapLibre contributors" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="application-name" content="Martin" />
+    <title>{title}</title>
+
+    <link rel="canonical" href="https://martin.maplibre.org/" />
+    <link rel="icon" href="/m.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://martin.maplibre.org/" />
+    <meta property="og:site_name" content="Martin" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="https://martin.maplibre.org/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Martin - fast open-source vector tile server by MapLibre" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@maplibre" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="https://martin.maplibre.org/og-image.png" />
+    <meta name="twitter:image:alt" content="Martin - fast open-source vector tile server by MapLibre" />
+    <meta name="twitter:creator" content="@maplibre" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  </head>
+  <body class="font-sans antialiased">
+    <noscript>
+      <style>
+        .js-only {
+          display: none;
+        }
+      </style>
+      <p style="position:absolute;left:-9999px">
+        Martin is an open-source vector tile server by MapLibre. It serves vector and raster tiles from PostGIS, MBTiles, PMTiles, and more - with a single
+        Rust binary and no dependencies. Visit <a href="https://maplibre.org/martin/">maplibre.org/martin</a> for documentation and downloads.
+      </p>
+    </noscript>
+    <div class="min-h-screen bg-background text-foreground flex flex-col font-sans">
+      <header class="border-b border-border px-6 py-4">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img alt="Martin tile server" class="h-7 w-auto" src="/logo.svg" width="28" height="28" />
+          </div>
+          <nav aria-label="Main navigation" class="flex items-center gap-5">
+            <a
+              class="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              href="https://maplibre.org/martin/introduction.html"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Docs
+            </a>
+            <a
+              class="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+              href="https://github.com/maplibre/martin/releases"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Releases
+            </a>
+            <a
+              class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              href="https://github.com/maplibre/martin"
+              rel="noopener noreferrer"
+              target="_blank"
+              aria-label="Martin on GitHub"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                ><path
+                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+                ></path></svg
+              >
+              <span class="hidden sm:inline">GitHub</span>
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <slot />
+
+      <footer class="border-t border-border px-6 py-5">
+        <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <img alt="Martin tile server" class="h-5 w-auto" src="/logo.svg" width="20" height="20" />
+            <span class="text-xs text-muted-foreground">© MapLibre contributors</span>
+          </div>
+          <nav aria-label="Footer navigation" class="flex items-center gap-5 text-xs font-mono text-muted-foreground">
+            <a class="hover:text-foreground transition-colors" href="https://maplibre.org/martin/introduction.html" rel="noopener noreferrer" target="_blank">
+              Docs
+            </a>
+            <a class="hover:text-foreground transition-colors" href="https://github.com/maplibre/martin/releases" rel="noopener noreferrer" target="_blank">
+              Releases
+            </a>
+            <a class="hover:text-foreground transition-colors" href="https://maplibre.org/" rel="noopener noreferrer" target="_blank"> MapLibre </a>
+          </nav>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

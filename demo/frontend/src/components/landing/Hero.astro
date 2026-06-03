@@ -1,0 +1,32 @@
+---
+import type { DemoLayerEntry } from "../../content.config";
+import type { DemoScenarioItem } from "../demo/ScenarioSelector";
+import MapDemo from "../MapDemo";
+import HeroActions from "./HeroActions.astro";
+
+interface Props {
+  tileSources: DemoLayerEntry[];
+  scenarios: DemoScenarioItem[];
+  martinBaseUrl: string;
+}
+
+const { tileSources, scenarios, martinBaseUrl } = Astro.props;
+---
+
+<section class="border-b border-border" aria-label="Martin tile server hero">
+  <div class="px-6 pt-12 pb-8 max-w-4xl mx-auto">
+    <p class="text-xs font-mono text-accent uppercase tracking-widest mb-4">Built for MapLibre. Ready for anything.</p>
+    <h1 id="hero-heading" class="text-4xl sm:text-5xl lg:text-6xl font-mono font-bold tracking-tight text-balance leading-tight mb-5">Martin</h1>
+    <p class="text-base sm:text-lg leading-relaxed text-foreground/90 mb-8 max-w-xl text-pretty">
+      A tile server for PostGIS, MBTiles, PMTiles, and on-disk directories. Single Rust binary, configured with YAML. Serves vector and raster tiles, plus
+      fonts, sprites, and MapLibre styles.
+    </p>
+    <div class="flex flex-wrap gap-3">
+      <HeroActions />
+    </div>
+  </div>
+
+  <div class="relative overflow-hidden h-[clamp(300px,50vh,420px)] sm:h-[clamp(420px,65vh,640px)]">
+    <MapDemo tileSources={tileSources} demoScenarios={scenarios} martinBaseUrl={martinBaseUrl} client:load />
+  </div>
+</section>

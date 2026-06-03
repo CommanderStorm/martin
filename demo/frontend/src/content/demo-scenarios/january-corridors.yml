@@ -1,0 +1,8 @@
+id: january-corridors
+label: January, min 2000 trips
+layerId: get_flows
+preset:
+  date_from: "2017-01-01"
+  date_to: "2017-01-31"
+  hour: -1
+  min_trips: 2000

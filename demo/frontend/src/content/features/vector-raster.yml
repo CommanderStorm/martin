@@ -1,0 +1,3 @@
+title: Vector and raster
+body: Serves Mapbox Vector Tiles (MVT), Maplibre Tiles (MLT) and raster tiles. Works with MapLibre, Mapbox GL JS, and Leaflet.
+icon: Layers

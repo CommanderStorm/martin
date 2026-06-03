@@ -1,0 +1,38 @@
+---
+import Icon from '../Icon.astro';
+---
+
+<section class="px-6 py-14" aria-labelledby="community-heading">
+  <div
+    class="max-w-4xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
+  >
+    <div>
+      <h2 id="community-heading" class="text-xl font-mono font-bold text-foreground mb-2">
+        Get involved
+      </h2>
+      <p class="text-sm leading-relaxed text-muted-foreground max-w-sm text-pretty">
+        Martin is built by the community. File issues, submit PRs, or join the discussion on
+        GitHub and the MapLibre Slack.
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-3 shrink-0">
+      <a
+        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-mono bg-primary text-primary-foreground rounded hover:opacity-90 transition-opacity"
+        href="https://github.com/maplibre/martin/issues"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        Open an issue
+        <Icon name="external-link" size={14} />
+      </a>
+      <a
+        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-mono bg-secondary text-secondary-foreground border border-border rounded hover:border-primary/50 transition-colors"
+        href="https://maplibre.org/martin/development/"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        Contributing guide
+      </a>
+    </div>
+  </div>
+</section>

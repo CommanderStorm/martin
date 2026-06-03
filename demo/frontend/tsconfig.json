@@ -1,20 +1,10 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "noEmit": true,
-    "noImplicitAny": false,
-    // Temporary workaround for TypeScript 6 + third-party declaration incompatibilities in the React Compiler toolchain.
-    "skipLibCheck": true,
-    "strict": true,
-    "strictNullChecks": false,
-    "target": "ESNext",
-    "types": ["vite/client"]
-  }
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": ["node_modules"],
+  "extends": "astro/tsconfigs/strict",
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.astro"]
 }
