@@ -131,7 +131,7 @@ impl Args {
                 config.postgres = pg_args.into_config(&mut cli_strings, env);
             } else {
                 // config was loaded from a file, we can only apply a few CLI overrides to it
-                pg_args.override_config(&mut config.postgres, env);
+                pg_args.override_config(&mut config.postgres);
             }
         }
 

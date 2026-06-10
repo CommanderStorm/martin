@@ -93,7 +93,7 @@ impl PostgresArgs {
     }
 
     /// Apply CLI parameters from `self` to the configuration loaded from the config file `pg_config`
-    pub fn override_config(self, pg_config: &mut OptOneMany<PostgresConfig>, env: &impl Env) {
+    pub fn override_config(self, pg_config: &mut OptOneMany<PostgresConfig>) {
         // This ensures that if a new parameter is added to the struct, it will not be forgotten here
         let Self {
             default_srid,
@@ -143,21 +143,6 @@ impl PostgresArgs {
             pg_config.iter_mut().for_each(|c| {
                 c.ssl_certificates.ssl_root_cert.clone_from(&ca_root_file);
             });
-        }
-
-        for v in &[
-            "DATABASE_URL",
-            "DEFAULT_SRID",
-            "PGSSLCERT",
-            "PGSSLKEY",
-            "PGSSLROOTCERT",
-        ] {
-            // We don't want to warn about these in case they were used in the config file expansion
-            if env.has_unused_var(v) {
-                warn!(
-                    "Environment variable {v} is set, but will be ignored because a configuration file was loaded. Any environment variables can be used inside the config yaml file."
-                );
-            }
         }
     }
 

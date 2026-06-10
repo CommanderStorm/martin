@@ -732,15 +732,40 @@ impl OnInvalid {
 
 /// Read config from a file.
 ///
-/// Reads the file, parses it through [`parse_config`], and records which
-/// `${VAR}` / `$VAR` names appeared in the source so callers of
-/// [`Env::has_unused_var`] can warn about env vars that were set but not
-/// referenced by the config.
+/// Reads the file, parses it through [`parse_config`], and warns about any
+/// well-known env vars that are set in the environment but never referenced
+/// in the loaded YAML (so the user sees that their `DATABASE_URL` etc. are
+/// being silently shadowed by the config file).
 pub fn read_config(file_name: &Path, env: &impl Env) -> ConfigFileResult<Config> {
     let contents = std::fs::read_to_string(file_name)
         .map_err(|e| ConfigFileError::ConfigLoadError(e, file_name.into()))?;
-    env.note_referenced(scan_referenced_vars(&contents));
+    #[cfg(feature = "postgres")]
+    warn_unused_pg_env_vars(env, &contents);
     parse_config(&contents, &env.as_property_map(), file_name)
+}
+
+/// Warn about Postgres-related env vars that are set in the environment but
+/// not mentioned anywhere in the config YAML, so the user notices when the
+/// config file is silently shadowing them.
+///
+/// Uses a substring scan rather than the parsed AST so we catch references in
+/// any shape (`${DATABASE_URL}`, `$DATABASE_URL`, etc.) without re-implementing
+/// saphyr's plain-scalar rules.
+#[cfg(feature = "postgres")]
+fn warn_unused_pg_env_vars(env: &impl Env, contents: &str) {
+    for v in &[
+        "DATABASE_URL",
+        "DEFAULT_SRID",
+        "PGSSLCERT",
+        "PGSSLKEY",
+        "PGSSLROOTCERT",
+    ] {
+        if env.var_os(v).is_some() && !contents.contains(v) {
+            warn!(
+                "Environment variable {v} is set, but will be ignored because a configuration file was loaded. Any environment variables can be used inside the config yaml file."
+            );
+        }
+    }
 }
 
 /// Parse a YAML configuration string into a [`Config`].
@@ -793,113 +818,6 @@ pub fn parse_config(
 
     serde_saphyr::from_str_with_options::<Config>(&migrated, options)
         .map_err(|e| ConfigFileError::yaml_parse(e, migrated, file_name))
-}
-
-/// Scan plain YAML text for `${VAR}` and `$VAR` references, ignoring comments,
-/// quoted strings, and `$$` escapes. Used by [`read_config`] to populate the
-/// "referenced" set on [`Env`].
-///
-/// The result is a best-effort superset of names saphyr will actually look up:
-/// it tracks every plausible variable token in the source so `has_unused_var`
-/// stays conservative ("not seen" → really not used).
-fn scan_referenced_vars(contents: &str) -> std::collections::HashSet<String> {
-    let mut out = std::collections::HashSet::new();
-    let mut chars = contents.char_indices().peekable();
-    let bytes = contents.as_bytes();
-
-    while let Some((i, ch)) = chars.next() {
-        match ch {
-            '#' => {
-                // skip the rest of the line
-                for (_, c) in chars.by_ref() {
-                    if c == '\n' {
-                        break;
-                    }
-                }
-            }
-            '"' | '\'' => {
-                // skip quoted scalar (single or double quoted, no escape handling needed
-                // because we only care about `$` tokens -- anything inside quotes is ignored)
-                let quote = ch;
-                while let Some((_, c)) = chars.next() {
-                    if c == '\\' && quote == '"' {
-                        chars.next();
-                        continue;
-                    }
-                    if c == quote {
-                        break;
-                    }
-                }
-            }
-            '$' => {
-                // `$$` is the escape for a literal `$`, skip it
-                if bytes.get(i + 1).copied() == Some(b'$') {
-                    chars.next();
-                    continue;
-                }
-                if let Some((name, end)) = parse_var_token(contents, i + 1) {
-                    out.insert(name);
-                    // advance past the consumed token
-                    while let Some(&(j, _)) = chars.peek() {
-                        if j < end {
-                            chars.next();
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    out
-}
-
-/// Parse a `${NAME}` or `$NAME` variable token starting at `start` (the index
-/// just past the leading `$`). Returns `(name, end_index_exclusive)` if a
-/// token is present, otherwise `None`.
-#[expect(
-    clippy::string_slice,
-    reason = "indices come from byte-safe positions (find on ASCII, char_indices boundaries)"
-)]
-fn parse_var_token(contents: &str, start: usize) -> Option<(String, usize)> {
-    let rest = contents.get(start..)?;
-    if let Some(body) = rest.strip_prefix('{') {
-        let close = body.find('}')?;
-        let body = &body[..close];
-        // body may carry a modifier like `:-default`, `?msg`, etc - strip after the name
-        let name_end = body
-            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
-            .unwrap_or(body.len());
-        let name = &body[..name_end];
-        if name.is_empty() || !is_var_start(name.chars().next()?) {
-            return None;
-        }
-        Some((name.to_string(), start + 1 + close + 1))
-    } else {
-        let mut end = 0;
-        for (i, c) in rest.char_indices() {
-            if i == 0 {
-                if !is_var_start(c) {
-                    return None;
-                }
-                end = c.len_utf8();
-            } else if c.is_ascii_alphanumeric() || c == '_' {
-                end = i + c.len_utf8();
-            } else {
-                break;
-            }
-        }
-        if end == 0 {
-            None
-        } else {
-            Some((rest[..end].to_string(), start + end))
-        }
-    }
-}
-
-fn is_var_start(ch: char) -> bool {
-    ch == '_' || ch.is_ascii_alphabetic()
 }
 
 /// Cheap pre-check: does the substituted YAML mention any deprecated cache key?
