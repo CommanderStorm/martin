@@ -292,7 +292,7 @@ mod tests {
 
     #[test]
     fn test_cors_yaml_parsing() {
-        let config: CorsConfig = serde_yaml::from_str(indoc! {"
+        let config: CorsConfig = serde_saphyr::from_str(indoc! {"
             origin:
               - https://example.org
             max_age: 3600
@@ -306,13 +306,13 @@ mod tests {
             panic!("Expected Settings variant for detailed config");
         }
 
-        let config: CorsConfig = serde_yaml::from_str("false").unwrap();
+        let config: CorsConfig = serde_saphyr::from_str("false").unwrap();
         assert_eq!(config, CorsConfig::SimpleFlag(false));
 
-        let config: CorsConfig = serde_yaml::from_str("true").unwrap();
+        let config: CorsConfig = serde_saphyr::from_str("true").unwrap();
         assert_eq!(config, CorsConfig::SimpleFlag(true));
 
-        let config: CorsConfig = serde_yaml::from_str(indoc! {"
+        let config: CorsConfig = serde_saphyr::from_str(indoc! {"
             origin:
               - https://example.org
               - https://martin.maplibre.org
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_cors_validation() {
-        let config: CorsConfig = serde_yaml::from_str(indoc! {"max_age: 3600"}).unwrap();
+        let config: CorsConfig = serde_saphyr::from_str(indoc! {"max_age: 3600"}).unwrap();
         if let CorsConfig::Properties(settings) = config {
             // This should fail validation
             assert!(matches!(
@@ -347,7 +347,7 @@ mod tests {
             panic!("Expected Properties variant");
         }
 
-        let config: CorsConfig = serde_yaml::from_str(indoc! {"
+        let config: CorsConfig = serde_saphyr::from_str(indoc! {"
             origin:
               - https://example.org
             max_age: 3600"})

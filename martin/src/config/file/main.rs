@@ -653,7 +653,7 @@ impl Config {
     }
 
     pub fn save_to_file(&self, file_name: &Path) -> ConfigFileResult<()> {
-        let yaml = serde_yaml::to_string(&self).expect("Unable to serialize config");
+        let yaml = serde_saphyr::to_string(&self).expect("Unable to serialize config");
         if file_name.as_os_str() == OsStr::new("-") {
             info!("Current system configuration:");
             #[expect(
@@ -748,22 +748,50 @@ pub fn read_config(file_name: &Path, env: &impl Env) -> ConfigFileResult<Config>
 /// not mentioned anywhere in the config YAML, so the user notices when the
 /// config file is silently shadowing them.
 ///
-/// Uses a substring scan rather than the parsed AST so we catch references in
-/// any shape (`${DATABASE_URL}`, `$DATABASE_URL`, etc.) without re-implementing
-/// saphyr's plain-scalar rules.
+/// We parse the YAML into a `serde_json::Value` (via saphyr) and recurse over
+/// the actual string scalars instead of substring-scanning the raw text — the
+/// AST drops comments for us, so a `# DATABASE_URL is great` comment can't
+/// suppress the warning. The parse is skipped entirely when none of the
+/// tracked vars are set in env (the common case).
 #[cfg(feature = "postgres")]
 fn warn_unused_pg_env_vars(env: &impl Env, contents: &str) {
-    for v in &[
+    let set_vars: Vec<&str> = [
         "DATABASE_URL",
         "DEFAULT_SRID",
         "PGSSLCERT",
         "PGSSLKEY",
         "PGSSLROOTCERT",
-    ] {
-        if env.var_os(v).is_some() && !contents.contains(v) {
+    ]
+    .into_iter()
+    .filter(|v| env.var_os(v).is_some())
+    .collect();
+    if set_vars.is_empty() {
+        return;
+    }
+    // If the YAML doesn't parse here, parse_config will emit the real
+    // user-facing diagnostic — skip the warning rather than double-reporting.
+    let Ok(value) = serde_saphyr::from_str::<serde_json::Value>(contents) else {
+        return;
+    };
+    for v in set_vars {
+        if !json_value_contains_str(&value, v) {
             warn!(
                 "Environment variable {v} is set, but will be ignored because a configuration file was loaded. Any environment variables can be used inside the config yaml file."
             );
+        }
+    }
+}
+
+#[cfg(feature = "postgres")]
+fn json_value_contains_str(value: &serde_json::Value, needle: &str) -> bool {
+    match value {
+        serde_json::Value::String(s) => s.contains(needle),
+        serde_json::Value::Array(items) => items.iter().any(|v| json_value_contains_str(v, needle)),
+        serde_json::Value::Object(map) => map
+            .iter()
+            .any(|(k, v)| k.contains(needle) || json_value_contains_str(v, needle)),
+        serde_json::Value::Null | serde_json::Value::Bool(_) | serde_json::Value::Number(_) => {
+            false
         }
     }
 }
@@ -779,21 +807,25 @@ pub fn parse_config(
     properties: &HashMap<String, String>,
     file_name: &Path,
 ) -> ConfigFileResult<Config> {
-    // Phase 1: rewrite deprecated cache keys via a `serde_yaml::Value` round-trip - but only
+    // Phase 1: rewrite deprecated cache keys via a `serde_json::Value` round-trip - but only
     // if at least one deprecated token appears in the text. The common case (no deprecated
     // keys) skips a full YAML parse + serialize.
     //
     // We migrate *before* saphyr-driven substitution so saphyr still sees the original
-    // `${VAR}` tokens in scalar values. `serde_yaml`'s emitter round-trips plain scalars
-    // starting with `$` as plain (YAML 1.1 doesn't reserve `$`), preserving substitution.
+    // `${VAR}` tokens in scalar values. Saphyr's emitter round-trips plain scalars
+    // starting with `$` as plain (YAML 1.2 doesn't reserve `$`), preserving substitution.
     let migrated = if needs_deprecated_migration(contents) {
-        match serde_yaml::from_str::<serde_yaml::Value>(contents) {
+        // We deserialize into `serde_json::Value` (no `${VAR}` interpolation requested),
+        // mutate, then re-emit as YAML via saphyr. Plain scalars with `$`/`{` are not
+        // reserved in YAML 1.2, so saphyr's emitter keeps them plain — i.e. the
+        // post-migration substitution pass still sees the original `${VAR}` tokens.
+        match serde_saphyr::from_str::<serde_json::Value>(contents) {
             Ok(mut value) => {
                 migrate_deprecated_config(&mut value);
-                serde_yaml::to_string(&value).unwrap_or_else(|_| contents.to_string())
+                serde_saphyr::to_string(&value).unwrap_or_else(|_| contents.to_string())
             }
-            // If serde_yaml itself can't parse, hand the original to saphyr - its diagnostics
-            // are richer, so let it produce the user-facing error.
+            // If structural parsing fails here, hand the original to saphyr's typed pass —
+            // its diagnostics are richer, so let it produce the user-facing error.
             Err(_) => contents.to_string(),
         }
     } else {
@@ -832,35 +864,29 @@ fn needs_deprecated_migration(yaml: &str) -> bool {
 
 /// Migrates deprecated cache configuration keys in raw YAML before deserialization.
 ///
-/// This runs on the `serde_yaml::Value` directly, so the `Config` struct
+/// This runs on the `serde_json::Value` directly, so the `Config` struct
 /// never needs to know about deprecated field names.
-fn migrate_deprecated_config(value: &mut serde_yaml::Value) {
-    let Some(root) = value.as_mapping_mut() else {
+fn migrate_deprecated_config(value: &mut serde_json::Value) {
+    let Some(root) = value.as_object_mut() else {
         return;
     };
 
     // Global: cache_size_mb -> cache.size_mb
-    migrate_yaml_key(root, "cache_size_mb", &["cache", "size_mb"]);
+    migrate_json_key(root, "cache_size_mb", &["cache", "size_mb"]);
 
     // Global: tile_cache_size_mb -> cache.tile_size_mb
-    migrate_yaml_key(root, "tile_cache_size_mb", &["cache", "tile_size_mb"]);
+    migrate_json_key(root, "tile_cache_size_mb", &["cache", "tile_size_mb"]);
 
     // Source-type level: {section}.cache_size_mb -> {section}.cache.size_mb
     for section in ["sprites", "fonts"] {
-        if let Some(mapping) = root
-            .get_mut(serde_yaml::Value::String(section.into()))
-            .and_then(|v| v.as_mapping_mut())
-        {
-            migrate_yaml_key(mapping, "cache_size_mb", &["cache", "size_mb"]);
+        if let Some(mapping) = root.get_mut(section).and_then(|v| v.as_object_mut()) {
+            migrate_json_key(mapping, "cache_size_mb", &["cache", "size_mb"]);
         }
     }
 
     // PMTiles: directory_cache_size_mb -> directory_cache.size_mb
-    if let Some(mapping) = root
-        .get_mut(serde_yaml::Value::String("pmtiles".into()))
-        .and_then(|v| v.as_mapping_mut())
-    {
-        migrate_yaml_key(
+    if let Some(mapping) = root.get_mut("pmtiles").and_then(|v| v.as_object_mut()) {
+        migrate_json_key(
             mapping,
             "directory_cache_size_mb",
             &["directory_cache", "size_mb"],
@@ -868,18 +894,21 @@ fn migrate_deprecated_config(value: &mut serde_yaml::Value) {
     }
 }
 
-/// Moves a deprecated key in a YAML mapping to a new nested location.
+/// Moves a deprecated key in a JSON map to a new nested location.
 ///
 /// `new_path` is a slice of keys describing the nested destination,
 /// e.g. `&["cache", "size_mb"]` means `cache.size_mb`.
 ///
 /// If the new key already exists, the old value is dropped with a warning.
 /// If only the old key exists, it is moved to the new location.
-fn migrate_yaml_key(mapping: &mut serde_yaml::Mapping, old_key: &str, new_path: &[&str]) {
+fn migrate_json_key(
+    mapping: &mut serde_json::Map<String, serde_json::Value>,
+    old_key: &str,
+    new_path: &[&str],
+) {
     debug_assert!(!new_path.is_empty(), "new_path must not be empty");
 
-    let old_yaml_key = serde_yaml::Value::String(old_key.into());
-    let Some(old_value) = mapping.remove(&old_yaml_key) else {
+    let Some(old_value) = mapping.remove(old_key) else {
         return;
     };
 
@@ -893,11 +922,11 @@ fn migrate_yaml_key(mapping: &mut serde_yaml::Mapping, old_key: &str, new_path: 
     for &segment in parents {
         if !current.contains_key(segment) {
             current.insert(
-                serde_yaml::Value::String(segment.into()),
-                serde_yaml::Value::Mapping(serde_yaml::Mapping::default()),
+                segment.to_string(),
+                serde_json::Value::Object(serde_json::Map::default()),
             );
         }
-        let Some(nested) = current.get_mut(segment).and_then(|v| v.as_mapping_mut()) else {
+        let Some(nested) = current.get_mut(segment).and_then(|v| v.as_object_mut()) else {
             warn!(
                 "deprecated config: `{old_key}` is ignored because `{segment}` is already set. \
                  Please remove `{old_key}` from your configuration"
@@ -907,13 +936,13 @@ fn migrate_yaml_key(mapping: &mut serde_yaml::Mapping, old_key: &str, new_path: 
         current = nested;
     }
 
-    if current.contains_key(leaf) {
+    if current.contains_key(*leaf) {
         warn!(
             "deprecated config: `{old_key}` is ignored in favor of `{new_key_display}`. \
              Please remove `{old_key}` from your configuration"
         );
     } else {
-        current.insert(serde_yaml::Value::String((*leaf).into()), old_value);
+        current.insert((*leaf).to_string(), old_value);
     }
 }
 
@@ -1235,7 +1264,7 @@ mod tests {
 
     #[test]
     fn cache_disable_per_source() {
-        let policy: CachePolicy = serde_yaml::from_str("disable").unwrap();
+        let policy: CachePolicy = serde_saphyr::from_str("disable").unwrap();
         assert_eq!(policy, CachePolicy::disabled());
         for zoom in 0..=u8::MAX {
             assert!(
