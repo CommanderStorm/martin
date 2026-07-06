@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../images/favicon.ico">
-      <meta name="generator" content="zensical-0.0.44">
+      <meta name="generator" content="zensical-0.0.47">
     
     
       
@@ -34,7 +34,7 @@
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.5e19f6ca.min.css">
       
         
           
@@ -1718,7 +1718,7 @@ Simple and fast for static datasets.</p>
 </ul>
 </details>
 <h2 id="component-interactions">Component Interactions</h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">PosgtgreSQL Integration</label><label for="__tabbed_4_2">File Source Integration</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">PosgtgreSQL Integration</label><label for="__tabbed_4_2">File Source Integration</label><label for="__tabbed_4_3">GeoJSON Integration</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <pre class="mermaid"><code>graph TB
@@ -1778,6 +1778,50 @@ Simple and fast for static datasets.</p>
 <li>Serves tiles directly from file format</li>
 </ol>
 </div>
+<div class="tabbed-block">
+<p>Unlike the other file sources, GeoJSON files hold raw geometry rather than pre-baked tiles.
+Martin loads the whole file once, reprojects and indexes it in memory, then clips and encodes an MVT tile on every request.</p>
+<pre class="mermaid"><code>graph TB
+    subgraph Load["Load time (once per source)"]
+        File[".geojson / .json file"]
+        Parse["Parse (geojson crate)&lt;br/&gt;-&gt; geo_types::Geometry"]
+        Reproject["Reproject WGS84 -&gt; WebMercator"]
+        RTree["Packed Hilbert R-tree&lt;br/&gt;(geo_index)"]
+    end
+
+    subgraph Request["Per tile request"]
+        Rect["Tile Rect + buffer&lt;br/&gt;(WebMercator bbox)"]
+        Query["R-tree candidate lookup"]
+        Clip["Parallel clip + transform&lt;br/&gt;(geo, rayon)"]
+        Encode["MVT encode&lt;br/&gt;(geozero::mvt)"]
+    end
+
+    File --&gt; Parse --&gt; Reproject --&gt; RTree
+    RTree -.-&gt;|in-memory features| Query
+    Rect --&gt; Query --&gt; Clip --&gt; Encode</code></pre>
+<p><strong>Load time</strong> (<code>GeoJsonSource::new</code> in <code>martin-core/src/tiles/geojson/</code>):</p>
+<ol>
+<li>The entire file is read into memory and parsed with the <code>geojson</code> crate; each feature's geometry becomes a <code>geo_types::Geometry&lt;f64&gt;</code>.</li>
+<li>Every geometry is reprojected once from WGS84 to Web Mercator, so all per-tile work stays in Mercator.</li>
+<li>A packed Hilbert R-tree (<code>geo_index</code>) is built over the feature bounding boxes for fast spatial lookup, and the union of all boxes becomes the TileJSON <code>bounds</code>.</li>
+<li>Features (Mercator geometry + JSON properties) are held in memory for the lifetime of the source.</li>
+</ol>
+<p><strong>Per request</strong> (<code>GeoJsonSource::get_tile</code>):</p>
+<ol>
+<li>The requested <code>z/x/y</code> is converted to a Web Mercator tile <code>Rect</code>, grown outward by the configurable <code>buffer</code> (as a <code>buffer / extent</code> fraction) so geometry near the edge survives clipping.</li>
+<li>The R-tree is queried for candidate features overlapping the buffered rect; no candidates yields an empty tile (<code>204 No Content</code>).</li>
+<li>Candidates are clipped in parallel (<code>rayon</code>): polygons via boolean intersection, lines via line-clip, points via containment - then snapped, repaired, re-oriented, and transformed into the tile's integer coordinate grid (<code>extent</code> units, y flipped for MVT).</li>
+<li>Surviving features are encoded into a single MVT layer named after the source id (<code>geozero::mvt</code>); properties are mapped to MVT column values (JSON arrays/objects serialized to strings, nulls dropped).</li>
+<li>The tile is returned uncompressed as <code>application/x-protobuf</code>; the shared server layer then handles caching, ETag/<code>304</code>, and <code>Content-Encoding</code>, identically to every other source.</li>
+</ol>
+<p><strong>Configuration</strong> (<code>GeoJsonConfig</code>, both <code>.json</code> and <code>.geojson</code> extensions are discovered):</p>
+<ul>
+<li><code>extent</code> (default <code>4096</code>) - side length of the MVT integer coordinate grid a tile is encoded into.
+  A <code>NonZeroU32</code>, so <code>0</code> is rejected at parse time.</li>
+<li><code>buffer</code> (default <code>64</code>, in tile units) - margin of geometry kept around each tile edge to avoid seams between neighbouring tiles.</li>
+</ul>
+<p>Hot-reload uses the same generic Reload Driver as the other file sources (see below), watching the configured directories for added, changed, or removed <code>.geojson</code>/<code>.json</code> files.</p>
+</div>
 </div>
 </div>
 <p>== Runtime Source Reloading</p>
@@ -1788,7 +1832,7 @@ One generic loop - the **Reload Driver** - sits behind three traits, so every so
 graph LR
     Trigger[&quot;Trigger&lt;br/&gt;(when)&quot;] --&gt;|fires| Driver[Reload Driver]
     Driver --&gt;|discover| Discovery[&quot;Discovery&lt;br/&gt;(what should exist)&quot;]
-    Discovery --&gt;|&quot;(Version, Recipe) per id&quot;| Driver
+    Discovery --&gt;|&quot;(Version, Args) per id&quot;| Driver
     Driver --&gt;|&quot;diff vs baseline, build changed&quot;| Advisory[&quot;ReloadAdvisory&lt;br/&gt;add / update / remove&quot;]
     Advisory --&gt;|apply| Sink[&quot;Sink&lt;br/&gt;(where)&quot;]
     Sink --&gt; Catalog[(&quot;Catalog&lt;br/&gt;TileSourceManager&quot;)]
@@ -2130,10 +2174,10 @@ The loop, triggers, and sink are reused.
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"search":"../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"search":"../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="../assets/javascripts/bundle.0df4f2d0.min.js"></script>
       
     
   </body>
