@@ -40,7 +40,10 @@
       groupName: 'npm dependencies',
     },
     {
-      matchManagers: ['dockerfile', 'docker-compose'],
+      // Match the docker datasource, not a manager, so images referenced in
+      // workflow service containers (github-actions manager) group here too
+      // instead of leaking into the github-actions group.
+      matchDatasources: ['docker'],
       groupName: 'docker images',
     },
     {
