@@ -17,6 +17,7 @@ use crate::bindiff::PatchType::BinDiffGz;
 use crate::bindiff::{BinDiffDiffer, BinDiffPatcher, BinDiffer as _, PatchType};
 use crate::errors::MbtResult;
 use crate::mbtiles::PatchFileInfo;
+use crate::progress::{Spinner, TileBar};
 use crate::queries::{
     create_tiles_with_hash_view, detach_db, init_mbtiles_schema, is_empty_database,
 };
@@ -213,6 +214,7 @@ impl MbtileCopierInt {
         self.copy_with_rusqlite(
             &mut conn,
             on_duplicate,
+            src_type,
             dst_type,
             &get_select_from(src_type, dst_type),
         )
@@ -270,6 +272,7 @@ impl MbtileCopierInt {
         self.copy_with_rusqlite(
             &mut conn,
             CopyDuplicateMode::Override,
+            src_info.mbt_type,
             dst_type,
             &get_select_from_with_diff(dif_info.mbt_type, dst_type, patch_type),
         )
@@ -350,6 +353,7 @@ impl MbtileCopierInt {
         self.copy_with_rusqlite(
             &mut conn,
             CopyDuplicateMode::Override,
+            src_type,
             dst_type,
             &get_select_from_apply_patch(src_type, &dif_info, dst_type),
         )
@@ -437,14 +441,25 @@ impl MbtileCopierInt {
         &self,
         conn: &mut SqliteConnection,
         on_duplicate: CopyDuplicateMode,
+        src_type: MbtType,
         dst_type: MbtType,
         select_from: &str,
     ) -> Result<(), MbtError> {
         if self.options.copy.copy_tiles() {
-            action_with_rusqlite(conn, |c| {
-                self.copy_tiles(c, dst_type, on_duplicate, select_from)
-            })
-            .await?;
+            // A plain copy maps each source tile to exactly one destination row, so it is split per
+            // zoom level to drive a determinate progress bar weighted by each zoom's tile count.
+            // Diff and patch copies join the source against another file, and are copied in a single
+            // statement under an indeterminate spinner.
+            if self.options.diff_with_file.is_none() && self.options.apply_patch.is_none() {
+                self.copy_tiles_by_zoom(conn, src_type, dst_type, on_duplicate, select_from)
+                    .await?;
+            } else {
+                let _spinner = Spinner::start("Copying tiles");
+                action_with_rusqlite(conn, |c| {
+                    self.copy_tiles(c, dst_type, on_duplicate, select_from, None)
+                })
+                .await?;
+            }
         } else {
             debug!("Skipping copying tiles");
         }
@@ -455,6 +470,66 @@ impl MbtileCopierInt {
             debug!("Skipping copying metadata");
             Ok(())
         }
+    }
+
+    /// Copy tiles one zoom level at a time, advancing a progress bar by each zoom's tile count.
+    ///
+    /// All inserts run inside a single transaction so the copy stays all-or-nothing, matching the
+    /// atomicity of the single `INSERT ... SELECT` statement it replaces.
+    async fn copy_tiles_by_zoom(
+        &self,
+        conn: &mut SqliteConnection,
+        src_type: MbtType,
+        dst_type: MbtType,
+        on_duplicate: CopyDuplicateMode,
+        select_from: &str,
+    ) -> Result<(), MbtError> {
+        let tiles_per_zoom = self.tiles_per_zoom(conn, src_type).await?;
+        let total_tiles = tiles_per_zoom.iter().map(|(_, count)| count).sum();
+        let bar = TileBar::new(total_tiles, "Copying tiles");
+
+        action_with_rusqlite(conn, |c| {
+            let tx = c.unchecked_transaction()?;
+            for (zoom, count) in &tiles_per_zoom {
+                self.copy_tiles(c, dst_type, on_duplicate, select_from, Some(*zoom))?;
+                bar.inc(*count);
+            }
+            tx.commit()?;
+            Ok(())
+        })
+        .await
+    }
+
+    /// Count how many source tiles exist at each zoom level, honouring the zoom and bounding-box filters.
+    ///
+    /// The count reads only the index columns, so it stays cheap even when tiles carry large blobs.
+    async fn tiles_per_zoom(
+        &self,
+        conn: &mut SqliteConnection,
+        src_type: MbtType,
+    ) -> MbtResult<Vec<(i64, u64)>> {
+        let table = match src_type {
+            Flat => "sourceDb.tiles".to_string(),
+            FlatWithHash => "sourceDb.tiles_with_hash".to_string(),
+            Normalized { schema, .. } => format!("sourceDb.{}", schema.map_table()),
+        };
+        let where_clause = self.get_where_clause("");
+        let sql = format!(
+            "SELECT zoom_level, count(*) AS tile_count
+             FROM {table}
+             WHERE TRUE {where_clause}
+             GROUP BY zoom_level
+             ORDER BY zoom_level"
+        );
+
+        let rows = query(AssertSqlSafe(sql)).fetch_all(&mut *conn).await?;
+        let mut tiles_per_zoom = Vec::with_capacity(rows.len());
+        for row in rows {
+            let zoom = row.try_get::<i64, _>("zoom_level")?;
+            let count = u64::try_from(row.try_get::<i64, _>("tile_count")?).unwrap_or(0);
+            tiles_per_zoom.push((zoom, count));
+        }
+        Ok(tiles_per_zoom)
     }
 
     fn copy_metadata(
@@ -516,9 +591,16 @@ impl MbtileCopierInt {
         dst_type: MbtType,
         on_duplicate: CopyDuplicateMode,
         select_from: &str,
+        zoom: Option<i64>,
     ) -> Result<(), MbtError> {
+        use std::fmt::Write as _;
+
         let on_dupl = on_duplicate.to_sql();
-        let where_clause = self.get_where_clause("");
+        let mut where_clause = self.get_where_clause("");
+        if let Some(zoom) = zoom {
+            write!(where_clause, " AND zoom_level = {zoom}")
+                .expect("writing to a String is infallible");
+        }
         let sql_cond = Self::get_on_duplicate_sql_cond(on_duplicate, dst_type);
 
         let sql = match dst_type {

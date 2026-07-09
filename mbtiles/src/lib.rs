@@ -25,6 +25,8 @@ pub use patcher::apply_patch;
 mod pool;
 pub use pool::MbtilesPool;
 
+mod progress;
+
 mod queries;
 pub use queries::*;
 

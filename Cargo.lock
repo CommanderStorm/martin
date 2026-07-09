@@ -4887,6 +4887,7 @@ dependencies = [
  "flume",
  "futures",
  "hotpath 0.21.1",
+ "indicatif",
  "insta",
  "itertools 0.15.0",
  "martin-tile-utils",
