@@ -61,7 +61,36 @@ if [[ -z "${CURL_BIN:-}" ]]; then
   echo 'On macOS, install it with: brew install curl'
   exit 1
 fi
-CURL="${CURL:-$CURL_BIN --silent --show-error --fail --compressed}"
+# Safety net: no single request may hang the job for hours. --connect-timeout keeps
+# the wait_for retry loop snappy when the server is not up yet; --max-time caps a
+# wedged response (see the /_/metrics hang investigation) so CI fails in minutes, not 6h.
+CURL="${CURL:-$CURL_BIN --silent --show-error --fail --compressed --connect-timeout 10 --max-time 120}"
+
+# TEMP DIAGNOSTIC (debug/metrics-hang-diagnostics branch): dump everything about the
+# martin process(es) when a request appears wedged. Distinguishes deadlock (futex in
+# kernel stack) from spinloop (high per-thread CPU) and names the faulting frame via gdb.
+capture_martin_stacks() {
+  echo "::group::HANG DIAGNOSTICS: martin state"
+  echo "[diag] a request appears wedged; capturing martin state at $(date -u +%H:%M:%S)"
+  command -v gdb >/dev/null 2>&1 || sudo apt-get install -y -qq gdb >/dev/null 2>&1 || true
+  sudo sysctl -w kernel.yama.ptrace_scope=0 >/dev/null 2>&1 || true
+  local pids; pids=$(pgrep -x martin || true)
+  echo "[diag] martin pids: ${pids:-none}"
+  for pid in $pids; do
+    echo "----- pid $pid: ps -----"
+    ps -o pid,ppid,%cpu,%mem,nlwp,stat,wchan:40,etimes -p "$pid" || true
+    echo "----- pid $pid: per-thread CPU (spinloop shows high %CPU) -----"
+    top -H -b -n1 -p "$pid" 2>/dev/null | tail -n +7 | head -40 || true
+    echo "----- pid $pid: per-thread kernel wchan/stack (futex_* => blocked on a lock) -----"
+    for t in /proc/$pid/task/*; do
+      echo "  tid $(basename "$t"): wchan=$(cat "$t/wchan" 2>/dev/null) state=$(awk '{print $3}' "$t/stat" 2>/dev/null)"
+      sudo cat "$t/stack" 2>/dev/null | sed 's/^/      /' || true
+    done
+    echo "----- pid $pid: gdb thread apply all bt -----"
+    sudo gdb -p "$pid" -batch -ex "set pagination off" -ex "thread apply all bt" 2>&1 | head -400 || true
+  done
+  echo "::endgroup::"
+}
 
 function wait_for {
     # Seems the --retry-all-errors option is not available on older curl versions, but maybe in the future we can just use this:
@@ -136,7 +165,12 @@ test_metrics() {
   URL="$MARTIN_URL/_/metrics"
 
   echo "Testing $1 from $URL"
+  # TEMP DIAGNOSTIC: this is the request that wedges in release builds on CI. Fire a
+  # background stack capture after 25s; if the fetch returns normally we cancel it below.
+  ( sleep 25; capture_martin_stacks ) &
+  DIAG_PID=$!
   $CURL --dump-header  "$FILENAME.headers" "$URL" | $SED --regexp-extended 's/^(martin_.*?) [\.0-9]+$/\1 NUMBER/g' > "$FILENAME.txt"
+  kill "$DIAG_PID" 2>/dev/null || true
   clean_headers_dump "$FILENAME.headers"
   $CURL --dump-header  "$FILENAME.fetched_with_compression.headers" --compressed "$URL" | $SED --regexp-extended 's/^(martin_.*?) [\.0-9]+$/\1 NUMBER/g' > "$FILENAME.fetched_with_compression.txt"
   clean_headers_dump "$FILENAME.fetched_with_compression.headers"
