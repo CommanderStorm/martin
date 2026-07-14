@@ -853,7 +853,18 @@ test_metrics "metrics_1"
 # Test style rendering (only available on Linux with the rendering feature)
 # Run AFTER metrics collection to avoid adding rendering-specific metric entries to expected output
 RENDERING_AVAILABLE=0
-if [[ $OSTYPE == linux* ]] && $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null 2>&1; then
+# TEMP DIAGNOSTIC: metrics_1 passes; the real wedge is the FIRST style-render request
+# (maplibre_native). Announce it and capture martin stacks if it does not return in 25s.
+render_probe_rc=0
+if [[ $OSTYPE == linux* ]]; then
+  >&2 echo "Probing style rendering: $MARTIN_URL/style/maplibre/0/0/0.png"
+  ( sleep 25; capture_martin_stacks ) &
+  RENDER_DIAG_PID=$!
+  $CURL "$MARTIN_URL/style/maplibre/0/0/0.png" > /dev/null 2>&1 || render_probe_rc=$?
+  kill "$RENDER_DIAG_PID" 2>/dev/null || true
+  >&2 echo "Style render probe returned rc=$render_probe_rc"
+fi
+if [[ $render_probe_rc -eq 0 && $OSTYPE == linux* ]]; then
   >&2 echo "***** Test server-side style rendering *****"
   RENDERING_AVAILABLE=1
   # PNG rendering
