@@ -61,6 +61,12 @@
         <loc>https://maplibre.org/martin/sources-files/</loc>
       </url>
       <url>
+        <loc>https://maplibre.org/martin/sources-mbtiles/</loc>
+      </url>
+      <url>
+        <loc>https://maplibre.org/martin/sources-pmtiles/</loc>
+      </url>
+      <url>
         <loc>https://maplibre.org/martin/pg-connections/</loc>
       </url>
       <url>
@@ -76,13 +82,28 @@
         <loc>https://maplibre.org/martin/sources-geojson/</loc>
       </url>
       <url>
+        <loc>https://maplibre.org/martin/sources-duckdb/</loc>
+      </url>
+      <url>
+        <loc>https://maplibre.org/martin/sources-passthrough/</loc>
+      </url>
+      <url>
         <loc>https://maplibre.org/martin/sources-composite/</loc>
+      </url>
+      <url>
+        <loc>https://maplibre.org/martin/postprocessing/</loc>
+      </url>
+      <url>
+        <loc>https://maplibre.org/martin/postprocessing/mlt/</loc>
       </url>
       <url>
         <loc>https://maplibre.org/martin/sources-sprites/</loc>
       </url>
       <url>
         <loc>https://maplibre.org/martin/sources-styles/</loc>
+      </url>
+      <url>
+        <loc>https://maplibre.org/martin/sources-styles/rendering/</loc>
       </url>
       <url>
         <loc>https://maplibre.org/martin/sources-fonts/</loc>
