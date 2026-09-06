@@ -146,7 +146,7 @@ impl StyleSources {
     /// Adds a style JSON file with an ID to the catalog.
     pub fn add_style(&self, id: String, path: PathBuf) {
         debug_assert!(path.is_file());
-        debug_assert!(!id.is_empty());
+        debug_assert_ne!(id, "");
         match self.sources.entry(id) {
             Entry::Occupied(v) => {
                 warn!(

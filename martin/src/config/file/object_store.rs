@@ -291,9 +291,7 @@ impl ObjectStoreConfig {
                 "Credentials from {namespace}.profile are ignored because request signing is disabled."
             );
         } else if let Some(provider) = sdk_config.credentials_provider() {
-            self.aws_credentials = Some(Arc::new(AwsSdkCredentialProvider {
-                provider: provider.clone(),
-            }));
+            self.aws_credentials = Some(Arc::new(AwsSdkCredentialProvider { provider }));
         }
     }
 
