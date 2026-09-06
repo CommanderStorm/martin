@@ -41,6 +41,7 @@ const fn is_default_buffer(buffer: &u32) -> bool {
     Clone,
     Debug,
     PartialEq,
+    Eq,
     Serialize,
     Deserialize,
     CollectUnrecognizedKeys,

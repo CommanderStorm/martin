@@ -66,6 +66,7 @@ impl SpriteConfig {
     Debug,
     Default,
     PartialEq,
+    Eq,
     Serialize,
     Deserialize,
     CollectUnrecognizedKeys,

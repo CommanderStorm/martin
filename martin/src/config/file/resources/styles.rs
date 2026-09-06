@@ -21,6 +21,7 @@ use crate::config::primitives::OptBoolObj;
     Debug,
     Default,
     PartialEq,
+    Eq,
     Serialize,
     Deserialize,
     CollectUnrecognizedKeys,

@@ -19,6 +19,7 @@ use crate::config::file::{MltProcessConfig, MvtProcessConfig};
     Debug,
     Default,
     PartialEq,
+    Eq,
     Serialize,
     Deserialize,
     CollectUnrecognizedKeys,

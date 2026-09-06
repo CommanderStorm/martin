@@ -14,6 +14,7 @@ use crate::config::file::{
     Debug,
     Default,
     PartialEq,
+    Eq,
     Serialize,
     Deserialize,
     CollectUnrecognizedKeys,
