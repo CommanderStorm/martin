@@ -719,6 +719,10 @@ impl Config {
 
     /// Writes the running configuration, with the tile sources materialized from the catalog so
     /// the file describes what is actually served.
+    #[expect(
+        clippy::print_stdout,
+        reason = "`--save -` writes the config to stdout"
+    )]
     pub fn save_to_file(
         &self,
         file_name: &Path,
@@ -736,14 +740,7 @@ impl Config {
         let yaml = serde_saphyr::to_string(&config).expect("Unable to serialize config");
         if file_name.as_os_str() == OsStr::new("-") {
             info!("Current system configuration:");
-            #[expect(
-                clippy::print_stdout,
-                reason = "`--save -` writes the config to stdout"
-            )]
-            {
-                println!("\n\n{yaml}\n");
-            }
-            Ok(())
+            println!("\n\n{yaml}\n");
         } else {
             info!(
                 "Saving config to {}, use --config to load it",
@@ -753,8 +750,8 @@ impl Config {
                 .map_err(|e| ConfigFileError::ConfigWriteError(e, file_name.to_path_buf()))?
                 .write_all(yaml.as_bytes())
                 .map_err(|e| ConfigFileError::ConfigWriteError(e, file_name.to_path_buf()))?;
-            Ok(())
         }
+        Ok(())
     }
 }
 

@@ -277,7 +277,7 @@ pub fn init_aws_lc_tls() {
     static INIT_TLS: LazyLock<()> = LazyLock::new(|| {
         aws_lc_rs::default_provider()
             .install_default()
-            .expect("Unable to init rustls: {e:?}");
+            .expect("Unable to init rustls");
     });
     *INIT_TLS;
 }

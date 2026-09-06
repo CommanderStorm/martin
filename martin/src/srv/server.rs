@@ -95,6 +95,7 @@ impl DebouncedWarning {
         let mut last = self.last_warning.lock().await;
         if last.elapsed() >= Duration::from_hours(1) {
             *last = std::time::Instant::now();
+            drop(last);
             f();
         }
     }

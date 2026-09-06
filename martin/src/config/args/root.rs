@@ -41,7 +41,7 @@ const HELP_STYLES: Styles = Styles::styled()
     .literal(AnsiColor::White.on_default())
     .placeholder(AnsiColor::Green.on_default());
 
-#[derive(Parser, Debug, PartialEq, Default)]
+#[derive(Parser, Debug, PartialEq, Eq, Default)]
 #[command(
     about,
     version,

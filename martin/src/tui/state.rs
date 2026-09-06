@@ -45,7 +45,7 @@ impl LogView {
     }
 
     /// Stops at the oldest of the `len` lines the log holds.
-    pub(super) fn scroll_to_oldest(&mut self, len: usize) {
+    pub(super) const fn scroll_to_oldest(&mut self, len: usize) {
         self.scroll = Self::oldest(len);
     }
 

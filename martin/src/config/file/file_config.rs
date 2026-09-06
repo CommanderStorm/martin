@@ -1083,7 +1083,7 @@ impl GlobalCacheConfig {
 
     /// Returns the zoom-level bounds as a [`CachePolicy`].
     #[must_use]
-    pub fn policy(self) -> CachePolicy {
+    pub const fn policy(self) -> CachePolicy {
         CachePolicy::new(self.zoom)
     }
 
