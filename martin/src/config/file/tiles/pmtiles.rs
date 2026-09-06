@@ -22,7 +22,7 @@ use crate::config::file::{MltProcessConfig, MvtProcessConfig};
 /// notify-driven and ignore this setting.
 pub const DEFAULT_RELOAD_INTERVAL: Duration = Duration::from_mins(10);
 
-fn default_reload_interval() -> Duration {
+const fn default_reload_interval() -> Duration {
     DEFAULT_RELOAD_INTERVAL
 }
 

@@ -79,13 +79,13 @@ impl SourceLocation {
 
     /// Whether this location is served over the network rather than from the local filesystem.
     #[must_use]
-    pub fn is_remote(&self) -> bool {
+    pub const fn is_remote(&self) -> bool {
         !matches!(self, Self::Local(_))
     }
 
     /// The URL of a remote location, or `None` for a local path.
     #[must_use]
-    pub fn url(&self) -> Option<&Url> {
+    pub const fn url(&self) -> Option<&Url> {
         match self {
             Self::Local(_) => None,
             Self::ObjectStore(url) | Self::Http(url) => Some(url),

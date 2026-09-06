@@ -192,14 +192,14 @@ impl YamlReportKind {
         }
     }
 
-    fn code(self) -> &'static str {
+    const fn code(self) -> &'static str {
         match self {
             Self::Substitution => "martin::config::substitution",
             Self::Yaml => "martin::config::yaml",
         }
     }
 
-    fn help(self) -> &'static str {
+    const fn help(self) -> &'static str {
         match self {
             Self::Substitution => {
                 "Make sure every ${VAR} reference resolves to an environment variable, or supply a default with `${VAR:-fallback}`."

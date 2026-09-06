@@ -80,7 +80,7 @@ impl TileCacheKey {
 
     /// The coordinate this entry is for.
     #[must_use]
-    pub fn xyz(&self) -> TileCoord {
+    pub const fn xyz(&self) -> TileCoord {
         match self {
             Self::Dynamic { xyz, .. } | Self::Static { xyz, .. } => *xyz,
         }

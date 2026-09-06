@@ -198,7 +198,7 @@ impl FsDiscovery {
 
     /// Whether the directories are watched recursively, which a collection needs as its projects sit one level below it.
     #[must_use]
-    pub fn recursive(&self) -> bool {
+    pub const fn recursive(&self) -> bool {
         self.recursive || !self.collections.is_empty()
     }
 

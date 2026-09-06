@@ -50,7 +50,7 @@ pub struct PostgresAutoDiscoveryBuilder {
 }
 
 /// Configuration for auto-discovering `PostgreSQL` functions.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(test, serde_with::skip_serializing_none, derive(serde::Serialize))]
 pub struct PostgresAutoDiscoveryBuilderFunctions {
     schemas: Option<HashSet<String>>,
@@ -58,7 +58,7 @@ pub struct PostgresAutoDiscoveryBuilderFunctions {
 }
 
 /// Configuration for auto-discovering `PostgreSQL` tables.
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 #[cfg_attr(test, serde_with::skip_serializing_none, derive(serde::Serialize))]
 pub struct PostgresAutoDiscoveryBuilderTables {
     schemas: Option<HashSet<String>>,
@@ -131,7 +131,7 @@ impl PostgresAutoDiscoveryBuilder {
 
     /// Returns the bounds calculation type for this builder.
     #[must_use]
-    pub fn auto_bounds(&self) -> BoundsCalcType {
+    pub const fn auto_bounds(&self) -> BoundsCalcType {
         self.auto_bounds
     }
 
@@ -591,7 +591,7 @@ fn calc_auto(
     (auto_tables, auto_functions)
 }
 
-fn use_auto_publish(config: &PostgresConfig, for_functions: bool) -> bool {
+const fn use_auto_publish(config: &PostgresConfig, for_functions: bool) -> bool {
     match &config.auto_publish {
         NoValue => config.tables.is_none() && config.functions.is_none(),
         Object(funcs) => {

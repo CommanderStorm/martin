@@ -222,7 +222,7 @@ impl<T: ConfigurationLivecycleHooks> FileConfigEnum<T> {
     }
 
     #[must_use]
-    pub fn is_none(&self) -> bool {
+    pub const fn is_none(&self) -> bool {
         matches!(self, Self::None)
     }
 
@@ -344,7 +344,7 @@ impl<T: ConfigurationLivecycleHooks> FileConfig<T> {
     feature = "styles",
     feature = "fonts"
 ))]
-pub(crate) fn subdirectories(collection: &Path) -> std::io::Result<Vec<(String, PathBuf)>> {
+pub fn subdirectories(collection: &Path) -> std::io::Result<Vec<(String, PathBuf)>> {
     let mut found = Vec::new();
     for entry in std::fs::read_dir(collection)? {
         let entry = entry?;
@@ -872,7 +872,7 @@ fn parse_url(is_enabled: bool, path: &Path) -> Result<Option<Url>, ConfigFileErr
 ///   minzoom: 0
 ///   maxzoom: 10
 /// ```
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "unstable-schemas", derive(schemars::JsonSchema))]
 pub struct CachePolicy {
     #[serde(flatten)]
@@ -899,13 +899,13 @@ pub(crate) enum DisableLiteral {
 impl CachePolicy {
     /// Creates a new `CachePolicy` with the given zoom range.
     #[must_use]
-    pub fn new(zoom: CacheZoomRange) -> Self {
+    pub const fn new(zoom: CacheZoomRange) -> Self {
         Self { zoom }
     }
 
     /// Creates a disabled `CachePolicy` where caching is turned off.
     #[must_use]
-    pub fn disabled() -> Self {
+    pub const fn disabled() -> Self {
         Self {
             zoom: CacheZoomRange::disabled(),
         }
@@ -913,7 +913,7 @@ impl CachePolicy {
 
     /// Returns the zoom-level bounds for caching.
     #[must_use]
-    pub fn zoom(self) -> CacheZoomRange {
+    pub const fn zoom(self) -> CacheZoomRange {
         self.zoom
     }
 
@@ -923,7 +923,7 @@ impl CachePolicy {
         clippy::trivially_copy_pass_by_ref,
         reason = "serde skip_serializing_if requires &self"
     )]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.zoom.is_empty()
     }
 
@@ -1003,7 +1003,7 @@ impl<'de> Deserialize<'de> for CachePolicy {
 /// cache: disable
 /// ```
 #[serde_with::skip_serializing_none]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "unstable-schemas", derive(schemars::JsonSchema))]
 pub struct GlobalCacheConfig {
     /// Total amount of cache we use \[default: 512, 0 to disable\]
@@ -1069,7 +1069,7 @@ pub struct GlobalCacheConfig {
 impl GlobalCacheConfig {
     /// Creates a disabled `GlobalCacheConfig` with size 0 and minzoom > maxzoom.
     #[must_use]
-    pub fn disabled() -> Self {
+    pub const fn disabled() -> Self {
         Self {
             size_mb: Some(0),
             tile_size_mb: Some(0),
@@ -1089,7 +1089,7 @@ impl GlobalCacheConfig {
 
     /// Returns `true` if no cache settings are configured.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.size_mb.is_none()
             && self.tile_size_mb.is_none()
             && self.expiry.is_none()
@@ -1191,7 +1191,7 @@ impl<'de> Deserialize<'de> for GlobalCacheConfig {
 ///   cache: disable
 /// ```
 #[serde_with::skip_serializing_none]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "unstable-schemas", derive(schemars::JsonSchema))]
 pub struct CacheSizeConfig {
     /// Size of the cache in MB (0 to disable).
@@ -1219,7 +1219,7 @@ pub struct CacheSizeConfig {
 impl CacheSizeConfig {
     /// Returns `true` if no cache settings are configured.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.size_mb.is_none() && self.expiry.is_none() && self.idle_timeout.is_none()
     }
 }

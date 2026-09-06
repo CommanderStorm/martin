@@ -20,7 +20,7 @@ use crate::config::primitives::{OptBoolObj, OptOneMany};
 /// re-runs catalog discovery to pick up new, changed, or dropped tables and functions at runtime.
 pub const DEFAULT_RELOAD_INTERVAL: Duration = Duration::from_mins(10);
 
-fn default_reload_interval() -> Duration {
+const fn default_reload_interval() -> Duration {
     DEFAULT_RELOAD_INTERVAL
 }
 
@@ -36,7 +36,7 @@ pub trait PostgresInfo {
 }
 
 #[serde_with::skip_serializing_none]
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, CollectUnrecognizedKeys)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, CollectUnrecognizedKeys)]
 #[cfg_attr(feature = "unstable-schemas", derive(schemars::JsonSchema))]
 pub struct PostgresSslCerts {
     /// Same as `PGSSLCERT` for `psql`

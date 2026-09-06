@@ -3,12 +3,11 @@ use std::path::PathBuf;
 use sqlx::{AssertSqlSafe, Connection as _, query};
 use tracing::{debug, info, warn};
 
-use crate::HashAlgorithm;
 use crate::MbtType::{Cache, Flat, FlatWithHash, Normalized};
 use crate::queries::detach_db;
 use crate::{
-    AGG_TILES_HASH, AGG_TILES_HASH_AFTER_APPLY, AGG_TILES_HASH_BEFORE_APPLY, MbtError, MbtResult,
-    MbtType, Mbtiles,
+    AGG_TILES_HASH, AGG_TILES_HASH_AFTER_APPLY, AGG_TILES_HASH_BEFORE_APPLY, HashAlgorithm,
+    MbtError, MbtResult, MbtType, Mbtiles,
 };
 
 #[hotpath::measure]

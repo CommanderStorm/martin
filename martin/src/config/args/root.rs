@@ -61,7 +61,7 @@ pub struct Args {
 }
 
 // None of these params will be transferred to the config
-#[derive(Parser, Debug, Clone, PartialEq, Default)]
+#[derive(Parser, Debug, Clone, PartialEq, Eq, Default)]
 #[command(about, version)]
 pub struct MetaArgs {
     // config may need a   conflicts_with = "SourcesArgs"
@@ -84,7 +84,7 @@ pub struct MetaArgs {
     pub tui: bool,
 }
 
-#[derive(Parser, Debug, Clone, PartialEq, Default)]
+#[derive(Parser, Debug, Clone, PartialEq, Eq, Default)]
 #[command()]
 pub struct ExtraArgs {
     /// Export a directory with SVG files as a sprite source. Can be specified multiple times.

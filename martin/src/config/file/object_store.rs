@@ -573,7 +573,7 @@ mod tests {
 
 /// Shared object-store HTTP client cache.
 #[derive(Clone, Debug, Default)]
-pub(crate) struct SharedHttpClients(pub(crate) Arc<DashMap<String, HttpClient>>);
+pub struct SharedHttpClients(pub(crate) Arc<DashMap<String, HttpClient>>);
 
 impl HttpConnector for SharedHttpClients {
     fn connect(&self, options: &ClientOptions) -> object_store::Result<HttpClient> {

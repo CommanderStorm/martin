@@ -24,7 +24,7 @@ pub struct LogView {
 
 impl LogView {
     /// Swaps the log between sitting under the panels and having the screen to itself.
-    pub(super) fn toggle_size(&mut self) {
+    pub(super) const fn toggle_size(&mut self) {
         self.size = match self.size {
             LogSize::Normal => LogSize::Expanded,
             LogSize::Expanded => LogSize::Normal,
@@ -50,7 +50,7 @@ impl LogView {
     }
 
     /// Follows the log again.
-    pub(super) fn follow(&mut self) {
+    pub(super) const fn follow(&mut self) {
         self.scroll = 0;
     }
 
@@ -58,7 +58,7 @@ impl LogView {
         self.scroll.min(Self::oldest(len))
     }
 
-    fn oldest(len: usize) -> usize {
+    const fn oldest(len: usize) -> usize {
         len.saturating_sub(1)
     }
 }

@@ -16,10 +16,9 @@ use sqlx::{
 };
 use tracing::debug;
 
-use crate::HashAlgorithm;
 use crate::bindiff::PatchType;
 use crate::errors::{MbtError, MbtResult};
-use crate::{CopyDuplicateMode, MbtType, NormalizedSchema, invert_y_value};
+use crate::{CopyDuplicateMode, HashAlgorithm, MbtType, NormalizedSchema, invert_y_value};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize, EnumDisplay)]
 #[enum_display(case = "Kebab")]

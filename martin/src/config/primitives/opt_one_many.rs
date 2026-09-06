@@ -9,7 +9,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use crate::config::file::CollectUnrecognizedKeys;
 
 /// An enum that can hold no values, one value, or many values of type T.
-#[derive(Debug, Default, Clone, PartialEq, Serialize, CollectUnrecognizedKeys)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, CollectUnrecognizedKeys)]
 #[cfg_attr(feature = "unstable-schemas", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum OptOneMany<T> {
@@ -129,12 +129,12 @@ impl<T> OptOneMany<T> {
     }
 
     /// Returns `true` if this contains no values.
-    pub fn is_none(&self) -> bool {
+    pub const fn is_none(&self) -> bool {
         matches!(self, Self::NoVals)
     }
 
     /// Returns `true` if this contains no values or an empty vector.
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         match self {
             Self::NoVals => true,
             Self::One(_) => false,
@@ -172,7 +172,7 @@ impl<T> OptOneMany<T> {
     }
 
     /// Returns a slice view of the contained values.
-    pub fn as_slice(&self) -> &[T] {
+    pub const fn as_slice(&self) -> &[T] {
         match self {
             Self::NoVals => &[],
             Self::One(item) => std::slice::from_ref(item),

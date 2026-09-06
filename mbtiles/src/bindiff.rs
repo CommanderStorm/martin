@@ -14,10 +14,9 @@ use sqlx::{AssertSqlSafe, Executor as _, Row as _, SqliteConnection, SqliteExecu
 use tracing::{debug, error, info};
 use xxhash_rust::xxh3::xxh3_64;
 
-use crate::HashAlgorithm;
 use crate::MbtType::{Cache, Flat, FlatWithHash, Normalized};
 use crate::PatchType::{BinDiffGz, BinDiffRaw};
-use crate::{MbtError, MbtResult, MbtType, Mbtiles};
+use crate::{HashAlgorithm, MbtError, MbtResult, MbtType, Mbtiles};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, EnumDisplay)]
 #[enum_display(case = "Kebab")]

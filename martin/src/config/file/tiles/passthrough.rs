@@ -27,7 +27,7 @@ use crate::config::primitives::{IdResolver, OptOneMany};
 /// Default per-request timeout for upstream fetches.
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 
-fn default_timeout() -> Duration {
+const fn default_timeout() -> Duration {
     DEFAULT_TIMEOUT
 }
 

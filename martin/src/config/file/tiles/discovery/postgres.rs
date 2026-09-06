@@ -53,12 +53,12 @@ impl PostgresDiscovery {
     /// Polling cadence for re-running discovery
     /// `0s` disables reloading.
     #[must_use]
-    pub fn reload_interval(&self) -> Duration {
+    pub const fn reload_interval(&self) -> Duration {
         self.config.reload_interval
     }
 
     #[must_use]
-    pub fn config(&self) -> &PostgresConfig {
+    pub const fn config(&self) -> &PostgresConfig {
         &self.config
     }
 

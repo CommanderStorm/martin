@@ -92,7 +92,7 @@ impl Default for FilteredThreshold {
 impl FilteredThreshold {
     /// The elevation to skip, or `None` when nothing is filtered.
     #[must_use]
-    pub fn as_elevation(self) -> Option<f32> {
+    pub const fn as_elevation(self) -> Option<f32> {
         match self {
             Self::Disabled => None,
             Self::Elevation(v) => Some(v),
@@ -425,7 +425,7 @@ impl ContourSettings {
 impl ContourProcessConfig {
     /// Whether contouring is switched on, without resolving the settings.
     #[must_use]
-    pub fn is_enabled(&self) -> bool {
+    pub const fn is_enabled(&self) -> bool {
         !matches!(self, Self::Disabled)
     }
 

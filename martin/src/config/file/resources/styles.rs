@@ -48,6 +48,7 @@ pub struct InnerStyleConfig {
     Debug,
     Default,
     PartialEq,
+    Eq,
     Serialize,
     Deserialize,
     CollectUnrecognizedKeys,
@@ -199,7 +200,6 @@ fn list_contained_files(
 #[cfg(test)]
 mod tests {
     use indoc::indoc;
-
     use martin_core::styles::StyleCatalog;
 
     use super::*;

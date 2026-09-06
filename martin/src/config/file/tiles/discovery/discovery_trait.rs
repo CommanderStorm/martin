@@ -26,7 +26,7 @@ pub struct Discovered<A> {
 
 impl<A> Discovered<A> {
     #[must_use]
-    pub fn new(sources: BTreeMap<String, (Version, A)>) -> Self {
+    pub const fn new(sources: BTreeMap<String, (Version, A)>) -> Self {
         Self {
             sources,
             warnings: Vec::new(),

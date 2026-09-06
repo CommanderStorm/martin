@@ -30,7 +30,7 @@ impl Arguments {
         feature = "unstable-cog"
     ))]
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
 
@@ -75,7 +75,7 @@ impl Arguments {
     pub fn check(self) -> ArgsResult<()> {
         let mut unrecognized = Vec::new();
         for (i, value) in self.values.into_iter().enumerate() {
-            if let State::Ignore = self.state[i] {
+            if matches!(self.state[i], State::Ignore) {
                 unrecognized.push(value);
             }
         }

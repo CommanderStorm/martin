@@ -13,7 +13,7 @@ const NODATA_CEILING_METERS: f32 = -20000.0;
 /// Elevation in meters for one Terrarium texel: `(R*256 + G + B/256) - 32768`.
 fn decode_terrarium(texel: [u8; 4]) -> f32 {
     let [r, g, b, _a] = texel;
-    (f32::from(r) * 256.0 + f32::from(g) + f32::from(b) / 256.0) + f32::from(i16::MIN)
+    (f32::mul_add(f32::from(r), 256.0, f32::from(g)) + f32::from(b) / 256.0) + f32::from(i16::MIN)
 }
 
 /// A grid of elevation values in meters, row-major.
@@ -76,7 +76,7 @@ impl HeightGrid {
 
     /// Grid extent in samples, as `(width, height)`.
     #[must_use]
-    pub fn dimensions(&self) -> (usize, usize) {
+    pub const fn dimensions(&self) -> (usize, usize) {
         (self.width, self.height)
     }
 

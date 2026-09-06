@@ -22,10 +22,9 @@ use crate::mbtiles::PatchFileInfo;
 use crate::queries::{detach_db, init_mbtiles_schema, is_empty_database};
 use crate::{
     AGG_TILES_HASH, AGG_TILES_HASH_AFTER_APPLY, AGG_TILES_HASH_BEFORE_APPLY, AggHashType, CopyType,
-    MbtError, MbtType, MbtTypeCli, Mbtiles, NormalizedSchema, action_with_rusqlite,
-    create_tiles_with_hash_view, invert_y_value, reset_db_settings,
+    HASH_ALGORITHM, HashAlgorithm, MbtError, MbtType, MbtTypeCli, Mbtiles, NormalizedSchema,
+    action_with_rusqlite, create_tiles_with_hash_view, invert_y_value, reset_db_settings,
 };
-use crate::{HASH_ALGORITHM, HashAlgorithm};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, EnumDisplay)]
 #[enum_display(case = "Kebab")]

@@ -175,7 +175,7 @@ fn log_line(line: &LogLine) -> Line<'_> {
 }
 
 /// The color the pretty format gives a level.
-fn level_color(level: Level) -> Color {
+const fn level_color(level: Level) -> Color {
     match level {
         Level::ERROR => Color::Red,
         Level::WARN => Color::Yellow,

@@ -71,13 +71,13 @@ impl TileSourceManager {
 
     /// Returns a reference to the optional tile cache.
     #[must_use]
-    pub fn tile_cache(&self) -> &OptTileCache {
+    pub const fn tile_cache(&self) -> &OptTileCache {
         &self.tile_cache
     }
 
     /// The [`OnInvalid`] policy this catalog applies to sources that fail to build.
     #[must_use]
-    pub fn on_invalid(&self) -> OnInvalid {
+    pub const fn on_invalid(&self) -> OnInvalid {
         self.on_invalid
     }
 

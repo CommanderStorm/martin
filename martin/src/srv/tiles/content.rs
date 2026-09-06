@@ -859,7 +859,7 @@ fn encode(tile: Tile, enc: ContentEncoding) -> ActixResult<Tile> {
 }
 
 #[hotpath::measure]
-pub(crate) fn decode(tile: Tile) -> ActixResult<Tile> {
+pub fn decode(tile: Tile) -> ActixResult<Tile> {
     let info = tile.info;
     Ok(if info.encoding.is_encoded() {
         let etag = tile.etag;

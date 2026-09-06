@@ -607,7 +607,7 @@ impl Mbtiles {
     }
 
     /// The table that lookups by tile coordinate read from.
-    fn tile_table(mbt_type: MbtType) -> &'static str {
+    const fn tile_table(mbt_type: MbtType) -> &'static str {
         match mbt_type {
             MbtType::Flat => "tiles",
             MbtType::FlatWithHash => "tiles_with_hash",
@@ -1068,10 +1068,11 @@ pub(crate) mod tests {
 
     use std::assert_matches;
 
+    use rstest::rstest;
+
     use super::*;
     use crate::mbtiles::tests::open;
     use crate::metadata::anonymous_mbtiles;
-    use rstest::rstest;
 
     #[actix_rt::test]
     async fn detect_type() {

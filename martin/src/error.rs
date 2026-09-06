@@ -94,7 +94,7 @@ impl StartupError {
     ///
     /// A config problem can reach `main` directly or via a source build that rejected the
     /// config it was handed; both should render the same caret diagnostic.
-    fn spanned_config_error(&self) -> Option<&ConfigFileError> {
+    const fn spanned_config_error(&self) -> Option<&ConfigFileError> {
         match self {
             Self::Config(e) => Some(e),
             #[cfg(feature = "_tiles")]

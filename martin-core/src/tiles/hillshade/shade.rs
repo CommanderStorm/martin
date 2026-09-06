@@ -156,9 +156,9 @@ impl Canvas {
         let c10 = self.texel(x0, y0 + 1);
         let c11 = self.texel(x0 + 1, y0 + 1);
         std::array::from_fn(|c| {
-            let top = c00[c] * (1.0 - tx) + c01[c] * tx;
-            let bot = c10[c] * (1.0 - tx) + c11[c] * tx;
-            top * (1.0 - ty) + bot * ty
+            let top = c01[c].mul_add(tx, c00[c] * (1.0 - tx));
+            let bot = c11[c].mul_add(tx, c10[c] * (1.0 - tx));
+            bot.mul_add(ty, top * (1.0 - ty))
         })
     }
 }
@@ -177,21 +177,25 @@ fn relief_shade(
 ) -> [f64; CHANNELS] {
     let mut shade = [0.0; CHANNELS];
     for i in 0..CHANNELS {
-        let nx = nx[i] * 2.0 - 1.0;
-        let ny = ny[i] * 2.0 - 1.0;
+        let nx = nx[i].mul_add(2.0, -1.0);
+        let ny = ny[i].mul_add(2.0, -1.0);
         // Floored so normalisation never sees a null vector at low exaggeration.
-        let nz = (1.0 - (nx * nx + ny * ny)).max(1e-4).sqrt();
+        let nz = (1.0 - ny.mul_add(ny, nx * nx)).max(1e-4).sqrt();
         let vx = nx * params.vertical_exaggeration;
         let vy = ny * params.vertical_exaggeration;
-        let len = (vx * vx + vy * vy + nz * nz).sqrt();
+        let len = nz.mul_add(nz, vy.mul_add(vy, vx * vx)).sqrt();
         // Normalise first, then dot. See the module's numeric contract.
-        let s =
-            ((vx / len) * light[0] + (vy / len) * light[1] + (nz / len) * light[2]).clamp(0.0, 1.0);
+        let s = (nz / len)
+            .mul_add(
+                light[2],
+                (vy / len).mul_add(light[1], (vx / len) * light[0]),
+            )
+            .clamp(0.0, 1.0);
         // `1 - alpha` is the elevation proxy: it raises gain on high terrain.
         let elevation = 1.0 - alpha[i];
-        let gain = params.contrast * (1.0 + params.elevation_scale * elevation);
+        let gain = params.contrast * params.elevation_scale.mul_add(elevation, 1.0);
         let neutral = light[2].clamp(0.0, 1.0);
-        shade[i] = ((s - neutral) * gain + neutral).clamp(0.0, 1.0);
+        shade[i] = (s - neutral).mul_add(gain, neutral).clamp(0.0, 1.0);
     }
     shade
 }
@@ -209,7 +213,7 @@ fn band_hard(shade: [f64; CHANNELS], neutral: f64, bands: f64) -> [f64; CHANNELS
         let floor_t = t.floor();
         let fract = t - floor_t;
         let step = if fract >= 0.5 { 1.0 } else { 0.0 };
-        out[i] = (neutral + (floor_t + step) * band_size).clamp(0.0, 1.0);
+        out[i] = (floor_t + step).mul_add(band_size, neutral).clamp(0.0, 1.0);
     }
     out
 }
@@ -255,9 +259,17 @@ pub fn bake_with_light(
     for oy in 0..side {
         // Output texel centre in canvas coordinates.
         // The centre tile starts one tile in on both axes, hence the TILE_SIZE offset.
-        let cy = (f64::from(oy) + 0.5 - f64::from(apron)) * scale + TILE_SIZE as f64;
+        let cy = f64::mul_add(
+            f64::from(oy) + 0.5 - f64::from(apron),
+            scale,
+            TILE_SIZE as f64,
+        );
         for ox in 0..side {
-            let cx = (f64::from(ox) + 0.5 - f64::from(apron)) * scale + TILE_SIZE as f64;
+            let cx = f64::mul_add(
+                f64::from(ox) + 0.5 - f64::from(apron),
+                scale,
+                TILE_SIZE as f64,
+            );
             let mut nx = [0.0; CHANNELS];
             let mut ny = [0.0; CHANNELS];
             let mut alpha = [0.0; CHANNELS];

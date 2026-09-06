@@ -20,7 +20,7 @@ pub const TILE_SIZE: usize = 256;
 pub const FIELD_SIDE: usize = GRID_SIDE * TILE_SIZE;
 
 /// Channels in an assembled texel.
-pub(crate) const CHANNELS: usize = 4;
+pub const CHANNELS: usize = 4;
 
 /// Errors raised while assembling a neighbourhood.
 #[derive(thiserror::Error, Debug)]
@@ -56,7 +56,7 @@ impl Neighbourhood {
 
     /// Builds a neighbourhood from nine fetch results in row-major order.
     #[must_use]
-    pub fn from_row_major(tiles: [Option<TileData>; NEIGHBOURHOOD_LEN]) -> Self {
+    pub const fn from_row_major(tiles: [Option<TileData>; NEIGHBOURHOOD_LEN]) -> Self {
         Self { tiles }
     }
 
@@ -162,7 +162,7 @@ fn clamped_pixel(img: &RgbaImage, x: usize, y: usize) -> [u8; CHANNELS] {
 /// should be replicated into it: `0` and `2` clamp to the centre's first or
 /// last row/column, `1` (edge-adjacent) passes the coordinate through.
 #[inline]
-fn clamp_toward_centre(grid: usize, coord: usize) -> usize {
+const fn clamp_toward_centre(grid: usize, coord: usize) -> usize {
     match grid {
         0 => 0,
         2 => TILE_SIZE - 1,

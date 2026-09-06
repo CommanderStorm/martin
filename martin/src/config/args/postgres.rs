@@ -13,7 +13,7 @@ use crate::config::file::{CachePolicy, UnrecognizedValues};
 use crate::config::primitives::env::Env;
 use crate::config::primitives::{OptBoolObj, OptOneMany};
 
-#[derive(clap::Args, Debug, PartialEq, Default)]
+#[derive(clap::Args, Debug, PartialEq, Eq, Default)]
 #[command(about, version)]
 pub struct PostgresArgs {
     /// Specify how bounds should be computed for the spatial PG tables. [DEFAULT: quick]

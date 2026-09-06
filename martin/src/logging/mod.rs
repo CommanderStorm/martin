@@ -192,7 +192,7 @@ impl LogFormat {
 
     /// Returns `true` if this format is JSON (`json` / `jsonl`).
     #[must_use]
-    pub fn is_json(self) -> bool {
+    pub const fn is_json(self) -> bool {
         matches!(self, Self::Json)
     }
 }

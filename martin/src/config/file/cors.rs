@@ -103,7 +103,7 @@ impl Default for CorsProperties {
 }
 
 impl CorsProperties {
-    pub fn validate(&self) -> ConfigFileResult<()> {
+    pub const fn validate(&self) -> ConfigFileResult<()> {
         if self.origin.is_empty() {
             Err(ConfigFileError::CorsNoOriginsConfigured)
         } else {

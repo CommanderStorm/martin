@@ -33,7 +33,7 @@ struct Variant {
 }
 
 impl Variant {
-    fn takes_query(&self) -> bool {
+    const fn takes_query(&self) -> bool {
         self.input_types.len() == 4
     }
 

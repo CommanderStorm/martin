@@ -220,7 +220,7 @@ impl ResolvedProcess {
     /// a client is told about - and the one `Accept` is negotiated against - has
     /// to be the traced one, not the source's own.
     #[must_use]
-    pub fn advertised_tile_info(&self, source: TileInfo) -> TileInfo {
+    pub const fn advertised_tile_info(&self, source: TileInfo) -> TileInfo {
         #[cfg(all(feature = "contour", feature = "_tiles"))]
         if self.contour.is_some() {
             return TileInfo::new(Format::Mvt, Encoding::Uncompressed);
@@ -234,7 +234,7 @@ impl ResolvedProcess {
         not(all(any(feature = "hillshade", feature = "contour"), feature = "_tiles")),
         expect(clippy::unused_self)
     )]
-    pub fn is_post_processed(&self) -> bool {
+    pub const fn is_post_processed(&self) -> bool {
         #[cfg(all(feature = "hillshade", feature = "_tiles"))]
         if self.hillshade.is_some() {
             return true;
@@ -293,7 +293,7 @@ pub type MvtProcessConfig = AutoOption<MvtEncoderConfig>;
 /// captured here verbatim and surfaced through the established unrecognized-key
 /// warning path so users get a typo hint instead of silent acceptance.
 #[cfg(all(feature = "mlt", feature = "_tiles"))]
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "unstable-schemas", derive(schemars::JsonSchema))]
 #[serde(transparent)]
 pub struct MvtEncoderConfig(pub serde_json::Map<String, serde_json::Value>);
@@ -311,7 +311,7 @@ impl CollectUnrecognizedKeys for MvtEncoderConfig {
 /// All fields are optional; unset fields use `mlt-core`'s defaults.
 #[cfg(all(feature = "mlt", feature = "_tiles"))]
 #[serde_with::skip_serializing_none]
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, CollectUnrecognizedKeys)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, CollectUnrecognizedKeys)]
 #[cfg_attr(feature = "unstable-schemas", derive(schemars::JsonSchema))]
 pub struct MltEncoderConfig {
     /// Generate tessellation data for polygons and multi-polygons.

@@ -21,19 +21,19 @@ pub struct GeometryFeatures(Vec<ContourFeature>);
 impl GeometryFeatures {
     /// Wraps a vector of features.
     #[must_use]
-    pub fn new(features: Vec<ContourFeature>) -> Self {
+    pub const fn new(features: Vec<ContourFeature>) -> Self {
         Self(features)
     }
 
     /// Whether no feature survived tracing.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     /// Number of features.
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.0.len()
     }
 
