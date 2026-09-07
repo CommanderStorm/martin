@@ -22,7 +22,7 @@ where
 }
 
 /// Execute a schema-init `.sql` script, decorating each statement to match the runtime DDL.
-/// 
+///
 /// every `CREATE TABLE`/`CREATE VIEW` becomes `... IF NOT EXISTS ...`
 /// `SQLite` strips `IF NOT EXISTS` from the stored DDL, and each `CREATE TABLE` gets a `STRICT` table-option when
 /// `strict` is set. `STRICT` is comma-joined with any options already present after the closing `)`
