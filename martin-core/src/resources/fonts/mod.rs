@@ -195,7 +195,7 @@ impl FontSources {
     /// Every member must name an already discovered font, not another alias.
     /// An alias may share the name of a discovered font it references.
     /// Requests for such a name serve the alias.
-    pub fn add_alias(&mut self, name: String, fonts: Vec<String>) -> Result<(), FontError> {
+    pub fn add_alias(&self, name: String, fonts: Vec<String>) -> Result<(), FontError> {
         if name.is_empty() || name.contains(',') {
             return Err(FontError::InvalidAliasName(name));
         }
