@@ -312,10 +312,7 @@ impl<'a> DynTileSource<'a> {
                 })
                 .collect::<Vec<_>>()
                 .join(", ");
-            return Err(TileError::ZoomOutOfRange {
-                zoom: z,
-                supported,
-            });
+            return Err(TileError::ZoomOutOfRange { zoom: z, supported });
         }
 
         let accepted_format = Self::resolve_accepted_format(
@@ -642,7 +639,10 @@ impl<'a> DynTileSource<'a> {
     /// Resolves this source's hillshade settings for the current request.
     /// Returns `None` when the source is not hillshaded.
     #[cfg(all(feature = "hillshade", feature = "_tiles"))]
-    fn resolve_hillshade(&self, pc: &ResolvedProcess) -> Result<Option<ResolvedHillshade>, TileError> {
+    fn resolve_hillshade(
+        &self,
+        pc: &ResolvedProcess,
+    ) -> Result<Option<ResolvedHillshade>, TileError> {
         let Some(settings) = pc.hillshade else {
             return Ok(None);
         };
