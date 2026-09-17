@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../images/favicon.ico">
-      <meta name="generator" content="zensical-0.0.57">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -36,7 +36,7 @@
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -444,6 +444,8 @@
       
         
       
+        
+      
     
     
     
@@ -620,6 +622,7 @@
   
   
   
+  
     <a href="../quick-start/" class="md-nav__link">
       
   
@@ -629,7 +632,7 @@
   <span class="md-ellipsis">
     
   
-  Martin Quick Start Guide
+  Quick Start
 
     
   </span>
@@ -718,6 +721,7 @@
   
   
   
+  
     <a href="../run/" class="md-nav__link">
       
   
@@ -727,7 +731,7 @@
   <span class="md-ellipsis">
     
   
-  Usage
+  Running
 
     
   </span>
@@ -784,6 +788,7 @@
   
   
   
+  
     <a href="../config-file/" class="md-nav__link">
       
   
@@ -793,7 +798,7 @@
   <span class="md-ellipsis">
     
   
-  Configuration
+  Configuration File
 
     
   </span>
@@ -860,6 +865,8 @@
       
         
       
+        
+      
     
     
     
@@ -877,6 +884,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1103,7 +1111,7 @@
   <a href="#martin-cp" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        <code>martin-cp</code>
+        <code>martin cp</code>
       </span>
     </span>
   </a>
@@ -1305,11 +1313,11 @@
 <p>In addition to the <code>martin</code> tile server, we provide a set of tools to help build and manage maps. These tools are designed to work seamlessly with the <code>martin</code> server and can be used to generate tiles, manage data, and perform various operations on maps.</p>
 <h2 id="cli-tools">CLI Tools</h2>
 <p>Martin project contains additional tooling to help manage the data servable with Martin tile server.</p>
-<h3 id="martin-cp"><code>martin-cp</code></h3>
-<p><code>martin-cp</code> is a tool for generating tiles in bulk, and save retrieved tiles into a new or an existing MBTiles file.
+<h3 id="martin-cp"><code>martin cp</code></h3>
+<p><code>martin cp</code> is a subcommand of <code>martin</code> for generating tiles in bulk, and save retrieved tiles into a new or an existing MBTiles file.
 It can be used to generate tiles for a large area or multiple areas.
 If multiple areas overlap, it will generate tiles only once.
-<code>martin-cp</code> supports the same configuration file and CLI arguments as Martin server, so it can support all sources and even combining sources.</p>
+<code>martin cp</code> supports the same configuration file and CLI arguments as Martin server, so it can support all sources and even combining sources.</p>
 <p>See <a href="../martin-cp/">this article</a> for more information.</p>
 <h3 id="mbtiles"><code>mbtiles</code></h3>
 <p><code>mbtiles</code> is a small utility to interact with the <code>*.mbtiles</code> files from the command line.
@@ -1317,7 +1325,7 @@ It allows users to <a href="../mbtiles-meta/">examine</a>, <a href="../mbtiles-c
 <p>See <a href="../mbtiles/">this article</a> for more information.</p>
 <h2 id="supporting-crates">Supporting crates</h2>
 <p>Next to these tools, we also have a set of supporting crates for supporting the <code>martin</code> server and its ecosystem.
-Example of this is <code>martin-tile-utils</code> which is used in <code>martin</code>, <code>mbtiles</code> and <code>martin-cp</code>.</p>
+Example of this is <code>martin-tile-utils</code> which is used in <code>martin</code> and <code>mbtiles</code>.</p>
 
 
   <nav class="md-tags" >
@@ -1453,10 +1461,14 @@ Example of this is <code>martin-tile-utils</code> which is used in <code>martin<
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"redirect":null,"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.49251538.min.js"></script>
+      <script src="../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
     
   </body>

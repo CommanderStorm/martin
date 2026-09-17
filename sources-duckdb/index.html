@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../images/favicon.ico">
-      <meta name="generator" content="zensical-0.0.57">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -36,7 +36,7 @@
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -446,6 +446,8 @@
       
         
       
+        
+      
     
     
     
@@ -620,6 +622,7 @@
   
   
   
+  
     <a href="../quick-start/" class="md-nav__link">
       
   
@@ -629,7 +632,7 @@
   <span class="md-ellipsis">
     
   
-  Martin Quick Start Guide
+  Quick Start
 
     
   </span>
@@ -718,6 +721,7 @@
   
   
   
+  
     <a href="../run/" class="md-nav__link">
       
   
@@ -727,7 +731,7 @@
   <span class="md-ellipsis">
     
   
-  Usage
+  Running
 
     
   </span>
@@ -948,6 +952,7 @@
   
   
   
+  
     <a href="../sources-files/" class="md-nav__link">
       
   
@@ -1010,6 +1015,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1291,6 +1297,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1367,6 +1377,64 @@
     
   
   MVT/MLT Conversion
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../postprocessing/hillshade/" class="md-nav__link">
+        
+  
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14 6-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22z"/></svg>
+  
+  <span class="md-ellipsis">
+    
+  
+  Hillshade
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../postprocessing/contour/" class="md-nav__link">
+        
+  
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m3 14 .5.07L8.07 9.5a1.95 1.95 0 0 1 .52-1.91c.78-.79 2.04-.79 2.82 0 .53.52.7 1.26.52 1.91l2.57 2.57.5-.07c.18 0 .35 0 .5.07l3.57-3.57C19 8.35 19 8.18 19 8a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2c-.18 0-.35 0-.5-.07l-3.57 3.57c.07.15.07.32.07.5a2 2 0 0 1-2 2 2 2 0 0 1-2-2l.07-.5-2.57-2.57c-.32.07-.68.07-1 0L4.93 15.5 5 16a2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2"/></svg>
+  
+  <span class="md-ellipsis">
+    
+  
+  Contours
 
     
   </span>
@@ -1516,6 +1584,7 @@
   
   
   
+  
     <a href="../sources-styles/" class="md-nav__link">
       
   
@@ -1525,7 +1594,7 @@
   <span class="md-ellipsis">
     
   
-  Style Sources
+  Styles
 
     
   </span>
@@ -1637,6 +1706,8 @@
       
         
       
+        
+      
     
     
     
@@ -1654,6 +1725,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1722,6 +1794,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1886,7 +1959,7 @@
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This feature is currently unstable and thus not included in the default build.
-Its behaviour may change in patch releases.</p>
+Its behavior may change in patch releases.</p>
 <p>To experiment with it on any supported platform, <a href="https://rust-lang.org/tools/install/">install Rust</a>, and run this to download, compile, and install Martin with the unstable feature:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cargo<span class="w"> </span>install<span class="w"> </span>martin<span class="w"> </span>--locked<span class="w"> </span>--features<span class="o">=</span>unstable-duckdb
 </span></code></pre></div>
@@ -1895,13 +1968,12 @@ Its behaviour may change in patch releases.</p>
 <li>DuckDB sources are not included in default binaries, Homebrew, or the Docker image</li>
 <li>There is no CLI shorthand for <code>.parquet</code> or <code>.duckdb</code> files</li>
 <li>DuckDB database sources (<code>database:</code>) are not yet supported</li>
-<li>Local GeoParquet must be a file; directories are rejected</li>
-<li>Remote GeoParquet is <code>http://</code> / <code>https://</code> only</li>
+<li>Local GeoParquet must be a single file; directories and globs are rejected</li>
 <li>Hot reload is not implemented</li>
 <li>MLT postprocessing is not supported</li>
 <li>The published configuration schema does not yet include DuckDB sources</li>
 </ul>
-<p>We welcome contributions to help stabilise this feature!</p>
+<p>We welcome contributions to help stabilize this feature!</p>
 </div>
 <p>Martin can serve vector tiles on the fly from <a href="https://geoparquet.org/">GeoParquet</a> files via <a href="https://duckdb.org/">DuckDB</a>.
 Instead of incurring the overhead of serving them directly, we serve them as vector tiles.</p>
@@ -1939,6 +2011,11 @@ Once a DuckDB configuration exists, <code>martin --config config.yaml --save-con
 </span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">    </span><span class="c1"># Remote GeoParquet over HTTP(S)</span>
 </span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">geoparquet</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://example.org/data/places.parquet</span>
 </span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">      </span><span class="nt">layer_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">places</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">    </span><span class="c1"># Remote GeoParquet in an object store, optionally a glob over many part files</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">geoparquet</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://overturemaps-us-west-2/release/2026-08-19.0/theme=places/type=place/*.parquet</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">      </span><span class="nt">layer_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">overture_places</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">      </span><span class="nt">geometry_column</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">geometry</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">      </span><span class="nt">srid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4326</span>
 </span></code></pre></div>
 <p>The top-level <code>pool_size</code>, <code>threads</code>, <code>memory_limit_mb</code>, and <code>auto_bounds</code> apply to every DuckDB source unless overridden on that source:</p>
 <ul>
@@ -1952,7 +2029,9 @@ Once a DuckDB configuration exists, <code>martin --config config.yaml --save-con
 </ul>
 <p>Each GeoParquet source supports:</p>
 <ul>
-<li><strong><code>geoparquet</code></strong> - local path or <code>http://</code> / <code>https://</code> URL of the GeoParquet file.</li>
+<li><strong><code>geoparquet</code></strong></li>
+<li>a remote URL of the GeoParquet file (<code>http</code>, <code>https</code>, <code>s3</code>, <code>gs</code>, <code>gcs</code>, <code>r2</code>, <code>az</code>, <code>azure</code>, <code>abfss</code> and <code>hf</code> URLs). A remote URL may be a glob such as <code>s3://bucket/prefix/*.parquet</code>, which DuckDB expands into every matching part file.</li>
+<li>a local path or <code>file://</code> URLs. Local paths must name a single file.</li>
 <li><strong><code>layer_id</code></strong> - MVT <code>source-layer</code> and the base for the source id (defaults to the file or URL stem).</li>
 <li><strong><code>geometry_column</code></strong> - geometry column name. Auto-detected when the file has exactly one geometry column.</li>
 <li><strong><code>id_column</code></strong> - optional table column to use as the MVT feature id.</li>
@@ -1972,6 +2051,17 @@ DuckDB sources can be combined with other sources via <a href="../sources-compos
 <p class="admonition-title">Note</p>
 <p>SRID auto-detection supports EPSG codes and <code>OGC:CRS84</code> only.
 If the file has more than one geometry column, set <code>geometry_column</code> explicitly.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Row-group pruning</p>
+<p>To reduce the IO necessary on large duckdb queries, we use can use the <a href="https://geoparquet.org/releases/v1.1.0/#covering">GeoParquet 1.1 <code>covering</code></a> declaration out of the file's <code>geo</code> metadata on startup and honor <code>bbox.{x,y}{min,max}</code> structs.</p>
+<p>Pruning is also skipped when the source SRID is neither <code>4326</code> nor <code>3857</code>, because transforming a tile envelope into another projection can under-cover it and silently clip features at tile edges.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Vector tiles can only carry text, numeric and boolean properties</p>
+<p>Martin casts every other scalar column - dates, timestamps, <code>DECIMAL</code>, <code>UUID</code>, <code>ENUM</code>, and small or unsigned integers - to the nearest type MVT supports.
+Columns with no MVT representation at all, such as <code>STRUCT</code>, <code>LIST</code>, <code>MAP</code> and <code>BLOB</code>, are dropped and named in a startup warning.
+The TileJSON <code>vector_layers[].fields</code> reports the type each property is served as, not the type it has on disk.</p>
 </div>
 <h2 id="database-sources">Database sources</h2>
 <p>A <code>database:</code> entry names a DuckDB database file.
@@ -2011,7 +2101,10 @@ Do not rely on any of the database source options above yet; they are included t
 <p>Parquet is a columnar file format.
 GeoParquet adds a standard way to store geometry columns and CRS information inside that file.</p>
 <p>Martin reads GeoParquet with DuckDB <code>read_parquet</code>, loads the DuckDB <code>spatial</code> extension, and generates MVT tiles on each request.
-Remote <code>http://</code> / <code>https://</code> URLs also load the DuckDB <code>httpfs</code> extension.</p>
+Remote URLs also load the DuckDB <code>httpfs</code> extension.</p>
+<p>Martin passes remote URLs to DuckDB unchanged and does not manage credentials for them.
+Public buckets work with no further configuration.
+Private ones need DuckDB's own credential configuration, such as the standard AWS environment variables.</p>
 <p>You may want to visit these specs:</p>
 <ul>
 <li><a href="https://geoparquet.org/">GeoParquet</a></li>
@@ -2174,10 +2267,14 @@ Remote <code>http://</code> / <code>https://</code> URLs also load the DuckDB <c
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"redirect":null,"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.49251538.min.js"></script>
+      <script src="../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
     
   </body>

@@ -12,13 +12,13 @@
         <meta name="author" content="Maplibre Contributors">
       
       
-        <link rel="canonical" href="https://maplibre.org/martin/mbtiles-meta/">
+        <link rel="canonical" href="https://maplibre.org/martin/recipe-basemap-selfhosted/">
       
       
-        <link rel="prev" href="../mbtiles-schema/">
+        <link rel="prev" href="../using-guides/">
       
       
-        <link rel="next" href="../mbtiles-copy/">
+        <link rel="next" href="../using-with-renderer/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Accessing Metadata - Martin Tile Server Documentation</title>
+        <title>Self-hosting a basemap from scratch - Martin Tile Server Documentation</title>
       
     
     
@@ -150,7 +150,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mbtiles-information-and-metadata" class="md-skip">
+        <a href="#building-a-self-hosted-basemap-from-scratch" class="md-skip">
           Skip to content
         </a>
       
@@ -186,7 +186,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Accessing Metadata
+              Self-hosting a basemap from scratch
             
           </span>
         </div>
@@ -932,10 +932,38 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../recipe-basemap-selfhosted/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15 19-6-2.11V5l6 2.11M20.5 3h-.16L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5a.5.5 0 0 0 .5.5c.05 0 .11 0 .16-.03L9 18.9l6 2.1 5.64-1.9c.21-.1.36-.25.36-.48V3.5a.5.5 0 0 0-.5-.5"/></svg>
+  
+  <span class="md-ellipsis">
+    
+  
+  Self-hosting a basemap from scratch
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
@@ -952,6 +980,115 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#generate-a-tile-archive-from-openstreetmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Generate a tile archive from OpenStreetMap
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-a-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Get a style
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-fonts-the-style-uses" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Get the fonts the style uses
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-the-icons-the-style-uses" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Get the icons the style uses
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#point-the-style-at-your-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Point the style at your server
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-martin" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Run Martin
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#view-the-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        View the map
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-go-from-here" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where to go from here
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1398,8 +1535,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1433,11 +1568,13 @@
     
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_6" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1464,7 +1601,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1509,38 +1646,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.68 12.32a4.49 4.49 0 0 0-6.36.01 4.49 4.49 0 0 0 0 6.36 4.51 4.51 0 0 0 5.57.63L21 22.39 22.39 21l-3.09-3.11c1.13-1.77.87-4.09-.62-5.57m-1.41 4.95c-.98.98-2.56.97-3.54 0-.97-.98-.97-2.56.01-3.54.97-.97 2.55-.97 3.53 0 .97.98.97 2.56 0 3.54M10.9 20.1a6.5 6.5 0 0 1-1.48-2.32C6.27 17.25 4 15.76 4 14v3c0 2.21 3.58 4 8 4-.4-.26-.77-.56-1.1-.9M4 9v3c0 1.68 2.07 3.12 5 3.7v-.2c0-.93.2-1.85.58-2.69C6.34 12.3 4 10.79 4 9m8-6C7.58 3 4 4.79 4 7c0 2 3 3.68 6.85 4h.05c1.2-1.26 2.86-2 4.6-2 .91 0 1.81.19 2.64.56A3.22 3.22 0 0 0 20 7c0-2.21-3.58-4-8-4"/></svg>
-  
-  <span class="md-ellipsis">
-    
-  
-  Accessing Metadata
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="././" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../mbtiles-meta/" class="md-nav__link">
         
   
   
@@ -1557,71 +1666,6 @@
   
 
       </a>
-      
-        
-
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        summary
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#meta-all" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        meta-all
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#meta-get" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        meta-get
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#meta-set" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        meta-set
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1874,44 +1918,6 @@
   
 
       
-        
-  
-  
-    
-    
-      
-        
-          
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-      <li class="md-path__item">
-        <a href="../mbtiles/" class="md-path__link">
-          
-  
-  <span class="md-ellipsis">
-    Working with MBTiles archives
-  </span>
-
-        </a>
-      </li>
-    
-  
-
-      
     </ol>
   </nav>
 
@@ -1920,7 +1926,7 @@
                 
                   
   
-    <a href="https://github.com/maplibre/martin/edit/main/docs/content/mbtiles-meta.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/maplibre/martin/edit/main/docs/content/recipe-basemap-selfhosted.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -1928,51 +1934,155 @@
   
 
 
-<h1 id="mbtiles-information-and-metadata">MBTiles information and metadata</h1>
-<h2 id="summary">summary</h2>
-<p>Use <code>mbtiles summary</code> to get a summary of the contents of an MBTiles file.
-The command will print a table with the
-number of tiles per zoom level, the size of the smallest and largest tiles, and the average size of tiles at each zoom
-level.
-The command will also print the bounding box of the covered area per zoom level.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Create a sample .mbtiles file in some dir</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sqlite3<span class="w"> </span>target/world_cities.mbtiles<span class="w"> </span>&lt;<span class="w"> </span>tests/fixtures/mbtiles/world_cities.sql
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Get mbtiles summary</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>mbtiles<span class="w"> </span>summary<span class="w"> </span>target/world_cities.mbtiles
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>MBTiles<span class="w"> </span>file<span class="w"> </span>summary<span class="w"> </span><span class="k">for</span><span class="w"> </span>tests/fixtures/mbtiles/world_cities.mbtiles
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>Schema:<span class="w"> </span>flat
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>File<span class="w"> </span>size:<span class="w"> </span><span class="m">48</span>.00kB
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>Page<span class="w"> </span>size:<span class="w"> </span><span class="m">4</span>.00kB
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>Page<span class="w"> </span>count:<span class="w"> </span><span class="m">12</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w"> </span>Zoom<span class="w"> </span><span class="p">|</span><span class="w">   </span>Count<span class="w">   </span><span class="p">|</span><span class="w"> </span>Smallest<span class="w">  </span><span class="p">|</span><span class="w">  </span>Largest<span class="w">  </span><span class="p">|</span><span class="w">  </span>Average<span class="w">  </span><span class="p">|</span><span class="w"> </span>Bounding<span class="w"> </span>Box
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="m">0</span><span class="w"> </span><span class="p">|</span><span class="w">         </span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w">     </span><span class="m">1</span>.0kB<span class="w"> </span><span class="p">|</span><span class="w">     </span><span class="m">1</span>.0kB<span class="w"> </span><span class="p">|</span><span class="w">    </span><span class="m">1</span>.0kB<span class="w"> </span><span class="p">|</span><span class="w"> </span>-180,-85,180,85
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w">         </span><span class="m">4</span><span class="w"> </span><span class="p">|</span><span class="w">      </span>160B<span class="w"> </span><span class="p">|</span><span class="w">      </span>650B<span class="w"> </span><span class="p">|</span><span class="w">      </span>366B<span class="w"> </span><span class="p">|</span><span class="w"> </span>-180,-85,180,85
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="m">2</span><span class="w"> </span><span class="p">|</span><span class="w">         </span><span class="m">7</span><span class="w"> </span><span class="p">|</span><span class="w">      </span>137B<span class="w"> </span><span class="p">|</span><span class="w">      </span>495B<span class="w"> </span><span class="p">|</span><span class="w">      </span>239B<span class="w"> </span><span class="p">|</span><span class="w"> </span>-180,-67,180,67
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="m">3</span><span class="w"> </span><span class="p">|</span><span class="w">        </span><span class="m">17</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>67B<span class="w"> </span><span class="p">|</span><span class="w">      </span>246B<span class="w"> </span><span class="p">|</span><span class="w">      </span>134B<span class="w"> </span><span class="p">|</span><span class="w"> </span>-135,-41,180,67
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="m">4</span><span class="w"> </span><span class="p">|</span><span class="w">        </span><span class="m">38</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>64B<span class="w"> </span><span class="p">|</span><span class="w">      </span>175B<span class="w"> </span><span class="p">|</span><span class="w">       </span>86B<span class="w"> </span><span class="p">|</span><span class="w"> </span>-135,-41,180,67
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="m">5</span><span class="w"> </span><span class="p">|</span><span class="w">        </span><span class="m">57</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>64B<span class="w"> </span><span class="p">|</span><span class="w">      </span>107B<span class="w"> </span><span class="p">|</span><span class="w">       </span>72B<span class="w"> </span><span class="p">|</span><span class="w"> </span>-124,-41,180,62
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="m">6</span><span class="w"> </span><span class="p">|</span><span class="w">        </span><span class="m">72</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>64B<span class="w"> </span><span class="p">|</span><span class="w">       </span>97B<span class="w"> </span><span class="p">|</span><span class="w">       </span>68B<span class="w"> </span><span class="p">|</span><span class="w"> </span>-124,-41,180,62
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">  </span>all<span class="w"> </span><span class="p">|</span><span class="w">       </span><span class="m">196</span><span class="w"> </span><span class="p">|</span><span class="w">       </span>64B<span class="w"> </span><span class="p">|</span><span class="w">     </span><span class="m">1</span>.0kB<span class="w"> </span><span class="p">|</span><span class="w">       </span>96B<span class="w"> </span><span class="p">|</span><span class="w"> </span>-180,-85,180,85
+<h1 id="building-a-self-hosted-basemap-from-scratch">Building a Self-hosted Basemap from Scratch</h1>
+<p>This guide takes you from nothing to a fully styled vector basemap in your browser, with every part of the stack served from your own machine.
+At the end, a single Martin instance serves the tiles, the glyphs, the sprites, and the style itself.
+No API keys and no external services are needed.</p>
+<p>A rendered basemap needs four things:</p>
+<ul>
+<li>a <strong>tile archive</strong> containing the map data,</li>
+<li>a <strong>style</strong> telling the renderer how to draw that data,</li>
+<li>the <strong>glyphs</strong> (fonts) the style labels text with, and</li>
+<li>the <strong>sprites</strong> (icons) the style marks points of interest with.</li>
+</ul>
+<p>We will produce each one, then wire them together.</p>
+<div class="admonition note">
+<p class="admonition-title">Prerequisites</p>
+<p>We expect you have the following already installed:</p>
+<ul>
+<li><a href="https://docker.io">Docker</a> to generate the tile archive</li>
+<li><a href="../installation/">Martin binary</a></li>
+<li><code>git</code> and <code>curl</code> to fetch the style and fonts</li>
+</ul>
+<p>All commands below run from one working directory.</p>
+</div>
+<h2 id="generate-a-tile-archive-from-openstreetmap">Generate a tile archive from OpenStreetMap</h2>
+<p>We will use <a href="https://github.com/onthegomap/planetiler/">Planetiler</a> to build an MBTiles archive of Monaco from <a href="https://osm.org">OpenStreetMap</a> data.
+Planetiler downloads the OSM extract for you and tiles it into the <a href="https://openmaptiles.org/">OpenMapTiles</a> schema.
+See <a href="../recipe-basemap-postgis/">Setting up a Basemap and Overlaying Points from PostGIS</a> for a discussion of why a tiling step is needed and what OpenMapTiles is, and <a href="../sources-tiles/">our tile source comparison</a> for the pros and cons of the different archive formats.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>--parents<span class="w"> </span>data
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>docker<span class="w"> </span>run<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--user<span class="o">=</span><span class="nv">$UID</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">JAVA_TOOL_OPTIONS</span><span class="o">=</span><span class="s2">"-Xmx1g"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/data"</span>:/data<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span>--rm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>ghcr.io/onthegomap/planetiler:latest<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span>--download<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span>--minzoom<span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span>--maxzoom<span class="o">=</span><span class="m">14</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span>--tile_compression<span class="o">=</span>none<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span>--area<span class="o">=</span>monaco<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span>--output<span class="w"> </span>/data/monaco.mbtiles
 </span></code></pre></div>
-<h2 id="meta-all">meta-all</h2>
-<p>Print all metadata values to stdout, as well as the results of tile detection.
-The format of the values printed is not
-stable, and should only be used for visual inspection.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>mbtiles<span class="w"> </span>meta-all<span class="w"> </span>my_file.mbtiles
+<p>Monaco is small, so this finishes in a few minutes.
+Any other <a href="https://download.geofabrik.de/">Geofabrik extract name</a> works as <code>--area</code> the same way, with larger downloads and longer runs.</p>
+<h2 id="get-a-style">Get a style</h2>
+<p>A style only works with data in the schema it was written for.
+Planetiler produced tiles in the OpenMapTiles schema, so we need an OpenMapTiles style.
+We will use <a href="https://github.com/openmaptiles/osm-bright-gl-style">OSM Bright</a>.
+<a href="https://github.com/openmaptiles/positron-gl-style">Positron</a>, <a href="https://github.com/openmaptiles/dark-matter-gl-style">Dark Matter</a>, <a href="https://github.com/openmaptiles/maptiler-basic-gl-style">MapTiler Basic</a>, and <a href="https://github.com/maputnik/osm-liberty">OSM Liberty</a> are alternatives.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/openmaptiles/osm-bright-gl-style.git
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>mkdir<span class="w"> </span>--parents<span class="w"> </span>styles
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>cp<span class="w"> </span>osm-bright-gl-style/style.json<span class="w"> </span>styles/basemap.json
 </span></code></pre></div>
-<h2 id="meta-get">meta-get</h2>
-<p>Retrieve raw metadata value by its name.
-The value is printed to stdout without any modifications.
-For example, to get the <code>description</code> value from an mbtiles file:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>mbtiles<span class="w"> </span>meta-get<span class="w"> </span>my_file.mbtiles<span class="w"> </span>description
+<div class="admonition note">
+<p class="admonition-title">Attribution</p>
+<p>Your map must display <a href="https://openmaptiles.org/"><code>© OpenMapTiles</code></a> and <a href="https://www.openstreetmap.org/copyright"><code>© OpenStreetMap contributors</code></a>.
+The tile archive built above carries this attribution in its metadata, and MapLibre displays it automatically.</p>
+</div>
+<h2 id="get-the-fonts-the-style-uses">Get the fonts the style uses</h2>
+<p>OSM Bright labels text with <code>Noto Sans Regular</code>, <code>Noto Sans Bold</code>, and <code>Noto Sans Italic</code>.
+Martin generates the glyph ranges MapLibre asks for <a href="../sources-fonts/">directly from <code>.ttf</code>/<code>.otf</code> files</a>, so all we need are the font files themselves:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>mkdir<span class="w"> </span>--parents<span class="w"> </span>fonts
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-L<span class="w"> </span>-o<span class="w"> </span>fonts/NotoSans-Regular.ttf<span class="w"> </span>https://github.com/notofonts/notofonts.github.io/raw/main/fonts/NotoSans/full/ttf/NotoSans-Regular.ttf
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>curl<span class="w"> </span>-L<span class="w"> </span>-o<span class="w"> </span>fonts/NotoSans-Bold.ttf<span class="w"> </span>https://github.com/notofonts/notofonts.github.io/raw/main/fonts/NotoSans/full/ttf/NotoSans-Bold.ttf
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>curl<span class="w"> </span>-L<span class="w"> </span>-o<span class="w"> </span>fonts/NotoSans-Italic.ttf<span class="w"> </span>https://github.com/notofonts/notofonts.github.io/raw/main/fonts/NotoSans/full/ttf/NotoSans-Italic.ttf
 </span></code></pre></div>
-<h2 id="meta-set">meta-set</h2>
-<p>Set metadata value by its name, or delete the key if no value is supplied.
-For example, to set the <code>description</code> value to <code>A vector tile dataset</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>mbtiles<span class="w"> </span>meta-set<span class="w"> </span>my_file.mbtiles<span class="w"> </span>description<span class="w"> </span><span class="s2">"A vector tile dataset"</span>
+<p>Martin publishes each font under the name embedded in the file.
+Here that is <code>Noto Sans Regular</code>, <code>Noto Sans Bold</code>, and <code>Noto Sans Italic</code>, exactly the names the style asks for.</p>
+<h2 id="get-the-icons-the-style-uses">Get the icons the style uses</h2>
+<p>The style repository ships its icons as SVG files.
+Martin <a href="../sources-sprites/">generates the spritesheet and index from an SVG directory on the fly</a>, so copying the folder is all that is needed:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cp<span class="w"> </span>-r<span class="w"> </span>osm-bright-gl-style/icons<span class="w"> </span>icons
 </span></code></pre></div>
+<p>The directory name becomes the sprite ID, so these will be served under <code>/sprite/icons</code>.</p>
+<h2 id="point-the-style-at-your-server">Point the style at your server</h2>
+<p>The copied style still references the original author's tile, glyph, and sprite servers.
+Open <code>styles/basemap.json</code> and change three values to point at the Martin instance we are about to start:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>New value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sources.openmaptiles.url</code></td>
+<td><code>http://localhost:3000/monaco</code></td>
+</tr>
+<tr>
+<td><code>glyphs</code></td>
+<td><code>http://localhost:3000/font/{fontstack}/{range}</code></td>
+</tr>
+<tr>
+<td><code>sprite</code></td>
+<td><code>http://localhost:3000/sprite/icons</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <code>sources</code> URL is the <a href="../using/">TileJSON endpoint</a> of the <code>monaco</code> archive.
+The <code>{fontstack}</code> and <code>{range}</code> placeholders are filled in by MapLibre when it requests glyph ranges.</p>
+<h2 id="run-martin">Run Martin</h2>
+<p>Everything is in place, so serve all four resources with one command:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>martin<span class="w"> </span>data/monaco.mbtiles<span class="w"> </span>--font<span class="w"> </span>fonts<span class="w"> </span>--sprite<span class="w"> </span>icons<span class="w"> </span>--style<span class="w"> </span>styles
+</span></code></pre></div>
+<p>Check <a href="http://localhost:3000/catalog">http://localhost:3000/catalog</a> to see the <code>monaco</code> tile source, the three fonts, the <code>icons</code> sprite, and the <code>basemap</code> style.
+For more control over what is published and how, see the <a href="../config-file/">configuration file</a> documentation.
+<code>--save-config</code> converts the command line above into a config file to grow from.</p>
+<h2 id="view-the-map">View the map</h2>
+<p>Save this as <code>index.html</code> in the working directory and open it in your browser:</p>
+<div class="language-html highlight"><span class="filename">index.html</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="cp">&lt;!DOCTYPE html&gt;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">"utf-8"</span><span class="p">&gt;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>My self-hosted map<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>  <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">"https://unpkg.com/maplibre-gl@^5/dist/maplibre-gl.js"</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">"stylesheet"</span> <span class="na">href</span><span class="o">=</span><span class="s">"https://unpkg.com/maplibre-gl@^5/dist/maplibre-gl.css"</span><span class="p">&gt;</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>  <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="nt">html</span><span class="o">,</span><span class="w"> </span><span class="nt">body</span><span class="o">,</span><span class="w"> </span><span class="p">#</span><span class="nn">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="kt">%</span><span class="p">;</span><span class="w"> </span><span class="k">margin</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">  </span><span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>  <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">"map"</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>  <span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">      </span><span class="nx">container</span><span class="o">:</span><span class="w"> </span><span class="s1">'map'</span><span class="p">,</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">      </span><span class="nx">style</span><span class="o">:</span><span class="w"> </span><span class="s1">'http://localhost:3000/style/basemap'</span><span class="p">,</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">      </span><span class="nx">center</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">7.4266</span><span class="p">,</span><span class="w"> </span><span class="mf">43.7396</span><span class="p">],</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">      </span><span class="nx">zoom</span><span class="o">:</span><span class="w"> </span><span class="mf">14</span><span class="p">,</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="w">    </span><span class="p">});</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="w">    </span><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nx">NavigationControl</span><span class="p">());</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">  </span><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<p><img alt="The finished self-hosted basemap of Monaco" src="../images/selfhosted-basemap.png" /></p>
+<p>The page loads the style from Martin, and the style pulls the tiles, glyphs, and sprites from Martin.
+The complete map is served from your machine.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Small extracts may not contain every layer the style references.
+Monaco has no aerodrome, so the browser console warns that the <code>aerodrome_label</code> source layer does not exist.
+The map renders fine regardless.</p>
+</div>
+<h2 id="where-to-go-from-here">Where to go from here</h2>
+<ul>
+<li><a href="../recipe-basemap-postgis/">Overlay your own data from PostGIS on this basemap</a></li>
+<li>Put Martin behind a <a href="../run-with-reverse-proxy/">reverse proxy</a> for TLS, caching, and a public hostname, and update the three URLs in the style to the public one</li>
+<li>Pre-generate tiles for offline use or for seeding a cache with <a href="../martin-cp/"><code>martin cp</code></a></li>
+<li><a href="../sources-styles/rendering/">Render the style into raster tiles server-side</a></li>
+</ul>
 
 
   <nav class="md-tags" >
@@ -1981,14 +2091,14 @@ For example, to set the <code>description</code> value to <code>A vector tile da
       
       
       
-        <span class="md-tag">mbtiles</span>
+        <span class="md-tag">recipes</span>
       
     
       
       
       
       
-        <span class="md-tag">tooling</span>
+        <span class="md-tag">getting-started</span>
       
     
   </nav>
@@ -2033,7 +2143,7 @@ For example, to set the <code>description</code> value to <code>A vector tile da
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../mbtiles-schema/" class="md-footer__link md-footer__link--prev" aria-label="Previous: MBTiles Schemas">
+          <a href="../using-guides/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Guides">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -2043,20 +2153,20 @@ For example, to set the <code>description</code> value to <code>A vector tile da
                 Previous
               </span>
               <div class="md-ellipsis">
-                MBTiles Schemas
+                Guides
               </div>
             </div>
           </a>
         
         
           
-          <a href="../mbtiles-copy/" class="md-footer__link md-footer__link--next" aria-label="Next: Copying MBTiles">
+          <a href="../using-with-renderer/" class="md-footer__link md-footer__link--next" aria-label="Next: Map renderer specific">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Copying MBTiles
+                Map renderer specific
               </div>
             </div>
             <div class="md-footer__button md-icon">

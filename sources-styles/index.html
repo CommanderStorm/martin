@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../images/favicon.ico">
-      <meta name="generator" content="zensical-0.0.57">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -36,7 +36,7 @@
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -446,6 +446,8 @@
       
         
       
+        
+      
     
     
     
@@ -620,6 +622,7 @@
   
   
   
+  
     <a href="../quick-start/" class="md-nav__link">
       
   
@@ -629,7 +632,7 @@
   <span class="md-ellipsis">
     
   
-  Martin Quick Start Guide
+  Quick Start
 
     
   </span>
@@ -718,6 +721,7 @@
   
   
   
+  
     <a href="../run/" class="md-nav__link">
       
   
@@ -727,7 +731,7 @@
   <span class="md-ellipsis">
     
   
-  Usage
+  Running
 
     
   </span>
@@ -948,6 +952,7 @@
   
   
   
+  
     <a href="../sources-files/" class="md-nav__link">
       
   
@@ -1010,6 +1015,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1209,6 +1215,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1285,6 +1295,64 @@
     
   
   MVT/MLT Conversion
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../postprocessing/hillshade/" class="md-nav__link">
+        
+  
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14 6-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22z"/></svg>
+  
+  <span class="md-ellipsis">
+    
+  
+  Hillshade
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../postprocessing/contour/" class="md-nav__link">
+        
+  
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m3 14 .5.07L8.07 9.5a1.95 1.95 0 0 1 .52-1.91c.78-.79 2.04-.79 2.82 0 .53.52.7 1.26.52 1.91l2.57 2.57.5-.07c.18 0 .35 0 .5.07l3.57-3.57C19 8.35 19 8.18 19 8a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2c-.18 0-.35 0-.5-.07l-3.57 3.57c.07.15.07.32.07.5a2 2 0 0 1-2 2 2 2 0 0 1-2-2l.07-.5-2.57-2.57c-.32.07-.68.07-1 0L4.93 15.5 5 16a2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2"/></svg>
+  
+  <span class="md-ellipsis">
+    
+  
+  Contours
 
     
   </span>
@@ -1602,6 +1670,8 @@
       
         
       
+        
+      
     
     
     
@@ -1619,6 +1689,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1687,6 +1758,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1871,12 +1943,26 @@
 <h3 id="api">API</h3>
 <p>Martin can serve <a href="https://maplibre.org/maplibre-style-spec/">MapLibre Style Spec</a>.
 Currently, Martin will use any valid <a href="https://json.org"><code>JSON</code></a> file as a style,
-but in the future, we may optimise Martin which may result in additional restrictions.</p>
+but in the future, we may optimize Martin which may result in additional restrictions.</p>
 <p>Use the <code>/catalog</code> API to see all the <code>&lt;style_id&gt;</code>s.</p>
 <h3 id="map-style">Map Style</h3>
 <p>Use the <code>/style/&lt;style_id&gt;</code> API to get a <code>&lt;style_id&gt;</code>'s JSON content.</p>
 <p>Changes or removals of styles are reflected immediately, but additions are not.
 A restart of Martin is required to see new styles.</p>
+<h3 id="configuring-with-config-file">Configuring with Config File</h3>
+<p>Styles are configured with the <code>styles</code> key.
+<code>paths</code> lists files or directories, and every <code>.json</code> file found is published under its file name.
+<code>sources</code> maps a <code>&lt;style_id&gt;</code> to one file.
+<code>collections</code> lists directories of per-project directories, and a style at <code>/projects/styles/project1/basic.json</code> is published as <code>project1.basic</code>.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">styles</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">paths</span><span class="p">:</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/style.json</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/style_dir</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">my_style</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/another_style.json</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">collections</span><span class="p">:</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/projects/styles</span>
+</span></code></pre></div>
 <h3 id="server-side-raster-tile-rendering">Server-side raster tile rendering</h3>
 <p>On Linux, Martin can also render a style server-side into raster images -
 both as XYZ tiles and as a single static image at a chosen camera, with an
@@ -2025,10 +2111,14 @@ enable it, the endpoints, and the static-image overlay API.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"redirect":null,"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.49251538.min.js"></script>
+      <script src="../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
     
   </body>

@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../images/favicon.ico">
-      <meta name="generator" content="zensical-0.0.57">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -36,7 +36,7 @@
       
         
       
-      <link rel="stylesheet" href="../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -446,6 +446,8 @@
       
         
       
+        
+      
     
     
     
@@ -620,6 +622,7 @@
   
   
   
+  
     <a href="../quick-start/" class="md-nav__link">
       
   
@@ -629,7 +632,7 @@
   <span class="md-ellipsis">
     
   
-  Martin Quick Start Guide
+  Quick Start
 
     
   </span>
@@ -779,6 +782,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#arch-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Arch Linux
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nix" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Nix
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -891,6 +916,7 @@
   
   
   
+  
     <a href="../run/" class="md-nav__link">
       
   
@@ -900,7 +926,7 @@
   <span class="md-ellipsis">
     
   
-  Usage
+  Running
 
     
   </span>
@@ -957,6 +983,7 @@
   
   
   
+  
     <a href="../config-file/" class="md-nav__link">
       
   
@@ -966,7 +993,7 @@
   <span class="md-ellipsis">
     
   
-  Configuration
+  Configuration File
 
     
   </span>
@@ -1033,6 +1060,8 @@
       
         
       
+        
+      
     
     
     
@@ -1050,6 +1079,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1118,6 +1148,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1193,9 +1224,15 @@ passing <code>DATABASE_URL</code> or specifying the .mbtiles/.pmtiles files or U
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">           </span>-e<span class="w"> </span>PGPASSWORD<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">           </span>-e<span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span>postgres://user@host:port/db<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">           </span>-v<span class="w"> </span>/path/to/config/dir:/config<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">           </span>ghcr.io/maplibre/martin:1.14.0<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">           </span>ghcr.io/maplibre/martin:1.16.1<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">           </span>--config<span class="w"> </span>/config/config.yaml
 </span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The default image is lean and does <strong>not</strong> include server-side style <a href="../sources-styles/rendering/">rendering</a>.
+If you need it, use the batteries-included <code>-full</code> image variant instead, tagged <code>:latest-full</code> or <code>:&lt;version&gt;-full</code>.
+It is larger because it bundles the <code>maplibre_native</code> runtime libraries.</p>
+</div>
 <h3 id="from-binary-distributions-manually">From Binary Distributions Manually</h3>
 <p>You can download martin from <a href="https://github.com/maplibre/martin/releases">GitHub releases page</a>.</p>
 <table>
@@ -1209,8 +1246,8 @@ passing <code>DATABASE_URL</code> or specifying the .mbtiles/.pmtiles files or U
 <tbody>
 <tr>
 <td>Linux</td>
-<td><a href="https://github.com/maplibre/martin/releases/latest/download/martin-x86_64-unknown-linux-gnu.tar.gz">.tar.gz</a> (gnu)<br><a href="https://github.com/maplibre/martin/releases/latest/download/martin-x86_64-unknown-linux-musl.tar.gz">.tar.gz</a> (musl)<br><a href="https://github.com/maplibre/martin/releases/latest/download/debian-x86_64.deb">.deb</a></td>
-<td><a href="https://github.com/maplibre/martin/releases/latest/download/martin-aarch64-unknown-linux-gnu.tar.gz">.tar.gz</a> (gnu)<br><a href="https://github.com/maplibre/martin/releases/latest/download/martin-aarch64-unknown-linux-musl.tar.gz">.tar.gz</a> (musl)</td>
+<td><a href="https://github.com/maplibre/martin/releases/latest/download/martin-x86_64-unknown-linux-gnu.tar.gz">.tar.gz</a> (gnu)<br><a href="https://github.com/maplibre/martin/releases/latest/download/martin-x86_64-unknown-linux-gnu-full.tar.gz">.tar.gz</a> (gnu, full)<br><a href="https://github.com/maplibre/martin/releases/latest/download/martin-x86_64-unknown-linux-musl.tar.gz">.tar.gz</a> (musl)<br><a href="https://github.com/maplibre/martin/releases/latest/download/debian-x86_64.deb">.deb</a></td>
+<td><a href="https://github.com/maplibre/martin/releases/latest/download/martin-aarch64-unknown-linux-gnu.tar.gz">.tar.gz</a> (gnu)<br><a href="https://github.com/maplibre/martin/releases/latest/download/martin-aarch64-unknown-linux-gnu-full.tar.gz">.tar.gz</a> (gnu, full)<br><a href="https://github.com/maplibre/martin/releases/latest/download/martin-aarch64-unknown-linux-musl.tar.gz">.tar.gz</a> (musl)</td>
 </tr>
 <tr>
 <td>macOS</td>
@@ -1224,6 +1261,12 @@ passing <code>DATABASE_URL</code> or specifying the .mbtiles/.pmtiles files or U
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The standard binaries do <strong>not</strong> include server-side style <a href="../sources-styles/rendering/">rendering</a>.
+The <code>-full</code> Linux-gnu tarballs do.
+They add the <code>rendering</code> feature and its bundled native libraries.</p>
+</div>
 <p>Rust users can install pre-built martin binary
 with <a href="https://github.com/cargo-bins/cargo-binstall">cargo-binstall</a> and <code>cargo</code>.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cargo<span class="w"> </span>install<span class="w"> </span>cargo-binstall
@@ -1234,10 +1277,9 @@ with <a href="https://github.com/cargo-bins/cargo-binstall">cargo-binstall</a> a
 <p>To install with apt source and others, we need your help
 to <a href="https://github.com/maplibre/martin/issues/578">improve packaging for various platforms</a>.</p>
 <h4 id="homebrew">Homebrew</h4>
-<p>If you are using macOS and <a href="https://brew.sh/">Homebrew</a> you can install martin using Homebrew tap.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>brew<span class="w"> </span>tap<span class="w"> </span>maplibre/martin
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>brew<span class="w"> </span>install<span class="w"> </span>martin
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>martin<span class="w"> </span>--help
+<p>If you are using <a href="https://brew.sh/">Homebrew</a> you can install martin using</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>brew<span class="w"> </span>install<span class="w"> </span>martin
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>martin<span class="w"> </span>--help
 </span></code></pre></div>
 <h4 id="debian-packages-x86_64-manually">Debian packages (x86_64) manually</h4>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-O<span class="w"> </span>https://github.com/maplibre/martin/releases/latest/download/debian-x86_64.deb
@@ -1245,21 +1287,38 @@ to <a href="https://github.com/maplibre/martin/issues/578">improve packaging for
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>martin<span class="w"> </span>--help
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>rm<span class="w"> </span>./debian-x86_64.deb
 </span></code></pre></div>
-<h3 id="building-from-source">Building from source</h3>
-<p>If you <a href="https://www.rust-lang.org/tools/install">install Rust</a>, you can build martin from source with Cargo:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cargo<span class="w"> </span>install<span class="w"> </span>martin<span class="w"> </span>--locked
+<h4 id="arch-linux">Arch Linux</h4>
+<p>The <a href="https://aur.archlinux.org/packages/martin">AUR</a> carries <code>martin</code>, maintained by the community.
+With an AUR helper such as <code>yay</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>yay<span class="w"> </span>-S<span class="w"> </span>martin
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>martin<span class="w"> </span>--help
 </span></code></pre></div>
+<h4 id="nix">Nix</h4>
+<p><a href="https://search.nixos.org/packages?query=martin">nixpkgs</a> carries <code>martin</code>, usually a release or two behind.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>nix-shell<span class="w"> </span>-p<span class="w"> </span>martin<span class="w"> </span>--run<span class="w"> </span><span class="s1">'martin --help'</span>
+</span></code></pre></div>
+<h3 id="building-from-source">Building from source</h3>
+<p>If you <a href="https://www.rust-lang.org/tools/install">install Rust</a>, you can build martin from source with Cargo:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cargo<span class="w"> </span>install<span class="w"> </span>martin<span class="w"> </span>--locked
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>martin<span class="w"> </span>--help
+</span></code></pre></div>
 <h4 id="optional-features">Optional features</h4>
-<p><code>unstable-foobar</code> features are <strong>not included</strong> in default builds, Homebrew, Debian packages, or the Docker image.
+<p>Features prefixed with <code>unstable-</code> are <strong>not included</strong> in default builds, Homebrew, Debian packages, or the Docker image.
 To experiment with them, build Martin from source with the feature enabled:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cargo<span class="w"> </span>install<span class="w"> </span>martin<span class="w"> </span>--locked<span class="w"> </span>--features<span class="o">=</span>unstable-foobar
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cargo<span class="w"> </span>install<span class="w"> </span>martin<span class="w"> </span>--locked<span class="w"> </span>--features<span class="o">=</span>unstable-duckdb
+</span></code></pre></div>
+<p>The currently available unstable features are <code>unstable-cog</code> for <a href="../sources-cog-files/">COG sources</a>
+and <code>unstable-duckdb</code> for <a href="../sources-duckdb/">DuckDB / GeoParquet sources</a>.</p>
+<p>Server-side style <a href="../sources-styles/rendering/">rendering</a> is also left out of the default feature set.
+To include it (Linux only), add the <code>rendering</code> feature.
+You will need its build dependencies first (<code>just install-dependencies</code>).</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cargo<span class="w"> </span>install<span class="w"> </span>martin<span class="w"> </span>--locked<span class="w"> </span>--features<span class="w"> </span>rendering
 </span></code></pre></div>
 <h4 id="platform-specific-build-notes">Platform-Specific Build Notes</h4>
 <h5 id="windows">Windows</h5>
 <p>When building from source on Windows, please note the following feature limitations:</p>
 <ul>
-<li><strong><code>unstable-rendering</code></strong>: This feature is <strong>not available on Windows</strong>. It requires <code>maplibre_native</code> which currently only supports MacOS and Linux. For updates, see <a href="https://github.com/maplibre/maplibre-native-rs"><code>maplibre/maplibre-native-rs</code></a>.</li>
+<li><strong><code>rendering</code></strong>: This feature is <strong>not available on Windows</strong>. It requires <code>maplibre_native</code> which currently only supports MacOS and Linux. For updates, see <a href="https://github.com/maplibre/maplibre-native-rs"><code>maplibre/maplibre-native-rs</code></a>.</li>
 </ul>
 
 
@@ -1403,10 +1462,14 @@ To experiment with them, build Martin from source with the feature enabled:</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"redirect":null,"search":"../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.49251538.min.js"></script>
+      <script src="../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
     
   </body>

@@ -18,25 +18,25 @@
         <link rel="prev" href="../">
       
       
-        <link rel="next" href="../../sources-sprites/">
+        <link rel="next" href="../hillshade/">
       
       
         
       
       
       <link rel="icon" href="../../images/favicon.ico">
-      <meta name="generator" content="zensical-0.0.57">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
-        <title>Serving MLT (MapLibre Tiles) - Martin Tile Server Documentation</title>
+        <title>MVT/MLT Conversion - Martin Tile Server Documentation</title>
       
     
     
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.ce62732f.min.css">
       
         
           
@@ -186,7 +186,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Serving MLT (MapLibre Tiles)
+              MVT/MLT Conversion
             
           </span>
         </div>
@@ -446,6 +446,8 @@
       
         
       
+        
+      
     
     
     
@@ -620,6 +622,7 @@
   
   
   
+  
     <a href="../../quick-start/" class="md-nav__link">
       
   
@@ -629,7 +632,7 @@
   <span class="md-ellipsis">
     
   
-  Martin Quick Start Guide
+  Quick Start
 
     
   </span>
@@ -718,6 +721,7 @@
   
   
   
+  
     <a href="../../run/" class="md-nav__link">
       
   
@@ -727,7 +731,7 @@
   <span class="md-ellipsis">
     
   
-  Usage
+  Running
 
     
   </span>
@@ -948,6 +952,7 @@
   
   
   
+  
     <a href="../../sources-files/" class="md-nav__link">
       
   
@@ -1010,6 +1015,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1211,6 +1217,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1360,6 +1370,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#setting-up-the-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Setting up the Client
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#scoping-mlt-conversion" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1452,6 +1473,64 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hillshade/" class="md-nav__link">
+        
+  
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14 6-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22z"/></svg>
+  
+  <span class="md-ellipsis">
+    
+  
+  Hillshade
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contour/" class="md-nav__link">
+        
+  
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m3 14 .5.07L8.07 9.5a1.95 1.95 0 0 1 .52-1.91c.78-.79 2.04-.79 2.82 0 .53.52.7 1.26.52 1.91l2.57 2.57.5-.07c.18 0 .35 0 .5.07l3.57-3.57C19 8.35 19 8.18 19 8a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1-2 2c-.18 0-.35 0-.5-.07l-3.57 3.57c.07.15.07.32.07.5a2 2 0 0 1-2 2 2 2 0 0 1-2-2l.07-.5-2.57-2.57c-.32.07-.68.07-1 0L4.93 15.5 5 16a2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2"/></svg>
+  
+  <span class="md-ellipsis">
+    
+  
+  Contours
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1594,6 +1673,7 @@
   
   
   
+  
     <a href="../../sources-styles/" class="md-nav__link">
       
   
@@ -1603,7 +1683,7 @@
   <span class="md-ellipsis">
     
   
-  Style Sources
+  Styles
 
     
   </span>
@@ -1715,6 +1795,8 @@
       
         
       
+        
+      
     
     
     
@@ -1732,6 +1814,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1800,6 +1883,7 @@
     <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
       
         
+  
   
   
   
@@ -1914,6 +1998,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1955,7 +2043,7 @@
 See the <a href="https://github.com/maplibre/maplibre-tile-spec">MLT spec</a> for details.</p>
 <p>Martin can convert MVT tiles to MLT at serve time, so you don't need to re-generate your tile archives or change your database functions.
 If you generate your own tile archives, consider generating them using MLT instead since you save CPU cycles and latency this way.
-The default for this is optimised for size, optimises for network size (!= low CPU usage) and can thus convert approximately 10k tiles/s.</p>
+The default for this is optimized for size, optimizes for network size (!= low CPU usage) and can thus convert approximately 10k tiles/s.</p>
 <div class="admonition note">
 <p class="admonition-title">Prerequisites</p>
 <p>Martin must be built with the <code>mlt</code> feature enabled and up to date.
@@ -1973,47 +2061,68 @@ If the feature is not enabled, Martin will return an error when MLT conversion i
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">basemap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/basemap.pmtiles</span>
 </span></code></pre></div>
 <p>Sources that produce other formats (raster, etc.) are unaffected.</p>
+<h2 id="setting-up-the-client">Setting up the Client</h2>
+<p>Conversion is negotiated per request: Martin only returns MLT if the client asks for it with <code>Accept: application/vnd.maplibre-tile</code>.
+A client that declares <code>"encoding": "mlt"</code> on a source but omits the header receives MVT bytes and fails to parse them.</p>
+<div class="admonition warning">
+<p class="admonition-title">MapLibre GL JS and Maplibre Native do not send the headers yet</p>
+<p>Until <a href="https://github.com/maplibre/maplibre-gl-js/pull/7483">maplibre-gl-js#7483</a> and <a href="https://github.com/maplibre/maplibre-native/pull/4231">maplibre-native#4231</a> is released, add it yourself via the <a href="https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequestTransformFunction/"><code>transformRequest</code></a> option or similar plugin facilities on native.</p>
+<div class="language-js highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">container</span><span class="o">:</span><span class="w"> </span><span class="s1">'map'</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nx">style</span><span class="o">:</span><span class="w"> </span><span class="s1">'https://example.org/style.json'</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nx">transformRequest</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceType</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nx">resourceType</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">'Tile'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">url</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">'https://example.org/my_mlt_source/'</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="o">?</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Accept</span><span class="o">:</span><span class="w"> </span><span class="s1">'application/vnd.maplibre-tile'</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="kc">undefined</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">});</span>
+</span></code></pre></div>
+<p>Scope the header to the sources you actually serve as MLT.
+Attaching it to every request means a source configured with <code>convert_to_mlt: auto</code> assumes you have <code>encoding: mlt</code> set for all sources.</p>
+</div>
 <h2 id="scoping-mlt-conversion">Scoping MLT Conversion</h2>
 <p>You don't have to convert everything.
 The <code>convert_to_mlt</code> key can be placed at three levels, and the most specific one wins entirely (see <a href="../">Postprocessing</a> for details).</p>
 <h3 id="convert-only-postgresql-sources">Convert only PostgreSQL sources</h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">postgres</span><span class="p">:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">convert_to_mlt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">connection_string</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql://localhost/mydb</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">postgres</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">convert_to_mlt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">connection_string</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql://localhost/mydb</span>
 </span></code></pre></div>
 <h3 id="convert-a-single-source">Convert a single source</h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">pmtiles</span><span class="p">:</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">basemap</span><span class="p">:</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/basemap.pmtiles</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">      </span><span class="nt">convert_to_mlt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="nt">imagery</span><span class="p">:</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/imagery.pmtiles</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">      </span><span class="c1"># no convert_to_mlt - served as-is</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">pmtiles</span><span class="p">:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">basemap</span><span class="p">:</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/basemap.pmtiles</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">      </span><span class="nt">convert_to_mlt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="nt">imagery</span><span class="p">:</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/imagery.pmtiles</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">      </span><span class="c1"># no convert_to_mlt - served as-is</span>
 </span></code></pre></div>
 <h3 id="opt-a-single-source-out-of-mlt">Opt a single source out of MLT</h3>
 <p>If a higher level (global or source-type) enables MLT but you want one source
 to keep serving MVT, set <code>convert_to_mlt: disabled</code> or <code>convert_to_mvt: disabled</code>.
 The most-specific level wins, so this overrides any inherited <code>auto</code>.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">convert_to_mlt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span><span class="w">              </span><span class="c1"># default everywhere</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">pmtiles</span><span class="p">:</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">basemap</span><span class="p">:</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/basemap.pmtiles</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="c1"># Inherits global `auto` -&gt; converted on Accept: MLT</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nt">legacy</span><span class="p">:</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/legacy.pmtiles</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">      </span><span class="nt">convert_to_mlt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">disabled</span><span class="w">    </span><span class="c1"># always served as MVT, even on Accept: MLT</span>
+<p>A disabled conversion is never negotiated, so a client asking only for the format
+the conversion would have produced gets <code>406 Not Acceptable</code> rather than the other
+format's bytes. Clients that also accept <code>*/*</code> still get the source format.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">convert_to_mlt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span><span class="w">              </span><span class="c1"># default everywhere</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nt">pmtiles</span><span class="p">:</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">basemap</span><span class="p">:</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/basemap.pmtiles</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">      </span><span class="c1"># Inherits global `auto` -&gt; converted on Accept: MLT</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">legacy</span><span class="p">:</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/legacy.pmtiles</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">      </span><span class="nt">convert_to_mlt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">disabled</span><span class="w">    </span><span class="c1"># served as MVT; an MLT-only Accept gets a 406</span>
 </span></code></pre></div>
 <h2 id="tuning-the-encoder">Tuning the Encoder</h2>
 <p><code>convert_to_mlt: auto</code> uses "magic" default encoder settings, which work well for most data.
 The <code>auto</code> preset is guaranteed to work on a reasonably new maplibre version, so for example <code>tessellation</code> will only be enabled if this has wider spread benefits.</p>
 <p>If you need to tweak encoding behavior, provide an explicit configuration:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">convert_to_mlt</span><span class="p">:</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">tessellate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">try_spatial_hilbert_sort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">allow_fsst</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">convert_to_mlt</span><span class="p">:</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">tessellate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">try_spatial_hilbert_sort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">allow_fsst</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 </span></code></pre></div>
 <p>All fields are optional.
 Only the fields you specify override the defaults; unset fields keep their <code>mlt-core</code> default values.</p>
@@ -2027,7 +2136,7 @@ Only the fields you specify override the defaults; unset fields keep their <code
 <tbody>
 <tr>
 <td><code>tessellate</code></td>
-<td>Enable if your client supports pre-tessellated polygons and you benchmarked that this improves your usecase</td>
+<td>Enable if your client supports pre-tessellated polygons and you benchmarked that this improves your use case</td>
 </tr>
 <tr>
 <td><code>try_spatial_morton_sort</code></td>
@@ -2063,27 +2172,27 @@ Only tune these settings if you've profiled your tiles and identified a specific
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>MLT uses lightweight compressions (FastPFOR, FSST, ...), so combining it with heavyweight compression (e.g. gzip) removes most of the reasons for using it.
-Do this only if you have benchmarked that this actually makes your usecase better.
+Do this only if you have benchmarked that this actually makes your use case better.
 If for example CPU usage is an issue, disable some sorting options that you have benchmarked to be ineffective.</p>
 </div>
 <h2 id="serving-mvt-from-mlt-sources">Serving MVT from MLT Sources</h2>
 <p>If you have tile archives that already contain MLT tiles (e.g. MBTiles or PMTiles generated with an MLT encoder), Martin can convert them back to MVT on the fly for clients that don't support MLT yet.</p>
 <p>Add <code>convert_to_mvt: auto</code> at the global, source-type, or per-source level:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">convert_to_mvt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">mbtiles</span><span class="p">:</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">my_mlt_archive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/tiles.mbtiles</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">convert_to_mvt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nt">mbtiles</span><span class="p">:</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">my_mlt_archive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/tiles.mbtiles</span>
 </span></code></pre></div>
 <p>When a client requests tiles with <code>Accept: application/x-protobuf</code> (MVT) from a source that produces MLT, Martin will decode the MLT tile and re-encode it as MVT protobuf.</p>
 <h3 id="scoping">Scoping</h3>
 <p>Like <code>convert_to_mlt</code>, the <code>convert_to_mvt</code> key can be placed at three levels and the most specific one wins:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Per-source</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">pmtiles</span><span class="p">:</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">mlt_archive</span><span class="p">:</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/mlt_tiles.pmtiles</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="nt">convert_to_mvt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Per-source</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">pmtiles</span><span class="p">:</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nt">mlt_archive</span><span class="p">:</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/mlt_tiles.pmtiles</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="nt">convert_to_mvt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
 </span></code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -2166,13 +2275,13 @@ If for example CPU usage is an issue, disable some sorting options that you have
         
         
           
-          <a href="../../sources-sprites/" class="md-footer__link md-footer__link--next" aria-label="Next: Sprites">
+          <a href="../hillshade/" class="md-footer__link md-footer__link--next" aria-label="Next: Hillshade">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Sprites
+                Hillshade
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -2231,10 +2340,14 @@ If for example CPU usage is an issue, disable some sorting options that you have
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"redirect":null,"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.49251538.min.js"></script>
+      <script src="../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
     
   </body>
