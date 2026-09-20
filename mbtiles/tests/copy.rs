@@ -12,7 +12,7 @@ use itertools::Itertools as _;
 use martin_tile_utils::xyz_to_bbox;
 use mbtiles::AggHashType::Verify;
 use mbtiles::IntegrityCheckType::Off;
-use mbtiles::MbtTypeCli::{Cache, Flat, FlatWithHash, Normalized};
+use mbtiles::MbtTypeCli::{Cache, Flat, FlatWithHash, Normalized, NormalizedHash};
 use mbtiles::PatchTypeCli::{BinDiffGz, BinDiffRaw};
 use mbtiles::{
     CacheEntryMeta, CopyType, MbtError, MbtResult, MbtTypeCli, Mbtiles, MbtilesCopier,
@@ -95,6 +95,7 @@ fn shorten(v: MbtTypeCli) -> &'static str {
         Flat => "flat",
         FlatWithHash => "hash",
         Normalized => "norm",
+        NormalizedHash => "norm-hash",
         Cache => "cache",
     }
 }
@@ -235,7 +236,7 @@ fn databases() -> Databases {
     tokio::task::block_in_place(|| {
         Handle::current().block_on(async {
             let mut result = Databases::default();
-            for &mbt_typ in &[Flat, FlatWithHash, Normalized] {
+            for &mbt_typ in &[Flat, FlatWithHash, Normalized, NormalizedHash] {
                 let typ = shorten(mbt_typ);
 
                 // ----------------- empty_no_hash -----------------
@@ -427,8 +428,8 @@ async fn update() -> MbtResult<()> {
 #[tokio::test(flavor = "multi_thread")]
 #[tracing_test::traced_test]
 async fn convert(
-    #[values(Flat, FlatWithHash, Normalized)] frm_type: MbtTypeCli,
-    #[values(Flat, FlatWithHash, Normalized)] dst_type: MbtTypeCli,
+    #[values(Flat, FlatWithHash, Normalized, NormalizedHash)] frm_type: MbtTypeCli,
+    #[values(Flat, FlatWithHash, Normalized, NormalizedHash)] dst_type: MbtTypeCli,
     #[notrace] databases: &Databases,
 ) -> MbtResult<()> {
     let (frm, to) = (shorten(frm_type), shorten(dst_type));
@@ -754,11 +755,20 @@ async fn diff_and_patch(
             "After applying patch, hash should match target database {b_db}",
         );
         let dmp = dump(&mut clone_cn).await?;
-        pretty_assert_eq!(
-            &dmp,
-            expected_b,
-            "After applying patch to {a_db}, content should match {b_db}",
-        );
+        if dst_type == Normalized {
+            pretty_assert_eq!(
+                &schema_only(&dmp),
+                &schema_only(expected_b),
+                "After applying patch to {a_db}, schema should match {b_db}",
+            );
+            assert_same_tileset(&mut clone_cn, databases.mbtiles(b_db, dst_type)).await?;
+        } else {
+            pretty_assert_eq!(
+                &dmp,
+                expected_b,
+                "After applying patch to {a_db}, content should match {b_db}",
+            );
+        }
 
         eprintln!(
             "TEST: Applying the difference ({b_db} - {a_db} = {dif_db}) to {b_db}, should not modify it"
@@ -928,6 +938,41 @@ struct SqliteEntry {
     pub sql: Option<String>,
     #[sqlx(skip)]
     pub values: Option<Vec<String>>,
+}
+
+/// The same dump with every table's rows dropped, leaving only the schema objects.
+fn schema_only(dump: &[SqliteEntry]) -> Vec<SqliteEntry> {
+    dump.iter()
+        .map(|entry| SqliteEntry {
+            r#type: entry.r#type.clone(),
+            tbl_name: entry.tbl_name.clone(),
+            sql: entry.sql.clone(),
+            values: None,
+        })
+        .collect()
+}
+
+/// Assert `conn` and `expected` expose the same metadata and the same tiles.
+///
+/// The dedup-id schema numbers `tile_data_id` in the order tiles are written, so a patched file
+/// and a freshly built one hold identical tiles under different ids; only what the `tiles` view
+/// exposes is comparable.
+async fn assert_same_tileset(conn: &mut SqliteConnection, expected: &Mbtiles) -> MbtResult<()> {
+    expected.attach_to(&mut *conn, "expectedDb").await?;
+    for (left, right) in [
+        ("tiles", "expectedDb.tiles"),
+        ("expectedDb.tiles", "tiles"),
+        ("metadata", "expectedDb.metadata"),
+        ("expectedDb.metadata", "metadata"),
+    ] {
+        let sql = format!("SELECT * FROM {left} EXCEPT SELECT * FROM {right}");
+        assert!(
+            conn.fetch_optional(AssertSqlSafe(sql)).await?.is_none(),
+            "{left} has rows that {right} does not",
+        );
+    }
+    conn.execute("DETACH DATABASE expectedDb").await?;
+    Ok(())
 }
 
 async fn dump(conn: &mut SqliteConnection) -> MbtResult<Vec<SqliteEntry>> {

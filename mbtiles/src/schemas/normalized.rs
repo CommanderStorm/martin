@@ -6,6 +6,7 @@
 use sqlx::{SqliteExecutor, query};
 use tracing::debug;
 
+use crate::HashAlgorithm;
 use crate::errors::MbtResult;
 use crate::queries::create_schema;
 
@@ -93,6 +94,46 @@ where
 {
     debug!("Creating if needed normalized tables and tiles view: map(z,x,y,id) + images(id,data)");
     create_schema(conn, include_str!("../../sql/init-normalized.sql"), strict).await
+}
+
+/// Temporary table mapping a tile hash to the integer `tile_data_id` it was given.
+///
+/// The dedup-id schema stores no hashes, so writers keep this connection-scoped side table to
+/// recognise a repeated tile. It is seeded from an existing `tiles_data` so that appending to a
+/// file reuses its ids instead of storing the same blob twice.
+pub(crate) const DEDUP_ID_MAP: &str = "mbt_dedup_ids";
+
+pub(crate) const CREATE_DEDUP_ID_MAP_SQL: &str = "CREATE TEMP TABLE IF NOT EXISTS mbt_dedup_ids (
+     tile_hash TEXT PRIMARY KEY,
+     tile_data_id INTEGER NOT NULL
+ )";
+
+pub(crate) const DEDUP_ID_MAP_EXISTS_SQL: &str =
+    "SELECT 1 FROM temp.sqlite_master WHERE type = 'table' AND name = 'mbt_dedup_ids'";
+
+pub(crate) fn seed_dedup_id_map_sql(algorithm: HashAlgorithm) -> String {
+    let hash = algorithm.sql_hash("tile_data");
+    format!(
+        "INSERT OR IGNORE INTO {DEDUP_ID_MAP} (tile_hash, tile_data_id)
+         SELECT COALESCE({hash}, ''), tile_data_id FROM tiles_data"
+    )
+}
+
+/// Create the dedup-id variant of the normalized schema: `tiles_shallow` + `tiles_data`
+/// keyed by an integer `tile_data_id`, plus the spec-compatible `tiles` view.
+pub async fn create_dedup_id_normalized_tables<T>(conn: &mut T, strict: bool) -> MbtResult<()>
+where
+    for<'e> &'e mut T: SqliteExecutor<'e>,
+{
+    debug!(
+        "Creating if needed dedup-id normalized tables and tiles view: tiles_shallow(z,x,y,id) + tiles_data(id,data)"
+    );
+    create_schema(
+        conn,
+        include_str!("../../sql/init-normalized-dedup-id.sql"),
+        strict,
+    )
+    .await
 }
 
 pub async fn create_tiles_with_hash_view<T>(conn: &mut T) -> MbtResult<()>

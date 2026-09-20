@@ -18,7 +18,10 @@ use tracing::debug;
 
 use crate::bindiff::PatchType;
 use crate::errors::{MbtError, MbtResult};
-use crate::{CopyDuplicateMode, HashAlgorithm, MbtType, NormalizedSchema, invert_y_value};
+use crate::{
+    CREATE_DEDUP_ID_MAP_SQL, CopyDuplicateMode, DEDUP_ID_MAP, DEDUP_ID_MAP_EXISTS_SQL,
+    HashAlgorithm, MbtType, NormalizedSchema, invert_y_value, seed_dedup_id_map_sql,
+};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize, EnumDisplay)]
 #[enum_display(case = "Kebab")]
@@ -26,7 +29,10 @@ use crate::{CopyDuplicateMode, HashAlgorithm, MbtType, NormalizedSchema, invert_
 pub enum MbtTypeCli {
     Flat,
     FlatWithHash,
+    /// The `tiles_shallow` + `tiles_data` normalized schema keyed by an integer `tile_data_id`.
     Normalized,
+    /// The `map` + `images` normalized schema keyed by the tile's hash.
+    NormalizedHash,
     Cache,
 }
 
@@ -624,9 +630,12 @@ impl Mbtiles {
         );
         let to_sql_str = |sql: String| sqlx::SqlSafeStr::into_sql_str(AssertSqlSafe(sql));
         let algorithm = self.get_hash_algorithm(&mut *conn).await?;
+        if mbt_type.normalized_schema() == Some(NormalizedSchema::DedupId) {
+            ensure_dedup_id_map(&mut *conn, algorithm).await?;
+        }
         let mut tx = conn.begin().await?;
-        let (sql1, sql2) = Self::get_insert_sql(mbt_type, on_duplicate, algorithm);
-        if let Some(sql2) = sql2 {
+        let (sql1, data_sqls) = Self::get_insert_sql(mbt_type, on_duplicate, algorithm);
+        for sql2 in data_sqls {
             let sql2 = tx.prepare(to_sql_str(sql2)).await?;
             for (_, _, _, tile_data) in batch {
                 sql2.query()
@@ -685,7 +694,7 @@ impl Mbtiles {
         src_type: MbtType,
         on_duplicate: CopyDuplicateMode,
         algorithm: HashAlgorithm,
-    ) -> (String, Option<String>) {
+    ) -> (String, Vec<String>) {
         let on_duplicate = on_duplicate.to_sql();
         let hash4 = algorithm.sql_hash("?4");
         let hash1 = algorithm.sql_hash("?1");
@@ -696,7 +705,7 @@ impl Mbtiles {
     INSERT {on_duplicate} INTO tiles (zoom_level, tile_column, tile_row, tile_data)
     VALUES (?1, ?2, ?3, ?4);"
                 ),
-                None,
+                Vec::new(),
             ),
             MbtType::FlatWithHash => (
                 format!(
@@ -704,19 +713,46 @@ impl Mbtiles {
     INSERT {on_duplicate} INTO tiles_with_hash (zoom_level, tile_column, tile_row, tile_data, tile_hash)
     VALUES (?1, ?2, ?3, ?4, {hash4});"
                 ),
-                None,
+                Vec::new(),
             ),
-            MbtType::Normalized { .. } => (
+            MbtType::Normalized {
+                schema: NormalizedSchema::Hash,
+                ..
+            } => (
                 format!(
                     "
     INSERT {on_duplicate} INTO map (zoom_level, tile_column, tile_row, tile_id)
     VALUES (?1, ?2, ?3, {hash4});"
                 ),
-                Some(format!(
+                vec![format!(
                     "
     INSERT {on_duplicate} INTO images (tile_id, tile_data)
     VALUES ({hash1}, ?1);"
-                )),
+                )],
+            ),
+            // The dedup-id schema has no hash column, so the id a repeated tile already got is
+            // looked up in the connection-scoped `DEDUP_ID_MAP` side table instead.
+            MbtType::Normalized {
+                schema: NormalizedSchema::DedupId,
+                ..
+            } => (
+                format!(
+                    "
+    INSERT {on_duplicate} INTO tiles_shallow (zoom_level, tile_column, tile_row, tile_data_id)
+    VALUES (?1, ?2, ?3, (SELECT tile_data_id FROM {DEDUP_ID_MAP} WHERE tile_hash = {hash4}));"
+                ),
+                vec![
+                    format!(
+                        "
+    INSERT OR IGNORE INTO {DEDUP_ID_MAP} (tile_hash, tile_data_id)
+    VALUES ({hash1}, (SELECT COALESCE(MAX(tile_data_id), 0) + 1 FROM {DEDUP_ID_MAP}));"
+                    ),
+                    format!(
+                        "
+    INSERT OR IGNORE INTO tiles_data (tile_data_id, tile_data)
+    SELECT tile_data_id, ?1 FROM {DEDUP_ID_MAP} WHERE tile_hash = {hash1};"
+                    ),
+                ],
             ),
             // Bulk-inserted cache entries get NULL fetched/expires/etag (unknown fetch time, never expire)
             MbtType::Cache => (
@@ -725,10 +761,33 @@ impl Mbtiles {
     INSERT {on_duplicate} INTO tile_cache (zoom_level, tile_column, tile_row, tile_data)
     VALUES (?1, ?2, ?3, ?4);"
                 ),
-                None,
+                Vec::new(),
             ),
         }
     }
+}
+
+/// Create the connection-scoped hash → `tile_data_id` map the dedup-id writers use, once.
+///
+/// Seeding hashes every blob already in `tiles_data`, which is why it only happens the first time
+/// this connection touches the map; a freshly created file has nothing to seed from.
+async fn ensure_dedup_id_map(
+    conn: &mut SqliteConnection,
+    algorithm: HashAlgorithm,
+) -> MbtResult<()> {
+    if query(DEDUP_ID_MAP_EXISTS_SQL)
+        .fetch_optional(&mut *conn)
+        .await?
+        .is_some()
+    {
+        return Ok(());
+    }
+    query(CREATE_DEDUP_ID_MAP_SQL).execute(&mut *conn).await?;
+    debug!("Seeding {DEDUP_ID_MAP} from the tile_data_id values already in tiles_data");
+    query(AssertSqlSafe(seed_dedup_id_map_sql(algorithm)))
+        .execute(&mut *conn)
+        .await?;
+    Ok(())
 }
 
 pub async fn attach_sqlite_fn(conn: &mut SqliteConnection) -> MbtResult<()> {

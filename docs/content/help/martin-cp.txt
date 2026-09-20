@@ -16,7 +16,12 @@ Options:
       --mbtiles-type <SCHEMA>
           Output format of the new destination file. Ignored if the file exists. [DEFAULT: normalized]
 
-          [possible values: flat, flat-with-hash, normalized, cache]
+          Possible values:
+          - flat
+          - flat-with-hash
+          - normalized:      The tiles_shallow + tiles_data normalized schema keyed by an integer tile_data_id
+          - normalized-hash: The map + images normalized schema keyed by the tile's hash
+          - cache
 
       --url-query <URL_QUERY>
           Optional query parameter (in URL query format) for the sources that support it (e.g. Postgres functions)

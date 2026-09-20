@@ -1,13 +1,14 @@
 use std::path::PathBuf;
 
-use sqlx::{AssertSqlSafe, Connection as _, query};
+use sqlx::{AssertSqlSafe, Connection as _, Row as _, SqliteConnection, query};
 use tracing::{debug, info, warn};
 
 use crate::MbtType::{Cache, Flat, FlatWithHash, Normalized};
 use crate::queries::detach_db;
 use crate::{
-    AGG_TILES_HASH, AGG_TILES_HASH_AFTER_APPLY, AGG_TILES_HASH_BEFORE_APPLY, HashAlgorithm,
-    MbtError, MbtResult, MbtType, Mbtiles,
+    AGG_TILES_HASH, AGG_TILES_HASH_AFTER_APPLY, AGG_TILES_HASH_BEFORE_APPLY,
+    CREATE_DEDUP_ID_MAP_SQL, DEDUP_ID_MAP, HashAlgorithm, MbtError, MbtResult, MbtType, Mbtiles,
+    NormalizedSchema, seed_dedup_id_map_sql,
 };
 
 #[hotpath::measure]
@@ -59,6 +60,9 @@ pub async fn apply_patch(base_file: PathBuf, patch_file: PathBuf, force: bool) -
     patch_mbt.attach_to(&mut conn, "patchDb").await?;
     let algorithm = base_mbt.get_hash_algorithm(&mut conn).await?;
     let select_from = get_select_from(base_info.mbt_type, patch_type, algorithm);
+    if base_info.mbt_type.normalized_schema() == Some(NormalizedSchema::DedupId) {
+        assign_dedup_ids(&mut conn, &select_from, algorithm).await?;
+    }
     let (main_table, insert1, insert2) = get_insert_sql(base_info.mbt_type, &select_from);
 
     let sql = format!("{insert1} WHERE tile_data NOTNULL");
@@ -112,13 +116,49 @@ pub async fn apply_patch(base_file: PathBuf, patch_file: PathBuf, force: bool) -
     detach_db(&mut conn, "patchDb").await
 }
 
+/// Give every patch tile the `tile_data_id` the base file already uses for that content, or the
+/// next free id when the content is new, recording both in [`DEDUP_ID_MAP`].
+async fn assign_dedup_ids(
+    conn: &mut SqliteConnection,
+    select_from: &str,
+    algorithm: HashAlgorithm,
+) -> MbtResult<()> {
+    query(CREATE_DEDUP_ID_MAP_SQL).execute(&mut *conn).await?;
+    query(AssertSqlSafe(seed_dedup_id_map_sql(algorithm)))
+        .execute(&mut *conn)
+        .await?;
+    let last_id: i64 = query(AssertSqlSafe(format!(
+        "SELECT COALESCE(MAX(tile_data_id), 0) FROM {DEDUP_ID_MAP}"
+    )))
+    .fetch_one(&mut *conn)
+    .await?
+    .get(0);
+
+    let sql = format!(
+        "
+    INSERT OR IGNORE INTO {DEDUP_ID_MAP} (tile_hash, tile_data_id)
+    SELECT hash, {last_id} + ROW_NUMBER() OVER (ORDER BY hash)
+    FROM (SELECT DISTINCT hash FROM ({select_from}) WHERE hash NOTNULL)
+    WHERE hash NOT IN (SELECT tile_hash FROM {DEDUP_ID_MAP})"
+    );
+    debug!("Assigning tile_data_id values with {sql}");
+    query(AssertSqlSafe(sql)).execute(&mut *conn).await?;
+    Ok(())
+}
+
 fn get_select_from(src_type: MbtType, patch_type: MbtType, algorithm: HashAlgorithm) -> String {
     if src_type == Flat {
         "SELECT zoom_level, tile_column, tile_row, tile_data FROM patchDb.tiles".to_owned()
     } else {
         match patch_type {
-            // A Cache patch file is read via its `tiles` view, like Flat
-            Flat | Cache => {
+            // A Cache or dedup-id patch file stores no hashes, so like Flat it is read via its
+            // `tiles` view with the hashes computed on the fly
+            Flat
+            | Cache
+            | Normalized {
+                schema: NormalizedSchema::DedupId,
+                ..
+            } => {
                 let hash = algorithm.sql_hash("tile_data");
                 format!(
                     "
@@ -160,6 +200,28 @@ fn get_insert_sql(src_type: MbtType, select_from: &str) -> (String, String, Opti
     {select_from}"
             ),
             None,
+        ),
+        // The dedup-id schema keys blobs by an integer, so both inserts read the id that
+        // `assign_dedup_ids` gave this tile's hash rather than writing the hash itself.
+        Normalized {
+            schema: NormalizedSchema::DedupId,
+            ..
+        } => (
+            "tiles_shallow".to_owned(),
+            format!(
+                "
+    INSERT OR REPLACE INTO tiles_shallow (zoom_level, tile_column, tile_row, tile_data_id)
+    SELECT src.zoom_level, src.tile_column, src.tile_row, ids.tile_data_id
+    FROM ({select_from}) AS src
+    JOIN {DEDUP_ID_MAP} AS ids ON ids.tile_hash = src.hash"
+            ),
+            Some(format!(
+                "
+    INSERT OR REPLACE INTO tiles_data (tile_data_id, tile_data)
+    SELECT ids.tile_data_id, src.tile_data
+    FROM ({select_from}) AS src
+    JOIN {DEDUP_ID_MAP} AS ids ON ids.tile_hash = src.hash"
+            )),
         ),
         Normalized { schema, .. } => {
             let (map, img, id) = (
