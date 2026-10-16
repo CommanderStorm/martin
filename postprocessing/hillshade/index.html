@@ -6,13 +6,19 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Documentation for Martin Tile Server">
+        <meta name="description" content="Rendering raster hillshade tiles from Mapzen normal map tiles">
       
       
         <meta name="author" content="Maplibre Contributors">
       
       
         <link rel="canonical" href="https://maplibre.org/martin/postprocessing/hillshade/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
       
       
         <link rel="prev" href="../mlt/">
@@ -25,7 +31,7 @@
       
       
       <link rel="icon" href="../../images/favicon.ico">
-      <meta name="generator" content="zensical-0.0.63">
+      <meta name="generator" content="zensical-0.0.71">
     
     
       
@@ -36,12 +42,12 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.10763589.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
       
         
           
         
-        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.812a03bb.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
       
       
   
@@ -131,7 +137,19 @@
 
     
     
-  </head>
+  <meta property="og:type" content="website" />
+<meta property="og:title" content="Hillshade - Martin Tile Server Documentation" />
+<meta property="og:description" content="Rendering raster hillshade tiles from Mapzen normal map tiles" />
+<meta property="og:image" content="https://maplibre.org/martin/assets/images/social/postprocessing/hillshade.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://maplibre.org/martin/postprocessing/hillshade/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Hillshade - Martin Tile Server Documentation" />
+<meta property="twitter:description" content="Rendering raster hillshade tiles from Mapzen normal map tiles" />
+<meta property="twitter:image" content="https://maplibre.org/martin/assets/images/social/postprocessing/hillshade.png" />
+</head>
   
   
     
@@ -146,14 +164,11 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
     <div data-md-component="skip">
-      
-        
-        <a href="#hillshade" class="md-skip">
-          Skip to content
-        </a>
-      
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
     </div>
     <div data-md-component="announce">
       
@@ -168,8 +183,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="Martin Tile Server Documentation" class="md-header__button md-logo" aria-label="Martin Tile Server Documentation" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+  <img src="../../images/logo.svg" alt="Martin Tile Server Documentation">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
@@ -450,6 +464,8 @@
       
         
       
+        
+      
     
     
     
@@ -508,6 +524,22 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../migration-guide/" class="md-tabs__link">
+        
+  
+  Migration Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../changelog/" class="md-tabs__link">
         
   
@@ -550,8 +582,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="Martin Tile Server Documentation" class="md-nav__button md-logo" aria-label="Martin Tile Server Documentation" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+  <img src="../../images/logo.svg" alt="Martin Tile Server Documentation">
 
     </a>
     Martin Tile Server Documentation
@@ -1012,6 +1043,8 @@
       
         
           
+        
+      
         
       
         
@@ -1869,6 +1902,8 @@
       
         
       
+        
+      
     
     
     
@@ -1982,6 +2017,34 @@
   
 
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migration-guide/" class="md-nav__link">
+        
+  
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1a6.887 6.887 0 0 0 0 9.8c2.73 2.7 7.15 2.7 9.88 0 1.36-1.35 2.04-2.92 2.04-4.9h2c0 1.98-.88 4.55-2.64 6.29-3.51 3.48-9.21 3.48-12.72 0-3.5-3.47-3.53-9.11-.02-12.58a8.987 8.987 0 0 1 12.65 0L21 3zM12.5 8v4.25l3.5 2.08-.72 1.21L11 13V8z"/></svg>
+  
+  <span class="md-ellipsis">
+    
+  
+  Migration Guide
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -2125,8 +2188,10 @@
 
               
               <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
                 
                   
+
   
     <a href="https://github.com/maplibre/martin/edit/main/docs/content/postprocessing/hillshade.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
@@ -2285,6 +2350,7 @@ We cache the normal maps rather than the baked output since an undecoded normal 
 There is deliberately no cache-busting query parameter: that would leave clients in charge of the server's correctness.</p>
 </div>
 <h2 id="neighborhood-handling">Neighborhood handling</h2>
+<p><svg id="neighborhood" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 310" width="100%" role="img" aria-label="Tiles are traced across a 3 by 3 neighborhood with an apron into each neighbor and only the center is encoded; x wraps to the far side at the antimeridian, while missing slots at the poles are clamped from the center"><title>Tiles are traced across a 3 by 3 neighborhood with an apron into each neighbor and only the center is encoded; x wraps to the far side at the antimeridian, while missing slots at the poles are clamped from the center</title><style>#neighborhood{font-family:var(--md-text-font-family,system-ui),system-ui,sans-serif;font-size:13px}#neighborhood .fg{fill:var(--md-default-fg-color,#000000de)}#neighborhood .muted{fill:var(--md-default-fg-color--light,#0000008a)}#neighborhood .line{stroke:var(--md-default-fg-color--lighter,#00000052);fill:none}#neighborhood .arrow{stroke:var(--md-default-fg-color--light,#0000008a);fill:none;stroke-width:1.5}#neighborhood .head{fill:var(--md-default-fg-color--light,#0000008a)}#neighborhood text{dominant-baseline:central}#neighborhood .t{font-weight:600}#neighborhood .s{font-size:11px}#neighborhood .mono{font-family:var(--md-code-font-family,ui-monospace),ui-monospace,monospace;font-size:11px}#neighborhood .box{fill:var(--md-code-bg-color,#f5f5f5);stroke:var(--md-default-fg-color--lighter,#00000052);stroke-width:1.5}#neighborhood .hi{fill:var(--md-primary-fg-color,#673ab7);fill-opacity:.1;stroke:var(--md-primary-fg-color,#673ab7);stroke-width:1.5}#neighborhood .sel{fill:var(--md-primary-fg-color,#673ab7);fill-opacity:.3;stroke:var(--md-primary-fg-color,#673ab7);stroke-width:1.5}#neighborhood .acc{fill:var(--md-accent-fg-color,#7c4dff);fill-opacity:.12;stroke:var(--md-accent-fg-color,#7c4dff);stroke-width:1.5}#neighborhood .ghost{fill:none;stroke:var(--md-default-fg-color--lighter,#00000052);stroke-width:1.5;stroke-dasharray:4 3}#neighborhood .apron{fill:var(--md-accent-fg-color,#7c4dff);fill-opacity:.12;stroke:var(--md-accent-fg-color,#7c4dff);stroke-width:1.5;stroke-dasharray:5 3}#neighborhood .accline{stroke:var(--md-accent-fg-color,#7c4dff);fill:none;stroke-width:2}#neighborhood .accdot{fill:var(--md-accent-fg-color,#7c4dff)}#neighborhood .accarrow{stroke:var(--md-accent-fg-color,#7c4dff);fill:none;stroke-width:1.5}#neighborhood .acchead{fill:var(--md-accent-fg-color,#7c4dff)}</style><text class="fg t" x="145" y="14" text-anchor="middle">3×3 neighborhood</text><rect class="box" x="40" y="50" width="70" height="70" rx="0"/><rect class="box" x="110" y="50" width="70" height="70" rx="0"/><rect class="box" x="180" y="50" width="70" height="70" rx="0"/><rect class="box" x="40" y="120" width="70" height="70" rx="0"/><rect class="box" x="110" y="120" width="70" height="70" rx="0"/><rect class="box" x="180" y="120" width="70" height="70" rx="0"/><rect class="box" x="40" y="190" width="70" height="70" rx="0"/><rect class="box" x="110" y="190" width="70" height="70" rx="0"/><rect class="box" x="180" y="190" width="70" height="70" rx="0"/><rect class="apron" x="94" y="104" width="102" height="102" rx="0"/><rect class="sel" x="110" y="120" width="70" height="70" rx="0"/><text class="fg s t" x="145" y="155" text-anchor="middle">center</text><text class="muted s" x="145" y="282" text-anchor="middle">dashed: fetch_margin apron</text><text class="fg t" x="465" y="14" text-anchor="middle">antimeridian</text><rect class="box" x="360" y="50" width="70" height="70" rx="0"/><rect class="box" x="430" y="50" width="70" height="70" rx="0"/><rect class="box" x="500" y="50" width="70" height="70" rx="0"/><rect class="box" x="360" y="120" width="70" height="70" rx="0"/><rect class="box" x="430" y="120" width="70" height="70" rx="0"/><rect class="box" x="500" y="120" width="70" height="70" rx="0"/><rect class="box" x="360" y="190" width="70" height="70" rx="0"/><rect class="box" x="430" y="190" width="70" height="70" rx="0"/><rect class="box" x="500" y="190" width="70" height="70" rx="0"/><rect class="apron" x="414" y="104" width="102" height="102" rx="0"/><rect class="sel" x="430" y="120" width="70" height="70" rx="0"/><text class="fg s t" x="465" y="155" text-anchor="middle">x = 0</text><text class="muted s" x="395" y="40" text-anchor="middle">x = 2ᶻ-1</text><text class="muted s" x="465" y="40" text-anchor="middle">x = 0</text><text class="muted s" x="535" y="40" text-anchor="middle">x = 1</text><path class="accline" d="M430 50 L430 268" stroke-dasharray="6 4"/><text class="muted s" x="465" y="282" text-anchor="middle">x wraps</text><text class="fg t" x="785" y="14" text-anchor="middle">pole</text><rect class="ghost" x="680" y="50" width="70" height="70" rx="0"/><rect class="ghost" x="750" y="50" width="70" height="70" rx="0"/><rect class="ghost" x="820" y="50" width="70" height="70" rx="0"/><rect class="box" x="680" y="120" width="70" height="70" rx="0"/><rect class="box" x="750" y="120" width="70" height="70" rx="0"/><rect class="box" x="820" y="120" width="70" height="70" rx="0"/><rect class="box" x="680" y="190" width="70" height="70" rx="0"/><rect class="box" x="750" y="190" width="70" height="70" rx="0"/><rect class="box" x="820" y="190" width="70" height="70" rx="0"/><rect class="apron" x="734" y="104" width="102" height="102" rx="0"/><rect class="sel" x="750" y="120" width="70" height="70" rx="0"/><text class="fg s t" x="785" y="155" text-anchor="middle">y = 0</text><path class="accarrow" d="M715 116 L715 80"/><path class="acchead" d="M715 80 L719.0 88.0 L711.0 88.0 Z"/><text class="muted s" x="715" y="66" text-anchor="middle">no tile</text><path class="accarrow" d="M785 116 L785 80"/><path class="acchead" d="M785 80 L789.0 88.0 L781.0 88.0 Z"/><text class="muted s" x="785" y="66" text-anchor="middle">no tile</text><path class="accarrow" d="M855 116 L855 80"/><path class="acchead" d="M855 80 L859.0 88.0 L851.0 88.0 Z"/><text class="muted s" x="855" y="66" text-anchor="middle">no tile</text><text class="muted s" x="785" y="282" text-anchor="middle">edge clamped</text></svg></p>
 <p>Missing neighbors are routine rather than an error: at the poles, at the edge of coverage, or when one read of nine fails.
 A missing or unreadable neighbor is replaced by extending the center tile's nearest edge outward, which may create a seam but still serves the tile.</p>
 <p>The projection is cylindrical in x, so tiles at the antimeridian get real neighbors from the far side of the map instead of a clamped edge.
@@ -2439,11 +2505,12 @@ It is not cylindrical in y, so a tile in the top or bottom row has three clamped
 </footer>
       
     </div>
-    <div class="md-dialog" data-md-component="dialog">
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+      
+<div class="md-progress" data-md-component="progress" role="progressbar" aria-label="Loading"></div>
     
     
     
@@ -2453,10 +2520,12 @@ It is not cylindrical in y, so a tile in the top or bottom row has three clamped
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"redirect":null,"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["announce.dismiss","content.action.edit","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","header.autohide","navigation.expand","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.instant.progress","navigation.path","navigation.prune","navigation.sections","navigation.tabs","navigation.tabs.sticky","navigation.top","navigation.tracking","search.highlight","toc.follow","toc.integrate"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../javascripts/keys.js"></script>
       
     
   </body>
