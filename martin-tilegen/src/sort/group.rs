@@ -122,6 +122,9 @@ pub struct TileGrouper {
     active: Vec<ActiveFill>,
     /// The tile after the last one emitted; active ranges cover it.
     position: u64,
+    /// Bytes and records of the last tile of a batch: neighbours in tile order have similar sizes, so the
+    /// next tile starts with that much room instead of growing from nothing.
+    last_size: (usize, usize),
 }
 
 impl TileGrouper {
@@ -131,6 +134,7 @@ impl TileGrouper {
             merger,
             active: Vec::new(),
             position: 0,
+            last_size: (0, 0),
         }
     }
 
@@ -141,10 +145,15 @@ impl TileGrouper {
             let mut batch = Vec::new();
             let mut bytes = 0;
             while batch.len() < max_tiles && bytes < max_bytes {
-                let mut tile = TileRecords::default();
+                let mut tile = TileRecords {
+                    tile_id: 0,
+                    data: Vec::with_capacity(self.last_size.0),
+                    records: Vec::with_capacity(self.last_size.1),
+                };
                 if !self.next_tile(&mut tile)? {
                     break;
                 }
+                self.last_size = (tile.data.len(), tile.records.len());
                 bytes += tile.data.len();
                 batch.push(tile);
             }
