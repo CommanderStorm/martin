@@ -167,8 +167,8 @@ impl<'a> SortBuffer<'a> {
         let (limit, data, entries) = match &sorter.spill {
             Spill::Disk(config) => (
                 config.buffer_bytes,
-                Vec::with_capacity(config.buffer_bytes),
-                Vec::with_capacity(config.max_entries()),
+                huge_pages(Vec::with_capacity(config.buffer_bytes)),
+                huge_pages(Vec::with_capacity(config.max_entries())),
             ),
             Spill::Memory => (u32::MAX as usize, Vec::new(), Vec::new()),
         };
@@ -247,6 +247,29 @@ impl<'a> SortBuffer<'a> {
         self.seq_sorted = true;
         Ok(())
     }
+}
+
+/// Asks the kernel to back `vec`'s allocation with transparent huge pages: spilling sorts and gathers
+/// records all over a buffer, which on 4 KiB pages misses the TLB on nearly every record.
+fn huge_pages<T>(vec: Vec<T>) -> Vec<T> {
+    #[cfg(target_os = "linux")]
+    {
+        const HUGE_PAGE: usize = 2 << 20;
+        let start = (vec.as_ptr() as usize).next_multiple_of(HUGE_PAGE);
+        let end = (vec.as_ptr() as usize + vec.capacity() * size_of::<T>()) / HUGE_PAGE * HUGE_PAGE;
+        if end > start {
+            #[expect(unsafe_code, reason = "rustix has no safe madvise")]
+            // SAFETY: the range lies within the vector's allocation, and the advice only changes how
+            // the kernel backs its pages, never their contents.
+            let advised = unsafe {
+                rustix::mm::madvise(start as *mut std::ffi::c_void, end - start, rustix::mm::Advice::LinuxHugepage)
+            };
+            if let Err(err) = advised {
+                tracing::debug!("sort buffers stay on small pages: {err}");
+            }
+        }
+    }
+    vec
 }
 
 /// 24 bytes, since [`SortKey`] is two words and carries no `u128` alignment.

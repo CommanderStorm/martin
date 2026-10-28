@@ -68,6 +68,9 @@ wincode = { workspace = true, features = ["derive"] }
 wkb.workspace = true
 xxhash-rust.workspace = true
 
+[target.'cfg(target_os = "linux")'.dependencies]
+rustix = { workspace = true, features = ["mm"] }
+
 [target.'cfg(unix)'.dev-dependencies]
 rustix = { workspace = true, features = ["process", "std"] }
 
