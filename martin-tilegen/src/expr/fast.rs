@@ -274,7 +274,8 @@ mod tests {
             let interpreted = eval_part(expr.ast(), &view);
             match (expr.eval(&view), interpreted) {
                 (Ok(fast), Ok(slow)) => assert!(
-                    fast == slow || matches!((&fast, &slow), (Value::Float(x), Value::Float(y)) if x.is_nan() && y.is_nan()),
+                    fast == slow
+                        || matches!((&fast, &slow), (Value::Float(x), Value::Float(y)) if x.is_nan() && y.is_nan()),
                     "{source} with {props:?}: {fast:?} vs {slow:?}"
                 ),
                 (Err(_), Err(_)) => {}
