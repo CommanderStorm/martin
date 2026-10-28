@@ -69,7 +69,7 @@ wkb.workspace = true
 xxhash-rust.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
-rustix = { workspace = true, features = ["mm"] }
+rustix = { workspace = true, features = ["fs", "mm"] }
 
 [target.'cfg(unix)'.dev-dependencies]
 rustix = { workspace = true, features = ["process", "std"] }
