@@ -63,7 +63,7 @@ pub fn run<I: Send + 'static, O: Send + 'static, S: Send, W: Send>(
     encode: impl Fn(&mut S, I) -> TileGenResult<O> + Sync,
     write: impl FnOnce(&mut dyn Iterator<Item = TileGenResult<O>>) -> TileGenResult<W> + Send,
 ) -> TileGenResult<(W, Vec<S>)> {
-    let (work_tx, work_rx) = hotpath::channel!(flume::unbounded::<Work<I, O>>(), label = { "encode_work" });
+    let (work_tx, work_rx) = hotpath::channel!(flume::bounded::<Work<I, O>>(threads.max(1)), label = { "encode_work" });
     let (order_tx, order_rx) = hotpath::channel!(flume::bounded::<Pending<O>>(window), label = { "encode_order" });
     thread::scope(|scope| {
         let encoders: Vec<_> = (0..threads.max(1))
