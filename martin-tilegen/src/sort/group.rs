@@ -49,6 +49,12 @@ impl TileRecords {
         });
     }
 
+    /// Bytes of all records of the tile.
+    #[must_use]
+    pub fn bytes(&self) -> usize {
+        self.data.len()
+    }
+
     /// The records in tile order.
     pub fn records(&self) -> impl Iterator<Item = LayerRecordRef<'_>> {
         self.records.iter().map(|slot| LayerRecordRef {
