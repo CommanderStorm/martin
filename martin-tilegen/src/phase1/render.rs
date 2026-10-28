@@ -1457,7 +1457,7 @@ fn union(a: Rect<f64>, b: Rect<f64>) -> Rect<f64> {
 mod tests {
     use std::f64::consts::TAU;
 
-    use geo::SimplifyIdx as _;
+    use geo::Simplify as _;
     use geo_types::coord;
     use map_tile_toolkit::signed_area_2x;
 
