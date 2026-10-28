@@ -13,7 +13,7 @@ use crate::phase2::{TileEncoder, TileEncoding};
 use crate::pipeline::{self, BatchSender, spawn_named};
 use crate::plan::{ExprErrors, Plan};
 use crate::sort::{SortConfig, Sorter, TileRecords};
-use crate::{TileFormat, TileGenError, TileGenResult, TileOrder, TileSink};
+use crate::{EncodedTile, TileFormat, TileGenError, TileGenResult, TileOrder, TileSink};
 
 #[derive(Clone, Debug)]
 pub struct GenerateConfig {
@@ -24,7 +24,7 @@ pub struct GenerateConfig {
     pub encoding: Encoding,
     /// Tiles per encode batch: large enough to amortize hand-offs, small enough to keep encoders busy.
     pub batch_tiles: usize,
-    /// Encode batches in flight.
+    /// Encode batches in flight, whose encoded bytes stay under the sort memory, `buffer_bytes × threads`.
     pub window: usize,
     /// MVT only: polygon rings keep their source start, rather than starting where `ST_AsMVTGeom`'s wagyu starts them
     /// in tiles that get the whole polygon.
@@ -101,10 +101,14 @@ pub fn generate<S: FeatureSource, K: TileSink>(
         config.batch_tiles,
         config.mvt_keep_unused_keys,
     )?;
+    let window = pipeline::Window {
+        batches: config.window.max(1),
+        bytes: config.sort.buffer_bytes.saturating_mul(config.threads.max(1)),
+    };
     let ((sink, tiles), encoders) = pipeline::run(
         config.threads,
-        config.window.max(1),
-        |submit: &BatchSender<Vec<TileRecords>, _>| {
+        window,
+        |submit: &BatchSender<'_, Vec<TileRecords>, _>| {
             for batch in batches {
                 submit.send(batch?)?;
             }
@@ -112,6 +116,7 @@ pub fn generate<S: FeatureSource, K: TileSink>(
         },
         TileEncoder::default,
         |encoder, batch| encoding.encode(encoder, batch),
+        |batch: &Vec<EncodedTile>| batch.iter().map(|tile| tile.data.len()).sum(),
         move |batches| {
             let mut tiles = 0u64;
             sink.write_all(&mut batches.inspect(|batch| {

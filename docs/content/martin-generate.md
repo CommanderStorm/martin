@@ -121,7 +121,7 @@ martin cp --mode bulk --config config.yaml --output-file tileset.pmtiles --max-z
 | `--max-zoom`    | `14`                                                              | Highest zoom, lowered by a source's `maxzoom`                                                         |
 | `--zoom-levels` |                                                                   | Instead of `--min-zoom` and `--max-zoom`, zooms that do not skip a level, e.g. `5,6,7`                |
 | `--bbox`        | whole world                                                       | Only tiles touching `min_lon,min_lat,max_lon,max_lat`, at most once                                   |
-| `--memory`      | `2GiB`                                                            | Memory for sorting, e.g. `512MB` or `4GiB`, split over the threads                                    |
+| `--memory`      | `2GiB`                                                            | Memory for sorting, split over the threads, then for encoded tiles to write, e.g. `512MB` or `4GiB`   |
 | `--temp-dir`    | system temp dir                                                   | Where sorted runs go, repeatable to spread them over several disks                                    |
 | `--threads`     | CPU count                                                         | Worker threads                                                                                        |
 | `--mvt-quirk`   |                                                                   | MVT: a [quirk](#mvt-quirks) to encode with, repeatable                                                |

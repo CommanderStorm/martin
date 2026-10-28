@@ -174,7 +174,7 @@ pub struct CopyArgs {
     /// Delete metadata values after the copy, including computed ones. Can be specified multiple times.
     #[arg(long, value_name = "KEY")]
     pub delete_meta: Vec<String>,
-    /// Bulk mode: memory for sorting, e.g. `512MB` or `2GiB`, split over the threads. A bare number is in MB. [DEFAULT: 2GiB]
+    /// Bulk mode: memory for sorting, split over the threads, then for encoded tiles to write, e.g. `512MB` or `2GiB`. A bare number is in MB. [DEFAULT: 2GiB]
     #[cfg(feature = "unstable-generate")]
     #[arg(long, value_parser = crate::config::args::parse_byte_size)]
     pub memory: Option<u64>,

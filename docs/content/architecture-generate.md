@@ -200,16 +200,17 @@ tiles in order. The ordered pipeline does both, with a bounded number of batches
 --8<-- "images/generate/ordered.svg"
 
 - For each batch, the grouper first puts an empty result **slot** into the **order queue**,
-  then hands the batch to the work queue. The order queue holds `threads × 4` slots. When it is full,
-  the grouper waits.
+  then hands the batch to the work queue. The order queue holds `threads × 64` slots, the work queue
+  `threads` batches. The grouper waits while either is full, or while the results waiting for the
+  writer hold more than `--memory`.
 - Encoders take batches from the work queue in any order, finish them in any order, and put each result
   into its batch's slot.
 - The writer takes slots from the order queue in batch order and waits for each slot's result. A result
   that arrives early waits in its slot until the writer gets to it.
 
 When one batch is slow, for example a dense city at a high zoom, the other encoders go on with later
-batches until the order queue is full, and then wait. Memory stays bounded however slow one batch is,
-and the archive still sees every tile in order.
+batches until the order queue is full or their results hold `--memory`, and then wait. Memory stays
+bounded however slow one batch is, and the archive still sees every tile in order.
 
 ### Repeated tiles
 
@@ -290,7 +291,7 @@ Every queue and buffer has a bound that does not depend on the size of the input
 | Sort buffers     | `--memory` in total, records plus index, at least 16 MiB per worker       |
 | Run file writers | 1 MiB of write buffer for each run being written                          |
 | Merge            | 256 KiB of read buffer per run, at most 256 runs, so 64 MiB per merge     |
-| Encode window    | `threads × 4` batches of 256 tiles or 16 MiB, plus the one being written  |
+| Encode window    | `threads × 64` batches of 256 tiles or 16 MiB, up to `--memory` encoded   |
 | Dedup index      | One copy of each distinct tile that got a dedup key                       |
 
 An intermediate merge, with more than 256 runs, runs several 64 MiB merges at once. On disk, a feature
