@@ -21,6 +21,9 @@ pub struct Window {
     pub bytes: usize,
 }
 
+/// Bench only: the most bytes that waited for the writer.
+static PEAK: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 /// Bytes of encoded batches waiting for the writer.
 #[derive(Debug, Default)]
 struct Unwritten {
@@ -33,7 +36,9 @@ struct Unwritten {
 impl Unwritten {
     /// Counts an encoded batch of `bytes`.
     fn add(&self, bytes: usize) {
-        self.lock().0 += bytes;
+        let mut state = self.lock();
+        state.0 += bytes;
+        PEAK.fetch_max(state.0, std::sync::atomic::Ordering::Relaxed);
     }
 
     /// Uncounts a batch of `bytes` the writer took.
@@ -173,6 +178,7 @@ pub fn run<I: Send + 'static, O: Send + 'static, S: Send, W: Send>(
             sender.fail(err);
         }
         drop(sender);
+        eprintln!("BENCH peak unwritten bytes {}", PEAK.load(std::sync::atomic::Ordering::Relaxed));
         let written = writer.join().unwrap_or_else(|panic| std::panic::resume_unwind(panic))?;
         let states = encoders
             .into_iter()
