@@ -264,6 +264,6 @@ codegen-units = 1
 # georust/geo#1625, georust/geo#1626: polygon validation speedup and spike fix, merged on main
 geo = { git = "https://github.com/georust/geo", rev = "554d6d10af46a234e228080d588215df5ad86cf6" }
 geo-types = { git = "https://github.com/georust/geo", rev = "554d6d10af46a234e228080d588215df5ad86cf6" }
-mlt-core = { git = "https://github.com/maplibre/maplibre-tile-spec", rev = "5be00633d1158e311a7a05fee29dfab4c2091ec9" }
+mlt-core = { git = "https://github.com/CommanderStorm/maplibre-tile-spec", rev = "a180a65626b9ce645947ec0932d9a65e8a73f6b2" }
 # georust/wkb#104..#107 merged into one branch
 wkb = { git = "https://github.com/CommanderStorm/wkb", rev = "36f032043a08916d00503bbe524931fee03de43b" }
