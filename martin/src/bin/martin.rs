@@ -1,6 +1,9 @@
 #![expect(clippy::print_stderr, reason = "binary entrypoint reports startup errors to stderr")]
 
 use std::env;
+
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[cfg(feature = "tui")]
 use std::sync::Arc;
 

@@ -241,6 +241,7 @@ martin-tile-utils.workspace = true
 martin-tilegen = { workspace = true, optional = true }
 mbtiles = { workspace = true, optional = true }
 miette.workspace = true
+mimalloc = "0.1.52"
 mlt-core.workspace = true
 notify = { workspace = true }
 num_cpus.workspace = true
