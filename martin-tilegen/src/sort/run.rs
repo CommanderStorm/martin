@@ -12,6 +12,10 @@ use crate::TileGenResult;
 use crate::sort::SortKey;
 
 const WRITE_BUFFER_BYTES: usize = 1 << 20;
+/// Bytes a reader moves past before it frees them from its temp file.
+const FREE_BYTES: usize = 64 << 20;
+/// Freed ranges are whole blocks of this size, so a block another run shares is never freed.
+const FREE_ALIGN: usize = 64 << 10;
 
 /// Sorted `(key, record)` pairs: a segment of a temp file in fixed-width [wincode], or a spilled buffer in memory.
 /// Runs are numbered in creation order, and a worker's runs are created in the order it pushed
@@ -67,11 +71,29 @@ impl SpillFile {
         }
         #[expect(unsafe_code, reason = "memmap2 has no safe constructor")]
         // SAFETY: only this process holds the unlinked temp file.
-        // No run is read before its writers finish, so the mapped bytes never change.
+        // No run is read before its writers finish, and only bytes no reader reads again are freed.
         let map = unsafe { Mmap::map(&self.file)? };
         #[cfg(unix)]
         map.advise(memmap2::Advice::Sequential)?;
         Ok(Arc::clone(self.map.get_or_init(|| Arc::new(map))))
+    }
+
+    /// Drops the whole blocks of `range` from the file and the page cache, returning where the kept
+    /// bytes start; the partial blocks at its ends may belong to neighbouring runs.
+    fn free(&self, range: Range<usize>) -> usize {
+        let start = range.start.next_multiple_of(FREE_ALIGN);
+        let end = range.end / FREE_ALIGN * FREE_ALIGN;
+        if start >= end {
+            return range.start;
+        }
+        #[cfg(target_os = "linux")]
+        {
+            use rustix::fs::{FallocateFlags, fallocate};
+            let flags = FallocateFlags::PUNCH_HOLE | FallocateFlags::KEEP_SIZE;
+            // Without hole punching the pages are freed when the file is closed.
+            fallocate(&self.file, flags, start as u64, (end - start) as u64).ok();
+        }
+        end
     }
 }
 
@@ -128,10 +150,13 @@ impl RunWriter {
 
 /// Reads a run's records in order, one ahead: [`head`](Self::head) is the next key.
 pub(super) enum RunReader {
-    /// `unread` is the unread part of the run, and `record` is the current record within `map`.
+    /// `unread` is the unread part of the run, `record` is the current record within `map`, and
+    /// the run's bytes from `kept` on are not yet freed.
     File {
+        file: Arc<SpillFile>,
         map: Arc<Mmap>,
         unread: Range<usize>,
+        kept: usize,
         remaining: u64,
         head: Option<SortKey>,
         record: Range<usize>,
@@ -152,8 +177,10 @@ impl RunReader {
                 let start = usize::try_from(start).expect("a mapped file fits in memory");
                 let bytes = usize::try_from(run.bytes).expect("a mapped file fits in memory");
                 let mut reader = Self::File {
+                    file,
                     map,
                     unread: start..start + bytes,
+                    kept: start,
                     remaining: records,
                     head: None,
                     record: 0..0,
@@ -187,12 +214,17 @@ impl RunReader {
     pub(super) fn advance(&mut self) -> TileGenResult<()> {
         match self {
             Self::File {
+                file,
                 map,
                 unread,
+                kept,
                 remaining,
                 head,
                 record,
             } => {
+                if *remaining == 0 || unread.start - *kept >= FREE_BYTES {
+                    *kept = file.free(*kept..unread.start);
+                }
                 if *remaining == 0 {
                     *head = None;
                     *record = 0..0;

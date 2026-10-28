@@ -322,6 +322,33 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn frees_read_bytes_of_runs_sharing_a_file_without_changing_records() {
+        let record = |key: SortKey| {
+            let (high, low) = key.words();
+            let mut bytes = (high.wrapping_mul(31) ^ low | 1).to_le_bytes().repeat(97);
+            bytes.push(7);
+            bytes
+        };
+        let dir = tempfile::tempdir().unwrap();
+        let sorter = sorter(&dir, 100 << 20, 64);
+        let mut buffer = sorter.buffer();
+        let keys: Vec<_> = random_keys(250_000, 50).collect();
+        for key in &keys {
+            buffer.push(*key, &record(*key)).unwrap();
+        }
+        buffer.finish().unwrap();
+        let mut merger = sorter.merge().unwrap();
+        let (mut count, mut last) = (0, None);
+        while let Some((key, bytes)) = merger.peek() {
+            assert!(last <= Some(key));
+            assert_eq!(bytes, record(key));
+            (count, last) = (count + 1, Some(key));
+            merger.advance().unwrap();
+        }
+        assert_eq!(count, keys.len());
+    }
+
+    #[test]
     fn keeps_each_workers_push_order_across_threads() {
         let dir = tempfile::tempdir().unwrap();
         let sorter = sorter(&dir, 500, 4);
