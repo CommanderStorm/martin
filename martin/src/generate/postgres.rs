@@ -184,7 +184,7 @@ impl FeatureSource for PgScanSource {
     /// One reader per two render threads: a connection streams rows faster than one thread renders them.
     fn open_readers(&self, count: usize) -> SourceResult<Vec<Box<dyn FeatureReader + '_>>> {
         Ok(self
-            .open_scan_readers(count.div_ceil(2))?
+            .open_scan_readers(martin_tilegen::bench_knob("MB_READERS", count.div_ceil(2)))?
             .into_iter()
             .map(|reader| Box::new(reader) as Box<dyn FeatureReader + '_>)
             .collect())

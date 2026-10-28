@@ -86,7 +86,7 @@ pub fn generate<S: FeatureSource, K: TileSink>(
         &sorter,
         plan,
         order,
-        config.threads,
+        crate::bench_knob("MB_RENDERS", config.threads),
         wagyu_ring_starts,
         progress,
     )?;
@@ -102,7 +102,7 @@ pub fn generate<S: FeatureSource, K: TileSink>(
         config.mvt_keep_unused_keys,
     )?;
     let ((sink, tiles), encoders) = pipeline::run(
-        config.threads,
+        crate::bench_knob("MB_ENCODERS", config.threads),
         config.window.max(1),
         |submit: &BatchSender<Vec<TileRecords>, _>| {
             for batch in batches {
@@ -156,7 +156,7 @@ fn render_all<S: FeatureSource>(
     let partitions = source.partitions();
     let next_partition = AtomicU32::new(0);
     let failed = AtomicBool::new(false);
-    let (tx, rx) = feature_channel(threads * 2);
+    let (tx, rx) = feature_channel(crate::bench_knob("MB_FEATURE_CHANNEL", threads * 2));
     let fail = |err| {
         failed.store(true, Ordering::Relaxed);
         err

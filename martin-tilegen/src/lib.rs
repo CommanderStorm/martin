@@ -46,3 +46,8 @@ pub mod internals {
         pub use crate::sort::record::*;
     }
 }
+
+/// Bench only: an env override of a tunable.
+pub fn bench_knob(name: &str, default: usize) -> usize {
+    std::env::var(name).ok().and_then(|v| v.parse().ok()).unwrap_or(default)
+}

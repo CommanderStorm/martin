@@ -300,7 +300,7 @@ pub async fn start(args: CopierArgs) -> GenerateResult<()> {
         .iter()
         .map(|scan| Ok((scan.id.clone(), unsupported_geometry_sql(&scan.info)?)))
         .collect::<GenerateResult<_>>()?;
-    let source = PgScanSource::new(pool, scans, PgScanSource::PARTITION_BLOCKS).await?;
+    let source = PgScanSource::new(pool, scans, u32::try_from(martin_tilegen::bench_knob("MB_PARTITION_BLOCKS", PgScanSource::PARTITION_BLOCKS as usize)).unwrap()).await?;
     let generate_config = generate_config(&options);
     let encoding = options.encoding;
     let metadata = metadata(&options);
@@ -445,12 +445,12 @@ fn generate_config(options: &GenerateOptions) -> GenerateConfig {
         sort: SortConfig {
             temp_dirs: options.temp_dirs.clone(),
             buffer_bytes: usize::try_from(per_thread).unwrap_or(usize::MAX),
-            max_fan_in: 256,
+            max_fan_in: martin_tilegen::bench_knob("MB_FAN_IN", 256),
         },
         format: options.format,
         encoding: options.encoding,
-        batch_tiles: 256,
-        window: threads * 4,
+        batch_tiles: martin_tilegen::bench_knob("MB_BATCH_TILES", 256),
+        window: martin_tilegen::bench_knob("MB_WINDOW", threads * 4),
         mvt_preserve_ring_start: options.mvt_preserve_ring_start,
         mvt_keep_unused_keys: options.mvt_keep_unused_keys,
     }

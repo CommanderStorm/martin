@@ -103,7 +103,7 @@ impl Iterator for TileBatches {
         if self.done {
             return None;
         }
-        let batch = self.grouper.next_batch(self.size, BATCH_BYTES);
+        let batch = self.grouper.next_batch(self.size, crate::bench_knob("MB_BATCH_BYTES", BATCH_BYTES));
         self.done = !matches!(&batch, Ok(tiles) if !tiles.is_empty());
         batch.map(|tiles| (!tiles.is_empty()).then_some(tiles)).transpose()
     }
