@@ -19,7 +19,7 @@ impl Merger {
             .into_iter()
             .map(RunReader::open)
             .collect::<TileGenResult<Vec<_>>>()?;
-        let tree = LoserTree::new(readers.len(), |a, b| precedes(&readers, a, b));
+        let tree = LoserTree::new(readers.iter().map(head_key));
         Ok(Self { readers, tree })
     }
 
@@ -33,9 +33,9 @@ impl Merger {
     /// Moves past the record [`peek`](Self::peek) returns.
     pub fn advance(&mut self) -> TileGenResult<()> {
         if let Some(winner) = self.tree.winner() {
-            self.readers[winner].advance()?;
-            let readers = &self.readers;
-            self.tree.replay(winner, |a, b| precedes(readers, a, b));
+            let reader = &mut self.readers[winner];
+            reader.advance()?;
+            self.tree.replay(winner, head_key(reader));
         }
         Ok(())
     }
@@ -57,53 +57,62 @@ impl Drop for Merger {
     }
 }
 
-fn precedes(readers: &[RunReader], a: usize, b: usize) -> bool {
-    head_precedes(readers[a].head(), a, readers[b].head(), b)
+/// An exhausted reader's key, after every real key: a tile id never fills the top byte of its word.
+const EXHAUSTED: (u64, u64) = (u64::MAX, u64::MAX);
+
+fn head_key(reader: &RunReader) -> (u64, u64) {
+    reader.head().map_or(EXHAUSTED, SortKey::words)
 }
 
-/// Exhausted heads sort last; ties go to the earlier run.
-fn head_precedes<K: Ord>(head_a: Option<K>, a: usize, head_b: Option<K>, b: usize) -> bool {
-    match (head_a, head_b) {
-        (Some(x), Some(y)) => (x, a) < (y, b),
-        (x, _) => x.is_some(),
-    }
+/// A leaf's current key, compared before its index, so ties go to the earlier run.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct Node {
+    key: (u64, u64),
+    leaf: u32,
 }
 
 /// Tournament tree over `k` leaves: `nodes[0]` is the winner, `nodes[1..k]` the losers of each match,
-/// so replacing the winner costs one comparison per level instead of a heap's two.
+/// so replacing the winner costs one comparison per level instead of a heap's two. Nodes hold their
+/// keys, so a replay compares within the tree and never reads the runs.
 struct LoserTree {
-    nodes: Vec<usize>,
+    nodes: Vec<Node>,
 }
 
 impl LoserTree {
-    const EMPTY: usize = usize::MAX;
+    /// Marks a match no leaf has reached yet, only while building.
+    const EMPTY: u32 = u32::MAX;
 
-    fn new(k: usize, precedes: impl Fn(usize, usize) -> bool) -> Self {
-        let mut tree = Self {
-            nodes: vec![Self::EMPTY; k],
+    fn new(keys: impl ExactSizeIterator<Item = (u64, u64)>) -> Self {
+        let empty = Node {
+            key: EXHAUSTED,
+            leaf: Self::EMPTY,
         };
-        for leaf in 0..k {
-            tree.replay(leaf, &precedes);
+        let mut tree = Self {
+            nodes: vec![empty; keys.len()],
+        };
+        for (leaf, key) in keys.enumerate() {
+            tree.replay(leaf, key);
         }
         tree
     }
 
     fn winner(&self) -> Option<usize> {
-        self.nodes.first().copied()
+        self.nodes.first().map(|node| node.leaf as usize)
     }
 
     /// While building, the first leaf to reach an empty match waits there for its opponent.
-    fn replay(&mut self, leaf: usize, precedes: impl Fn(usize, usize) -> bool) {
+    fn replay(&mut self, leaf: usize, key: (u64, u64)) {
         let k = self.nodes.len();
-        let mut winner = leaf;
+        #[expect(clippy::cast_possible_truncation, reason = "runs are numbered by a u32")]
+        let mut winner = Node { key, leaf: leaf as u32 };
         let mut node = usize::midpoint(leaf, k);
         while node > 0 {
             let other = self.nodes[node];
-            if other == Self::EMPTY {
+            if other.leaf == Self::EMPTY {
                 self.nodes[node] = winner;
                 return;
             }
-            if precedes(other, winner) {
+            if other < winner {
                 self.nodes[node] = winner;
                 winner = other;
             }
@@ -119,20 +128,19 @@ mod tests {
 
     #[test]
     fn loser_tree_yields_sorted_order_for_any_width() {
-        for k in 1..=9 {
-            let mut heads: Vec<Vec<u32>> = (0..k).map(|i| (0..5).map(|j| j * 3 + i % 3).rev().collect()).collect();
-            let head = |heads: &[Vec<u32>], i: usize| heads[i].last().copied();
-            let precedes = |heads: &[Vec<u32>], a: usize, b: usize| head_precedes(head(heads, a), a, head(heads, b), b);
-            let mut tree = LoserTree::new(k as usize, |a, b| precedes(&heads, a, b));
+        for k in 1..=9_u64 {
+            let mut heads: Vec<Vec<u64>> = (0..k).map(|i| (0..5).map(|j| j * 3 + i % 3).rev().collect()).collect();
+            let key = |heads: &[Vec<u64>], i: usize| heads[i].last().map_or(EXHAUSTED, |&v| (v, 0));
+            let mut tree = LoserTree::new((0..heads.len()).map(|i| key(&heads, i)));
             let mut out = Vec::new();
-            while let Some(w) = tree.winner().filter(|&w| head(&heads, w).is_some()) {
+            while let Some(w) = tree.winner().filter(|&w| heads[w].last().is_some()) {
                 out.push((heads[w].pop().unwrap(), w));
-                tree.replay(w, |a, b| precedes(&heads, a, b));
+                tree.replay(w, key(&heads, w));
             }
             let mut expected = out.clone();
             expected.sort_unstable();
             assert_eq!(out, expected, "k={k}");
-            assert_eq!(out.len(), 5 * k as usize);
+            assert_eq!(out.len() as u64, 5 * k);
         }
     }
 }
