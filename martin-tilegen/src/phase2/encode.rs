@@ -9,6 +9,7 @@ use martin_tile_utils::{Encoding, Format, TileCoord};
 use mlt_core::PropKind;
 use mlt_core::encoder::EncoderConfig;
 use mlt_core::fast_mvt::MvtTileBuilder;
+use rayon::iter::{IntoParallelIterator as _, ParallelIterator as _};
 use xxhash_rust::xxh3::xxh3_64;
 
 use crate::phase2::assemble::{AssembledLayer, LayerAssembler};
@@ -214,6 +215,9 @@ impl TileEncoder {
         zoom: u8,
         features: &mut Vec<(u8, u64)>,
     ) -> TileGenResult<Vec<u8>> {
+        if matches!(settings.format, TileFormat::Mlt) && tile.bytes() >= PARALLEL_LAYERS_BYTES {
+            return self.encode_layers_in_parallel(settings, tile, zoom, features);
+        }
         let mut mlt = Vec::new();
         let mut mvt = MvtTileBuilder::new();
         let mut records: Vec<(Seq, &[u8])> = Vec::new();
@@ -244,7 +248,49 @@ impl TileEncoder {
         };
         Ok(martin_tile_utils::encode(data, settings.encoding)?)
     }
+
+    /// An MLT tile is its layers concatenated, so a large tile encodes each layer on its own thread.
+    fn encode_layers_in_parallel(
+        &mut self,
+        settings: &EncodeSettings<'_>,
+        tile: &TileRecords,
+        zoom: u8,
+        features: &mut Vec<(u8, u64)>,
+    ) -> TileGenResult<Vec<u8>> {
+        let mut layers: Vec<LayerRecords<'_>> = Vec::new();
+        for record in tile.records() {
+            match layers.last_mut() {
+                Some((layer, records)) if *layer == record.layer => records.push((record.seq, record.bytes)),
+                _ => layers.push((record.layer, vec![(record.seq, record.bytes)])),
+            }
+        }
+        let encoded = layers
+            .into_par_iter()
+            .map(|(layer, records)| {
+                let info = &settings.layers[usize::from(layer)];
+                let names = &settings.keys[usize::from(layer)];
+                let mut scratch = LayerAssembler::default();
+                let assembled = scratch.assemble(&info.name, info.grid, names, &records)?;
+                let mut stats = LayerStats::default();
+                let count = stats.record(zoom, &assembled, names);
+                Ok((layer, stats, count, assembled.layer.encode(info.encoder)?))
+            })
+            .collect::<TileGenResult<Vec<_>>>()?;
+        let mut mlt = Vec::new();
+        for (layer, stats, count, bytes) in encoded {
+            self.stats[usize::from(layer)].merge(&stats);
+            features.push((layer, count));
+            mlt.extend(bytes);
+        }
+        Ok(martin_tile_utils::encode(mlt, settings.encoding)?)
+    }
 }
+
+/// One layer's records of a tile.
+type LayerRecords<'a> = (u8, Vec<(Seq, &'a [u8])>);
+
+/// Record bytes from which a tile's layers are encoded in parallel.
+const PARALLEL_LAYERS_BYTES: usize = 4 << 20;
 
 #[cfg(test)]
 mod tests {
