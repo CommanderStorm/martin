@@ -450,7 +450,7 @@ fn generate_config(options: &GenerateOptions) -> GenerateConfig {
         format: options.format,
         encoding: options.encoding,
         batch_tiles: 256,
-        window: threads * 4,
+        window: threads * 64,
         mvt_preserve_ring_start: options.mvt_preserve_ring_start,
         mvt_keep_unused_keys: options.mvt_keep_unused_keys,
     }
