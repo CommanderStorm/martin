@@ -54,27 +54,30 @@ jobs:
       matrix:
         # 1. Linux-only for PRs (faster feedback)
         # 2. Run on all three OS platforms when merging to main
-        os: ${{ github.ref == 'refs/heads/main' && fromJSON('["ubuntu-latest", "macos-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
+        os: ${{ github.ref == 'refs/heads/main' && fromJSON('["ubuntu-26.04", "macos-latest", "windows-latest"]') || fromJSON('["ubuntu-26.04"]') }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
+      - name: Free disk space for the restored build cache plus the coverage builds
+        if: matrix.os == 'ubuntu-26.04'
+        run: sudo rm -rf /usr/local/lib/android /usr/share/dotnet /usr/local/.ghcup
       - uses: $/.github/actions/setup-rust
         with:
           tools: 'just,nextest'
           cache: true
-          coverage: ${{ matrix.os == 'ubuntu-latest' }}
+          coverage: ${{ matrix.os == 'ubuntu-26.04' }}
       - name: Run the unit tests
         run: just test-packages-ci
       - run: just test-doc
-      - if: matrix.os == 'ubuntu-latest'
+      - if: matrix.os == 'ubuntu-26.04'
         uses: $/.github/actions/upload-coverage
         with: { suite: unit }
   test-cog:
     name: COG GeoTIFF tests
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     needs:
       - lint-rust
@@ -95,7 +98,7 @@ jobs:
     if: inputs.run-cog-py
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     needs:
       - lint-rust
@@ -120,7 +123,7 @@ jobs:
     name: DuckDB GeoParquet tests
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     needs:
       - lint-rust
@@ -138,7 +141,8 @@ jobs:
     name: Style rendering tests
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    # TODO: 26.04 once rendering moves to maplibre-native-ffi; the prebuilt maplibre_native amalgam segfaults in libuv 1.51
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     needs:
       - lint-rust
@@ -156,7 +160,7 @@ jobs:
     name: OGC API - Tiles conformance
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     needs: [ build-x86_64-unknown-linux-gnu ]
     steps:
@@ -180,7 +184,8 @@ jobs:
     name: OGC API - Maps conformance
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    # TODO: 26.04 once rendering moves to maplibre-native-ffi; the prebuilt maplibre_native amalgam segfaults in libuv 1.51
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     needs:
       - lint-rust
@@ -196,7 +201,7 @@ jobs:
     name: Lint the Rust code
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     steps:
       - name: Checkout sources
@@ -214,7 +219,7 @@ jobs:
     # before the cheaper clippy run has had a chance to fail fast.
     needs:
       - lint-rust
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     strategy:
       fail-fast: false
@@ -231,7 +236,7 @@ jobs:
     name: Lint Rust dependencies
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     steps:
       - name: Checkout sources
@@ -245,7 +250,7 @@ jobs:
     uses: $/.github/workflows/build-binary.yml
     with:
       target: aarch64-unknown-linux-musl
-      os: ubuntu-latest
+      os: ubuntu-26.04
       zig: true
       release_mode: ${{ inputs.run-release-builds && github.event_name != 'pull_request' }}
 
@@ -253,7 +258,7 @@ jobs:
     uses: $/.github/workflows/build-binary.yml
     with:
       target: x86_64-unknown-linux-musl
-      os: ubuntu-latest
+      os: ubuntu-26.04
       zig: true
       release_mode: ${{ inputs.run-release-builds && github.event_name != 'pull_request' }}
 
@@ -262,7 +267,7 @@ jobs:
     uses: $/.github/workflows/build-binary.yml
     with:
       target: x86_64-unknown-linux-musl
-      os: ubuntu-latest
+      os: ubuntu-26.04
       zig: true
       legacy_cpu: true
       release_mode: ${{ inputs.run-release-builds && github.event_name != 'pull_request' }}
@@ -273,7 +278,7 @@ jobs:
     uses: $/.github/workflows/build-binary.yml
     with:
       target: x86_64-unknown-freebsd
-      os: ubuntu-latest
+      os: ubuntu-26.04
       zig: true
       release_mode: ${{ inputs.run-release-builds && github.event_name != 'pull_request' }}
 
@@ -282,7 +287,7 @@ jobs:
     uses: $/.github/workflows/build-binary.yml
     with:
       target: x86_64-unknown-freebsd
-      os: ubuntu-latest
+      os: ubuntu-26.04
       zig: true
       legacy_cpu: true
       release_mode: ${{ inputs.run-release-builds && github.event_name != 'pull_request' }}
@@ -292,13 +297,13 @@ jobs:
     uses: $/.github/workflows/build-binary.yml
     with:
       target: aarch64-unknown-freebsd
-      os: ubuntu-latest
+      os: ubuntu-26.04
       zig: true
       release_mode: ${{ inputs.run-release-builds && github.event_name != 'pull_request' }}
 
   docker-legacycpu:
     name: Publish the legacycpu Docker image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     needs: [ build-x86_64-unknown-linux-musl-legacycpu ]
     if: |
@@ -375,7 +380,7 @@ jobs:
 
   docker-build-test:
     name: Build and test docker images (${{ matrix.variant }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     needs: [ build-aarch64-unknown-linux-gnu, build-x86_64-unknown-linux-gnu, build-aarch64-unknown-linux-gnu-full, build-x86_64-unknown-linux-gnu-full ]
     if: |
@@ -553,15 +558,9 @@ jobs:
       - name: Test linux/arm64 Docker image
         if: contains(env.DOCKER_TEST_PLATFORMS, 'arm64')
         run: |
-          PLATFORM=linux/arm64
           TAG=${{ github.repository }}:linux${{ matrix.suffix }}
-          # The tests hand martin absolute paths, both to checked-in fixtures and to the temp
-          # directories they build their own in, so the workspace and the temp directory are
-          # mounted where the host has them. The container runs as the runner so that the files
-          # it writes into those directories stay ours to read and delete.
-          RUN="--rm --net host --platform $PLATFORM --user $(id -u):$(id -g) -e DATABASE_URL -e AWS_REGION=eu-central-1 -e RUST_LOG_FORMAT=bare -e RUST_LOG -v $PWD:$PWD -v $TMPDIR:$TMPDIR -w $PWD"
-          export MARTIN_BIN="docker run $RUN $TAG"
-          export MBTILES_BIN="docker run $RUN --entrypoint /usr/local/bin/mbtiles $TAG"
+          export MARTIN_BIN=".github/files/docker-bin.sh linux/arm64 $TAG /usr/local/bin/martin"
+          export MBTILES_BIN=".github/files/docker-bin.sh linux/arm64 $TAG /usr/local/bin/mbtiles"
           cargo nextest run --package martin-e2e-tests --features test-pg
         env:
           TMPDIR: /tmp
@@ -571,15 +570,9 @@ jobs:
           MARTIN_E2E_READY_TIMEOUT: 300
       - name: End-to-end tests against the linux/amd64 Docker image
         run: |
-          PLATFORM=linux/amd64
           TAG=${{ github.repository }}:linux${{ matrix.suffix }}
-          # The tests hand martin absolute paths, both to checked-in fixtures and to the temp
-          # directories they build their own in, so the workspace and the temp directory are
-          # mounted where the host has them. The container runs as the runner so that the files
-          # it writes into those directories stay ours to read and delete.
-          RUN="--rm --net host --platform $PLATFORM --user $(id -u):$(id -g) -e DATABASE_URL -e AWS_REGION=eu-central-1 -e RUST_LOG_FORMAT=bare -e RUST_LOG -v $PWD:$PWD -v $TMPDIR:$TMPDIR -w $PWD"
-          export MARTIN_BIN="docker run $RUN $TAG"
-          export MBTILES_BIN="docker run $RUN --entrypoint /usr/local/bin/mbtiles $TAG"
+          export MARTIN_BIN=".github/files/docker-bin.sh linux/amd64 $TAG /usr/local/bin/martin"
+          export MBTILES_BIN=".github/files/docker-bin.sh linux/amd64 $TAG /usr/local/bin/mbtiles"
           cargo nextest run --package martin-e2e-tests --features test-pg
         env:
           TMPDIR: /tmp
@@ -649,7 +642,8 @@ jobs:
     uses: $/.github/workflows/build-binary.yml
     with:
       target: x86_64-unknown-linux-gnu
-      os: ubuntu-latest
+      # 24.04 keeps the glibc floor of the released binaries at 2.39
+      os: ubuntu-24.04
       release_mode: ${{ inputs.run-release-builds && github.event_name != 'pull_request' }}
       pgo: ${{ github.event_name == 'schedule' || (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'martin-v')) }}
 
@@ -667,7 +661,8 @@ jobs:
     uses: $/.github/workflows/build-binary.yml
     with:
       target: x86_64-unknown-linux-gnu
-      os: ubuntu-latest
+      # 24.04 keeps the glibc floor of the released binaries at 2.39
+      os: ubuntu-24.04
       full: true
       release_mode: ${{ inputs.run-release-builds && github.event_name != 'pull_request' }}
 
@@ -682,7 +677,7 @@ jobs:
 
   test-aws-lambda:
     name: Test AWS Lambda
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     permissions:
       contents: read
@@ -700,7 +695,7 @@ jobs:
 
   test-freebsd:
     name: Test the ${{ matrix.build }} binaries on FreeBSD ${{ matrix.release }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -797,7 +792,7 @@ jobs:
 
   test-svc-pg:
     name: Test against PostGIS variants
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     permissions:
       contents: read
@@ -863,6 +858,8 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
+      - name: Free disk space for the restored build cache plus the PR's rebuilt crates
+        run: sudo rm -rf /usr/local/lib/android /usr/share/dotnet /usr/local/.ghcup
       - name: Set up sqlite3-tools
         run: sudo apt-get update && sudo apt-get install -y sqlite3-tools
       - uses: $/.github/actions/setup-rust
@@ -968,7 +965,7 @@ jobs:
     # via Martin's public HTTP API. Docker is preinstalled on GitHub-hosted runners,
     # which is all the testcontainers crate needs.
     name: Unit test against RustFS (S3-compatible)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     permissions:
       contents: read
@@ -988,7 +985,7 @@ jobs:
     name: Test publishing via cargo-publish
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     # A from-scratch package and build of the whole workspace. What it guards
     # is the release itself, so on pull requests it only runs for the one
@@ -1007,7 +1004,7 @@ jobs:
 
   coverage:
     name: Merge and upload code coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     needs:
       - unit-test-rust

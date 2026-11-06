@@ -3,7 +3,6 @@ use std::fmt::{Display, Formatter};
 use std::path::Path;
 use std::pin::Pin;
 
-use enum_display::EnumDisplay;
 use futures::Stream;
 use martin_tile_utils::{Tile, TileCoord};
 use serde::{Deserialize, Serialize};
@@ -19,8 +18,8 @@ use crate::bindiff::PatchType;
 use crate::errors::{MbtError, MbtResult};
 use crate::{CopyDuplicateMode, MbtType, NormalizedSchema, invert_y_value};
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize, EnumDisplay)]
-#[enum_display(case = "Kebab")]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize, strum::Display)]
+#[strum(serialize_all = "kebab-case")]
 #[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
 pub enum MbtTypeCli {
     Flat,
@@ -43,8 +42,8 @@ impl From<MbtTypeCli> for MbtType {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize, EnumDisplay)]
-#[enum_display(case = "Kebab")]
+#[derive(Default, Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize, strum::Display)]
+#[strum(serialize_all = "kebab-case")]
 #[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
 pub enum CopyType {
     #[default]
@@ -520,7 +519,7 @@ impl Mbtiles {
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let mbt = Mbtiles::new("tiles.mbtiles")?;
     /// let mut conn = mbt.open_readonly().await?;
-    /// let mbt_type = mbt.detect_type(&mut conn).await?;
+    /// let (mbt_type, _warnings) = mbt.detect_type(&mut conn).await?;
     ///
     /// match mbt.get_tile_and_hash(&mut conn, mbt_type, 4, 5, 6).await? {
     ///     Some((data, Some(hash))) => {
@@ -593,7 +592,7 @@ impl Mbtiles {
     /// let mbtiles = Mbtiles::new("example.mbtiles").unwrap();
     /// let mut conn = mbtiles.open().await.unwrap();
     ///
-    /// let mbt_type = mbtiles.detect_type(&mut conn).await.unwrap();
+    /// let mbt_type = mbtiles.detect_writable_type(&mut conn).await.unwrap();
     /// let batch = vec![
     ///     (0, 0, 0, vec![0, 1, 2, 3]),
     ///     (0, 1, 0, vec![4, 5, 6, 7]),

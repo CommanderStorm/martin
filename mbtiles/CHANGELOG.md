@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0](https://github.com/maplibre/martin/compare/mbtiles-v0.21.2...mbtiles-v0.22.0) - 2026-11-04
+
+### Added
+
+- *(mbtiles)* [**breaking**] warn instead of failing on a missing unique tile index ([#3871](https://github.com/maplibre/martin/pull/3871))
+
+### Other
+
+- *(deps)* replace enum-display and derive-debug, both still on syn 1 ([#3854](https://github.com/maplibre/martin/pull/3854))
+- update Cargo.toml dependencies
+
+## [0.21.2](https://github.com/maplibre/martin/compare/mbtiles-v0.21.1...mbtiles-v0.21.2) - 2026-10-29
+
+### Added
+
+- *(cp)* delete metadata with --delete-meta ([#3777](https://github.com/maplibre/martin/pull/3777))
+- *(mbtiles)* set and delete metadata in meta-update ([#3755](https://github.com/maplibre/martin/pull/3755))
+- *(ogcapi)* serve collections, tilesets and tiles over the OGC API ([#3764](https://github.com/maplibre/martin/pull/3764))
+- *(ogcapi)* serve an OGC API landing page, conformance and tile matrix sets ([#3763](https://github.com/maplibre/martin/pull/3763))
+- *(martin)* `martin test generate` and `run` over real rows ([#3686](https://github.com/maplibre/martin/pull/3686))
+
 ## [0.21.1](https://github.com/maplibre/martin/compare/mbtiles-v0.21.0...mbtiles-v0.21.1) - 2026-10-22
 
 ### Added

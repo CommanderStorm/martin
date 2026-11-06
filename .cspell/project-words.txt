@@ -74,6 +74,7 @@ jpegxl
 justfiles
 keepalives
 LAEA
+lavapipe
 libwebp
 linestring
 linestrings
@@ -172,6 +173,7 @@ tilelive
 tileserver
 tileset
 tilesets
+tmpfs
 toon
 tui
 unclipped

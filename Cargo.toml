@@ -108,7 +108,7 @@ bytestring = "1.5"
 cel = { version = "0.15", default-features = false }
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
 clap = { version = "4", features = ["derive", "unstable-markdown", "wrap_help"] }
-cog-tiles = { path = "cog-tiles", version = "0.2.0", default-features = false, features = ["fs", "png"] }
+cog-tiles = { path = "cog-tiles", version = "0.3.0", default-features = false, features = ["fs", "png"] }
 compact_str = "0.10"
 contour = { version = "0.13.1", features = ["f32"] }
 cql2 = "0.6.0"
@@ -118,9 +118,7 @@ csscolorparser = "0.9"
 dashmap = { version = "6.1.0", features = ["serde", "inline", "rayon"] }
 deadpool = "0.13.0"
 deadpool-postgres = "0.14"
-derive-debug = "0.1.2"
-duckdb = { version = ">=1.10503.1, <1.20000", features = ["bundled", "parquet"] }
-enum-display = "0.2"
+duckdb = { version = ">=1.10503.1, <1.20001", features = ["bundled", "parquet"] }
 env_logger = "0.11"
 flate2 = { version = "1", default-features = false, features = ["zlib-rs", "runtime_detection"] }
 flume = "0.12"
@@ -131,7 +129,7 @@ geo-index = { version = "0.4.0", features = ["rayon"] }
 geo-traits = "0.3"
 geo-types = "0.7.19"
 geojson = { version = "1", features = ["geo-types"] }
-hotpath = "0.29.2"
+hotpath = "0.31.0"
 humantime = "2.4.0"
 humantime-serde = "1.1.1"
 image = { version = "0.25.8", default-features = false, features = ["png", "jpeg", "webp"] }
@@ -148,15 +146,15 @@ jxl-oxide = { version = "0.12.6", features = ["image"] }
 lambda-web = { version = "0.2.1", features = ["actix4"] }
 lasso = { version = "0.7.3", features = ["multi-threaded"] }
 log = "0.4"
-map-tile-toolkit = { path = "./map-tile-toolkit", version = "0.3.4" }
+map-tile-toolkit = { path = "./map-tile-toolkit", version = "0.4.1" }
 # maplibre/maplibre-native-ffi#1178 (mln_graphics_device_create) is unreleased; this is the commit the
 # `unstable-native-snapshot` native library was built from
 maplibre-native-ffi = { git = "https://github.com/maplibre/maplibre-native-ffi", rev = "43162e8b588163a8c2119b77f8ee07b3f69f5bba" }
-martin-config-macros = { path = "./martin-config-macros", version = "0.1.4" }
-martin-core = { path = "./martin-core", version = "0.14.0", default-features = false }
-martin-tile-utils = { path = "./martin-tile-utils", version = "0.9.1" }
-martin-tilegen = { path = "./martin-tilegen", version = "0.1.1", default-features = false }
-mbtiles = { path = "./mbtiles", version = "0.21.1" }
+martin-config-macros = { path = "./martin-config-macros", version = "0.1.5" }
+martin-core = { path = "./martin-core", version = "0.16.0", default-features = false }
+martin-tile-utils = { path = "./martin-tile-utils", version = "0.9.3" }
+martin-tilegen = { path = "./martin-tilegen", version = "0.2.0", default-features = false }
+mbtiles = { path = "./mbtiles", version = "0.22.0" }
 md5 = "0.8.0"
 memmap2 = "0.9.11"
 miette = { version = "7.6", features = ["fancy"] }
@@ -164,11 +162,11 @@ mlt-core = { version = "0.22.1", default-features = false }
 moka = { version = "0.12", default-features = false }
 notify = "8.2.0"
 num_cpus = "1"
-numpy = "0.29"
+numpy = "0.30"
 object_store = { version = "0.14.1", features = ["gcp", "aws", "azure", "fs", "http"] }
 pbf_font_tools = { version = "3.1.1", features = ["freetype"] }
 perf-event2 = "0.7.4"
-pmtiles = { version = "0.25.0", default-features = false }
+pmtiles = { version = "0.27.0", default-features = false }
 png = "0.18.0"
 portable-pty = "0.9.0"
 postgis = "0.9"
@@ -181,7 +179,7 @@ postgres-protocol = "0.6"
 pretty_assertions = "1"
 proc-macro2 = "1"
 prometheus = { version = "0.14", default-features = false }
-pyo3 = "0.29"
+pyo3 = "0.30"
 pyo3-stub-gen = { version = "0.23.1", default-features = false, features = ["infer_signature", "numpy"] }
 quantizr = "1.4"
 quote = "1"
@@ -232,7 +230,7 @@ tracing-subscriber = { version = "0.3", default-features = false }
 tracing-test = "0.2"
 url = "2.5"
 utoipa = { version = "6.0", default-features = false, features = ["chrono", "macros", "actix_extras"] }
-vt100 = "0.17.0"
+vt100 = "0.18.0"
 walkdir = "2.5.0"
 webp = { version = "0.3.1", default-features = false }
 wincode = "0.6.2"
@@ -261,7 +259,3 @@ unicode-ident.debug = false
 # Make release binaries a bit smaller
 lto = true
 codegen-units = 1
-
-[patch.crates-io]
-# georust/wkb#104: reject type codes 8 and above instead of reading a TRIANGLE as a point
-wkb = { git = "https://github.com/CommanderStorm/wkb", rev = "b5e52669e3c1b488a7846c8d02369e3758ce6e8c" }
