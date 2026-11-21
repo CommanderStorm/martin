@@ -41,6 +41,8 @@ pmtiles = ["pmtiles/write", "dep:serde_json"]
 internals = []
 # Reading OpenStreetMap PBF files as a feature source
 osm = ["dep:osmflow"]
+# Nested columns of the MLT v2 wire format, which is not stable yet
+unstable-mlt-v2 = ["mlt-core/unstable-v2", "dep:serde_json"]
 
 [dependencies]
 bytes.workspace = true
